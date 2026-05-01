@@ -83,39 +83,64 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* Basic Mobile Menu Implementation */}
+      {/* Professional Sidebar Menu Implementation */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, x: '100%' }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: '100%' }}
-            transition={{ type: 'tween', duration: 0.4 }}
-            style={{
-              position: 'fixed',
-              top: 0,
-              right: 0,
-              bottom: 0,
-              width: '100%',
-              background: '#fff',
-              color: '#000',
-              zIndex: 100,
-              padding: '2rem',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <X size={24} cursor="pointer" onClick={() => setMobileMenuOpen(false)} />
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', marginTop: '4rem', fontSize: '1.5rem', fontFamily: 'var(--font-heading)' }}>
-               {['Collections', 'Discover', 'World of Zanny'].map((item) => (
-                <a key={item} href={`#${item.toLowerCase().replace(/ /g, '-')}`} onClick={() => setMobileMenuOpen(false)}>
-                  {item}
-                </a>
-              ))}
-            </div>
-          </motion.div>
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0,0,0,0.5)',
+                zIndex: 90,
+                backdropFilter: 'blur(4px)'
+              }}
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, x: '-100%' }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: '-100%' }}
+              transition={{ type: 'tween', duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                bottom: 0,
+                width: '400px',
+                maxWidth: '85vw',
+                background: '#fff',
+                color: '#000',
+                zIndex: 100,
+                padding: '2rem',
+                display: 'flex',
+                flexDirection: 'column',
+                boxShadow: '4px 0 24px rgba(0,0,0,0.1)'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontFamily: 'var(--font-heading)', fontSize: '1.2rem', letterSpacing: '2px', fontWeight: 'bold' }}>MENU</span>
+                <X size={24} cursor="pointer" onClick={() => setMobileMenuOpen(false)} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', marginTop: '4rem', fontSize: '1.2rem', fontFamily: 'var(--font-heading)' }}>
+                 {['Collections', 'Discover', 'World of Zanny'].map((item) => (
+                  <a key={item} href={`#${item.toLowerCase().replace(/ /g, '-')}`} onClick={() => setMobileMenuOpen(false)} style={{ borderBottom: '1px solid #eee', paddingBottom: '1rem' }}>
+                    {item}
+                  </a>
+                ))}
+                <Link to="/contact" onClick={() => setMobileMenuOpen(false)} style={{ borderBottom: '1px solid #eee', paddingBottom: '1rem' }}>Contact Us</Link>
+                <Link to="/shipping" onClick={() => setMobileMenuOpen(false)} style={{ borderBottom: '1px solid #eee', paddingBottom: '1rem' }}>Shipping & Returns</Link>
+                <Link to="/faqs" onClick={() => setMobileMenuOpen(false)} style={{ borderBottom: '1px solid #eee', paddingBottom: '1rem' }}>FAQs</Link>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
       <style>{`
