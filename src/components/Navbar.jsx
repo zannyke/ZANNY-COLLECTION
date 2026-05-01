@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useCart, CATEGORIES, PRODUCTS } from '../context/CartContext';
 
 /* ── Zanny custom SVG icons ────────────────────────────────────── */
 const IconGrid = ({ color }) => (
@@ -42,6 +43,21 @@ export default function Navbar() {
   const isHomePage = location.pathname === '/';
   const shouldBeSolid = !isHomePage || isScrolled;
   const iconColor = shouldBeSolid ? '#1a1a1a' : '#fff';
+  const { cartCount } = useCart();
+  const navigate = useNavigate();
+
+  const searchResults = searchQuery.trim().length > 1
+    ? PRODUCTS.filter(p =>
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        CATEGORIES.find(c => c.id === p.category)?.label.toLowerCase().includes(searchQuery.toLowerCase())
+      ).slice(0, 6)
+    : [];
+
+  const handleSearchSelect = () => {
+    setSearchOpen(false);
+    setSearchQuery('');
+    navigate('/#collections');
+  };
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -180,36 +196,41 @@ export default function Navbar() {
             Z
           </motion.button>
 
-          {/* Cart with diamond badge */}
-          <motion.button
-            whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.92 }}
+          {/* Cart link with live diamond badge */}
+          <Link
+            to="/cart"
             style={{
               position: 'relative',
-              background: 'none', border: 'none',
-              cursor: 'pointer', color: iconColor,
+              color: iconColor,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              padding: 0,
               flexShrink: 0,
+              textDecoration: 'none',
             }}
           >
-            <IconBag color={iconColor} />
-            {/* Diamond-shaped badge — unique to Zanny */}
-            <span style={{
-              position: 'absolute',
-              top: '-6px', right: '-7px',
-              width: '14px', height: '14px',
-              background: shouldBeSolid ? '#1a1a1a' : '#fff',
-              color: shouldBeSolid ? '#fff' : '#1a1a1a',
-              fontSize: '0.55rem',
-              fontWeight: 700,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transform: 'rotate(45deg)',
-              transition: 'all 0.35s',
-            }}>
-              <span style={{ transform: 'rotate(-45deg)' }}>0</span>
-            </span>
-          </motion.button>
+            <motion.span whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }} style={{ display: 'flex' }}>
+              <IconBag color={iconColor} />
+            </motion.span>
+            {/* Diamond badge — unique to Zanny */}
+            <AnimatePresence>
+              {cartCount >= 0 && (
+                <motion.span
+                  key={cartCount}
+                  initial={{ scale: 0.6 }} animate={{ scale: 1 }} exit={{ scale: 0.6 }}
+                  style={{
+                    position: 'absolute', top: '-6px', right: '-7px',
+                    width: '15px', height: '15px',
+                    background: shouldBeSolid ? '#1a1a1a' : '#fff',
+                    color: shouldBeSolid ? '#fff' : '#1a1a1a',
+                    fontSize: '0.5rem', fontWeight: 700,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transform: 'rotate(45deg)', transition: 'background 0.35s, color 0.35s',
+                  }}
+                >
+                  <span style={{ transform: 'rotate(-45deg)' }}>{cartCount}</span>
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </Link>
         </div>
       </motion.nav>
 
@@ -222,50 +243,110 @@ export default function Navbar() {
             exit={{ opacity: 0 }}
             style={{
               position: 'fixed', inset: 0,
-              background: 'rgba(0,0,0,0.85)',
+              background: 'rgba(0,0,0,0.92)',
               zIndex: 200,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              justifyContent: 'center',
-              gap: '2rem',
-              padding: '2rem',
+              paddingTop: '15vh',
+              gap: '1.5rem',
+              padding: '15vh 2rem 2rem',
             }}
           >
             <button
-              onClick={() => setSearchOpen(false)}
+              onClick={() => { setSearchOpen(false); setSearchQuery(''); }}
               style={{ position: 'absolute', top: '2rem', right: '2rem', background: 'none', border: 'none', cursor: 'pointer' }}
             >
               <IconX color="#fff" size={28} />
             </button>
-            <p style={{ color: '#aaa', fontFamily: 'var(--font-heading)', letterSpacing: '3px', fontSize: '0.85rem', textTransform: 'uppercase' }}>
+            <p style={{ color: '#666', fontFamily: 'var(--font-heading)', letterSpacing: '3px', fontSize: '0.8rem', textTransform: 'uppercase' }}>
               Search the Collection
             </p>
+            {/* Input */}
             <motion.div
               initial={{ width: '200px', opacity: 0 }}
               animate={{ width: 'min(600px, 90vw)', opacity: 1 }}
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               style={{
-                borderBottom: '1px solid rgba(255,255,255,0.3)',
+                borderBottom: '1px solid rgba(255,255,255,0.25)',
                 display: 'flex', alignItems: 'center', gap: '1rem',
-                paddingBottom: '0.75rem',
+                paddingBottom: '0.75rem', width: 'min(600px, 90vw)',
               }}
             >
-              <IconSearch color="#fff" />
+              <IconSearch color="#aaa" />
               <input
                 autoFocus
                 type="text"
-                placeholder="What are you looking for?"
+                placeholder="Products, categories..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 style={{
                   background: 'none', border: 'none', outline: 'none',
-                  color: '#fff', fontSize: '1.2rem',
+                  color: '#fff', fontSize: '1.3rem',
                   fontFamily: 'var(--font-body)', width: '100%',
                   caretColor: '#fff',
                 }}
               />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#555', fontSize: '1.2rem' }}>×</button>
+              )}
             </motion.div>
+
+            {/* Category quick links */}
+            {!searchQuery && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'center', width: 'min(600px, 90vw)', marginTop: '0.5rem' }}>
+                {CATEGORIES.map(cat => (
+                  <button
+                    key={cat.id}
+                    onClick={handleSearchSelect}
+                    style={{
+                      padding: '0.4rem 1rem', border: '1px solid #333',
+                      background: 'transparent', color: '#aaa',
+                      cursor: 'pointer', fontSize: '0.75rem', letterSpacing: '1px',
+                      textTransform: 'uppercase', fontFamily: 'var(--font-body)',
+                      transition: 'all 0.2s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#fff'; e.currentTarget.style.color = '#fff'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = '#aaa'; }}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Live results */}
+            {searchResults.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                style={{ width: 'min(600px, 90vw)', display: 'flex', flexDirection: 'column', gap: '0' }}
+              >
+                {searchResults.map(product => (
+                  <button
+                    key={product.id}
+                    onClick={handleSearchSelect}
+                    style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      padding: '0.9rem 0', borderBottom: '1px solid #222',
+                      background: 'none', border: 'none', borderBottom: '1px solid #222',
+                      cursor: 'pointer', textAlign: 'left', width: '100%',
+                    }}
+                  >
+                    <div>
+                      <p style={{ color: '#fff', fontSize: '0.95rem', marginBottom: '0.15rem', fontFamily: 'var(--font-heading)' }}>{product.name}</p>
+                      <p style={{ color: '#666', fontSize: '0.75rem', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                        {CATEGORIES.find(c => c.id === product.category)?.label}
+                      </p>
+                    </div>
+                    <p style={{ color: '#aaa', fontSize: '0.85rem', flexShrink: 0, marginLeft: '1rem' }}>KSh {product.price.toLocaleString()}</p>
+                  </button>
+                ))}
+              </motion.div>
+            )}
+
+            {searchQuery && searchResults.length === 0 && (
+              <p style={{ color: '#555', fontSize: '0.9rem' }}>No results for "{searchQuery}"</p>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
