@@ -2,6 +2,7 @@ import React from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { CartProvider } from './context/CartContext'
 import { ProductProvider } from './context/ProductContext'
+import { AuthProvider, useAuth } from './context/AuthContext'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import ScrollToTop from './components/ScrollToTop'
@@ -20,6 +21,8 @@ import CookiePolicy from './pages/CookiePolicy'
 import CartPage from './pages/CartPage'
 import CategoryPage from './pages/CategoryPage'
 import ProductDetailPage from './pages/ProductDetailPage'
+import CustomerLogin from './pages/CustomerLogin'
+import CustomerRegister from './pages/CustomerRegister'
 
 // Admin pages (no Navbar/Footer)
 import AdminLogin from './pages/admin/AdminLogin'
@@ -32,6 +35,15 @@ import './index.css'
 function AdminRoute({ children }) {
   const isAuth = sessionStorage.getItem('zanny_admin') === 'true'
   return isAuth ? children : <Navigate to="/admin/login" replace />
+}
+
+// Route guard for customers (Checkout protection)
+function UserRoute({ children }) {
+  const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
+  
+  if (loading) return null;
+  return isAuthenticated ? children : <Navigate to="/login" state={{ from: location }} replace />;
 }
 
 // Layout with Navbar + Footer
@@ -48,32 +60,40 @@ function PublicLayout({ children }) {
 
 function App() {
   return (
-    <ProductProvider>
-      <CartProvider>
-        <Router>
-          <ScrollToTop />
-          <Routes>
-            {/* ── Admin (no navbar/footer) ── */}
-            <Route path="/admin/login" element={<ThemeProvider><AdminLogin /></ThemeProvider>} />
-            <Route path="/admin" element={<AdminRoute><ThemeProvider><AdminDashboard /></ThemeProvider></AdminRoute>} />
-            <Route path="/admin/add-product" element={<AdminRoute><ThemeProvider><AddProduct /></ThemeProvider></AdminRoute>} />
+    <AuthProvider>
+      <ProductProvider>
+        <CartProvider>
+          <Router>
+            <ScrollToTop />
+            <Routes>
+              {/* ── Admin (no navbar/footer) ── */}
+              <Route path="/admin/login" element={<ThemeProvider><AdminLogin /></ThemeProvider>} />
+              <Route path="/admin" element={<AdminRoute><ThemeProvider><AdminDashboard /></ThemeProvider></AdminRoute>} />
+              <Route path="/admin/add-product" element={<AdminRoute><ThemeProvider><AddProduct /></ThemeProvider></AdminRoute>} />
 
-            {/* ── Public pages ── */}
-            <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
-            <Route path="/contact" element={<PublicLayout><ContactUs /></PublicLayout>} />
-            <Route path="/shipping" element={<PublicLayout><ShippingReturns /></PublicLayout>} />
-            <Route path="/faqs" element={<PublicLayout><FAQs /></PublicLayout>} />
-            <Route path="/care" element={<PublicLayout><CareGuide /></PublicLayout>} />
-            <Route path="/terms" element={<PublicLayout><TermsOfService /></PublicLayout>} />
-            <Route path="/privacy" element={<PublicLayout><PrivacyPolicy /></PublicLayout>} />
-            <Route path="/cookie" element={<PublicLayout><CookiePolicy /></PublicLayout>} />
-            <Route path="/cart" element={<PublicLayout><CartPage /></PublicLayout>} />
-            <Route path="/collections/:categoryId" element={<PublicLayout><CategoryPage /></PublicLayout>} />
-            <Route path="/product/:productId" element={<PublicLayout><ProductDetailPage /></PublicLayout>} />
-          </Routes>
-        </Router>
-      </CartProvider>
-    </ProductProvider>
+              {/* ── Public pages ── */}
+              <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />
+              <Route path="/contact" element={<PublicLayout><ContactUs /></PublicLayout>} />
+              <Route path="/shipping" element={<PublicLayout><ShippingReturns /></PublicLayout>} />
+              <Route path="/faqs" element={<PublicLayout><FAQs /></PublicLayout>} />
+              <Route path="/care" element={<PublicLayout><CareGuide /></PublicLayout>} />
+              <Route path="/terms" element={<PublicLayout><TermsOfService /></PublicLayout>} />
+              <Route path="/privacy" element={<PublicLayout><PrivacyPolicy /></PublicLayout>} />
+              <Route path="/cookie" element={<PublicLayout><CookiePolicy /></PublicLayout>} />
+              
+              <Route path="/login" element={<PublicLayout><CustomerLogin /></PublicLayout>} />
+              <Route path="/register" element={<PublicLayout><CustomerRegister /></PublicLayout>} />
+              
+              {/* Protected Order Flow */}
+              <Route path="/cart" element={<UserRoute><PublicLayout><CartPage /></PublicLayout></UserRoute>} />
+              
+              <Route path="/collections/:categoryId" element={<PublicLayout><CategoryPage /></PublicLayout>} />
+              <Route path="/product/:productId" element={<PublicLayout><ProductDetailPage /></PublicLayout>} />
+            </Routes>
+          </Router>
+        </CartProvider>
+      </ProductProvider>
+    </AuthProvider>
   )
 }
 

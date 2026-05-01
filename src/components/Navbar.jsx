@@ -160,21 +160,18 @@ export default function Navbar() {
 
         {/* ── RIGHT: contact + monogram + cart ── */}
         <div style={{ display: 'flex', gap: '1.2rem', flex: 1, justifyContent: 'flex-end', alignItems: 'center' }}>
-          {/* Contact text link */}
+          {/* Auth Link */}
           <Link
-            to="/contact"
+            to={isAuthenticated ? "/account" : "/login"}
             className="zanny-text-link"
             style={{
-              fontSize: '0.78rem', fontWeight: 500, letterSpacing: '1px',
+              fontSize: '0.78rem', fontWeight: 700, letterSpacing: '1px',
               color: iconColor, textDecoration: 'none',
-              borderBottom: `1px solid ${shouldBeSolid ? 'transparent' : 'rgba(255,255,255,0.4)'}`,
               paddingBottom: '1px',
-              transition: 'border-color 0.2s, color 0.35s',
+              transition: 'opacity 0.2s',
             }}
-            onMouseEnter={e => e.currentTarget.style.borderBottomColor = iconColor}
-            onMouseLeave={e => e.currentTarget.style.borderBottomColor = shouldBeSolid ? 'transparent' : 'rgba(255,255,255,0.4)'}
           >
-            CONTACT
+            {isAuthenticated ? user.firstName.toUpperCase() : "SIGN IN"}
           </Link>
 
           {/* Monogram avatar (unique to Zanny) - Linked to Admin */}
@@ -199,7 +196,7 @@ export default function Navbar() {
                 flexShrink: 0,
               }}
             >
-              Z
+              {isAuthenticated ? user.firstName[0] : "Z"}
             </motion.button>
           </Link>
 
