@@ -34,6 +34,7 @@ const IconX = ({ color, size = 22 }) => (
 );
 
 export default function Navbar() {
+  const { user, isAuthenticated } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
