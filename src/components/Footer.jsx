@@ -25,9 +25,9 @@ export default function Footer() {
         <div>
           <h5 style={{ textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '1.5rem', fontSize: '0.875rem' }}>Legal</h5>
           <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', color: '#999', fontSize: '0.875rem' }}>
-            <li><a href="#" className="footer-link">Terms of Service</a></li>
-            <li><a href="#" className="footer-link">Privacy Policy</a></li>
-            <li><a href="#" className="footer-link">Cookie Policy</a></li>
+            <li><Link to="/terms" className="footer-link">Terms of Service</Link></li>
+            <li><Link to="/privacy" className="footer-link">Privacy Policy</Link></li>
+            <li><Link to="/cookie" className="footer-link">Cookie Policy</Link></li>
           </ul>
         </div>
 

@@ -7,6 +7,9 @@ import ContactUs from './pages/ContactUs'
 import ShippingReturns from './pages/ShippingReturns'
 import FAQs from './pages/FAQs'
 import CareGuide from './pages/CareGuide'
+import TermsOfService from './pages/TermsOfService'
+import PrivacyPolicy from './pages/PrivacyPolicy'
+import CookiePolicy from './pages/CookiePolicy'
 import './index.css'
 
 function App() {
@@ -19,6 +22,9 @@ function App() {
         <Route path="/shipping" element={<ShippingReturns />} />
         <Route path="/faqs" element={<FAQs />} />
         <Route path="/care" element={<CareGuide />} />
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/cookie" element={<CookiePolicy />} />
       </Routes>
       <Footer />
     </Router>
