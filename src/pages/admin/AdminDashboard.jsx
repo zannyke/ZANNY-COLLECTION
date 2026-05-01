@@ -189,7 +189,26 @@ export default function AdminDashboard() {
         {/* ── Traffic Chart ── */}
         <div style={{ background: t.surface, border: `1px solid ${t.border}`, padding: '2rem', marginBottom: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-            <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', letterSpacing: '1px' }}>Website Traffic</h2>
+            <div>
+              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', letterSpacing: '1px' }}>Website Traffic</h2>
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                {[
+                  { id: 'area', icon: <TrendingUp size={14} />, label: 'Area' },
+                  { id: 'bar',  icon: <BarChart3 size={14}  />, label: 'Bar' },
+                  { id: 'line', icon: <Activity size={14}   />, label: 'Line' },
+                ].map(type => (
+                  <button key={type.id} onClick={() => setChartType(type.id)} style={{
+                    display: 'flex', alignItems: 'center', gap: '0.4rem',
+                    padding: '0.35rem 0.65rem', background: chartType === type.id ? t.text : 'transparent',
+                    color: chartType === type.id ? t.bg : t.textMuted, border: `1px solid ${t.border}`,
+                    cursor: 'pointer', fontSize: '0.65rem', textTransform: 'uppercase',
+                    letterSpacing: '0.5px', transition: 'all 0.2s',
+                  }}>
+                    {type.icon} {type.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               {['daily','weekly','monthly','yearly'].map(p => (
                 <button key={p} onClick={() => setPeriod(p)} style={{
@@ -202,25 +221,7 @@ export default function AdminDashboard() {
             </div>
           </div>
           <ResponsiveContainer width="100%" height={260}>
-            <AreaChart data={DATA[period]} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-              <defs>
-                <linearGradient id="colorV" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={chartColor} stopOpacity={0.15} />
-                  <stop offset="95%" stopColor={chartColor} stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="colorP" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={accentColor} stopOpacity={0.15} />
-                  <stop offset="95%" stopColor={accentColor} stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke={t.border} />
-              <XAxis dataKey="date" tick={{ fill: t.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: t.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
-              <Tooltip content={<CustomTooltip t={t} />} />
-              <Legend wrapperStyle={{ color: t.textMuted, fontSize: '0.75rem' }} />
-              <Area type="monotone" dataKey="Visitors" stroke={chartColor} strokeWidth={1.5} fill="url(#colorV)" />
-              <Area type="monotone" dataKey="PageViews" stroke={accentColor} strokeWidth={1.5} fill="url(#colorP)" />
-            </AreaChart>
+            {renderChart()}
           </ResponsiveContainer>
         </div>
 
