@@ -1,18 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import PageHeader from '../components/PageHeader';
 
 export default function TermsOfService() {
   return (
-    <div style={{ paddingTop: '100px', minHeight: '80vh', backgroundColor: '#fff', color: '#1a1a1a' }}>
+    <div style={{ minHeight: '80vh', backgroundColor: '#fff', color: '#1a1a1a' }}>
+      <PageHeader title="Terms of Service" />
       <div className="container" style={{ padding: '4rem 2rem', maxWidth: '800px' }}>
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          style={{ fontFamily: 'var(--font-heading)', fontSize: '3rem', textAlign: 'center', marginBottom: '4rem' }}
-        >
-          Terms of Service
-        </motion.h1>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}

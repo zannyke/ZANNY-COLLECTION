@@ -1,31 +1,19 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import PageHeader from '../components/PageHeader';
 
 export default function ContactUs() {
   return (
-    <div style={{ paddingTop: '100px', minHeight: '80vh', backgroundColor: '#fff', color: '#1a1a1a' }}>
+    <div style={{ minHeight: '80vh', backgroundColor: '#fff', color: '#1a1a1a' }}>
+      <PageHeader
+        title="Contact Us"
+        subtitle="We are here to assist you with any inquiries regarding our collections, your orders, or our services."
+      />
       <div className="container" style={{ padding: '4rem 2rem', maxWidth: '800px' }}>
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          style={{ fontFamily: 'var(--font-heading)', fontSize: '3rem', textAlign: 'center', marginBottom: '1rem' }}
-        >
-          Contact Us
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3, duration: 0.8 }}
-          style={{ textAlign: 'center', color: '#666', marginBottom: '4rem' }}
-        >
-          We are here to assist you with any inquiries regarding our collections, your orders, or our services.
-        </motion.p>
-
         <motion.form
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.8 }}
+          transition={{ delay: 0.2, duration: 0.8 }}
           style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}
         >
           <div style={{ display: 'flex', gap: '2rem' }} className="contact-row">

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
+import PageHeader from '../components/PageHeader';
 
 const faqs = [
   {
@@ -25,16 +26,9 @@ export default function FAQs() {
   const [openIndex, setOpenIndex] = useState(null);
 
   return (
-    <div style={{ paddingTop: '100px', minHeight: '80vh', backgroundColor: '#fff', color: '#1a1a1a' }}>
+    <div style={{ minHeight: '80vh', backgroundColor: '#fff', color: '#1a1a1a' }}>
+      <PageHeader title="Frequently Asked Questions" />
       <div className="container" style={{ padding: '4rem 2rem', maxWidth: '800px' }}>
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          style={{ fontFamily: 'var(--font-heading)', fontSize: '3rem', textAlign: 'center', marginBottom: '4rem' }}
-        >
-          Frequently Asked Questions
-        </motion.h1>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {faqs.map((faq, index) => (
