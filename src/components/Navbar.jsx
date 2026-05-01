@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart, CATEGORIES, PRODUCTS } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 /* ── Zanny custom SVG icons ────────────────────────────────────── */
 const IconGrid = ({ color }) => (
