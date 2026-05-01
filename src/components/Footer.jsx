@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 export default function Footer() {
   return (
@@ -14,10 +15,10 @@ export default function Footer() {
         <div>
           <h5 style={{ textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '1.5rem', fontSize: '0.875rem' }}>Customer Care</h5>
           <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', color: '#999', fontSize: '0.875rem' }}>
-            <li><a href="#" className="footer-link">Contact Us</a></li>
-            <li><a href="#" className="footer-link">Shipping & Returns</a></li>
-            <li><a href="#" className="footer-link">FAQs</a></li>
-            <li><a href="#" className="footer-link">Care Guide</a></li>
+            <li><Link to="/contact" className="footer-link">Contact Us</Link></li>
+            <li><Link to="/shipping" className="footer-link">Shipping & Returns</Link></li>
+            <li><Link to="/faqs" className="footer-link">FAQs</Link></li>
+            <li><Link to="/care" className="footer-link">Care Guide</Link></li>
           </ul>
         </div>
 

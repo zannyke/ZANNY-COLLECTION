@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingBag, Search, Menu, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Navbar() {
@@ -49,9 +50,9 @@ export default function Navbar() {
       </div>
 
       <div style={{ flex: 1, textAlign: 'center' }}>
-        <a href="#" className="navbar-logo" style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, letterSpacing: '4px' }}>
+        <Link to="/" className="navbar-logo" style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, letterSpacing: '4px' }}>
           ZANNY
-        </a>
+        </Link>
       </div>
 
       <div style={{ display: 'flex', gap: '1.5rem', flex: 1, justifyContent: 'flex-end', alignItems: 'center' }}>

@@ -1,18 +1,27 @@
 import React from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
-import Hero from './components/Hero'
-import CollectionShowcase from './components/CollectionShowcase'
 import Footer from './components/Footer'
+import Home from './pages/Home'
+import ContactUs from './pages/ContactUs'
+import ShippingReturns from './pages/ShippingReturns'
+import FAQs from './pages/FAQs'
+import CareGuide from './pages/CareGuide'
 import './index.css'
 
 function App() {
   return (
-    <>
+    <Router>
       <Navbar />
-      <Hero />
-      <CollectionShowcase />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/contact" element={<ContactUs />} />
+        <Route path="/shipping" element={<ShippingReturns />} />
+        <Route path="/faqs" element={<FAQs />} />
+        <Route path="/care" element={<CareGuide />} />
+      </Routes>
       <Footer />
-    </>
+    </Router>
   )
 }
 
