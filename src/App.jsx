@@ -6,6 +6,7 @@ import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import ScrollToTop from './components/ScrollToTop'
 import CookieConsent from './components/CookieConsent'
+import { ThemeProvider } from './context/ThemeContext'
 
 // Public pages
 import Home from './pages/Home'
@@ -53,9 +54,9 @@ function App() {
           <ScrollToTop />
           <Routes>
             {/* ── Admin (no navbar/footer) ── */}
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-            <Route path="/admin/add-product" element={<AdminRoute><AddProduct /></AdminRoute>} />
+            <Route path="/admin/login" element={<ThemeProvider><AdminLogin /></ThemeProvider>} />
+            <Route path="/admin" element={<AdminRoute><ThemeProvider><AdminDashboard /></ThemeProvider></AdminRoute>} />
+            <Route path="/admin/add-product" element={<AdminRoute><ThemeProvider><AddProduct /></ThemeProvider></AdminRoute>} />
 
             {/* ── Public pages ── */}
             <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />

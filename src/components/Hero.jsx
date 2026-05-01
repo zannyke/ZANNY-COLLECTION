@@ -44,9 +44,9 @@ export default function Hero() {
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 1, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          style={{ fontSize: 'clamp(3rem, 10vw, 7rem)', fontWeight: 900, letterSpacing: '-2px', lineHeight: 0.9, marginBottom: '1.5rem', textShadow: '0 4px 12px rgba(0,0,0,0.3)' }}
+          style={{ fontSize: 'clamp(3rem, 12vw, 8rem)', fontWeight: 900, letterSpacing: '8px', marginBottom: '1.5rem', textShadow: '0 4px 12px rgba(0,0,0,0.3)' }}
         >
-          YOUTH <br />QUAKE
+          ZANNY
         </motion.h1>
         <motion.p
           initial={{ y: 30, opacity: 0 }}

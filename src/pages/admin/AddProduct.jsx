@@ -8,6 +8,7 @@ const BADGES = ['', 'NEW', 'HOT', 'SALE'];
 
 export default function AddProduct() {
   const { addProduct } = useProducts();
+  const { t, resolvedTheme } = useTheme();
   const navigate = useNavigate();
   const [form, setForm] = useState({
     name: '', category: 'tops-tees', price: '', description: '',
@@ -49,35 +50,35 @@ export default function AddProduct() {
   };
 
   if (submitted) return (
-    <div style={{ minHeight: '100vh', background: '#0e0e0e', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexDirection: 'column', gap: '1rem' }}>
+    <div style={{ minHeight: '100vh', background: t.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: t.text, flexDirection: 'column', gap: '1rem' }}>
       <div style={{ fontSize: '3rem' }}>✓</div>
       <p style={{ fontFamily: 'var(--font-heading)', fontSize: '1.4rem', letterSpacing: '2px' }}>Product Added!</p>
-      <p style={{ color: '#555', fontSize: '0.85rem' }}>Redirecting to dashboard...</p>
+      <p style={{ color: t.textMuted, fontSize: '0.85rem' }}>Redirecting to dashboard...</p>
     </div>
   );
 
   const inputStyle = (field) => ({
-    width: '100%', padding: '0.85rem 1rem', background: '#111',
-    border: `1px solid ${errors[field] ? '#c0392b' : '#2a2a2a'}`,
-    color: '#fff', outline: 'none', fontSize: '0.9rem',
+    width: '100%', padding: '0.85rem 1rem', background: t.input,
+    border: `1px solid ${errors[field] ? '#c0392b' : t.border}`,
+    color: t.text, outline: 'none', fontSize: '0.9rem',
     fontFamily: 'var(--font-body)', boxSizing: 'border-box',
     transition: 'border-color 0.2s',
   });
 
   const labelStyle = {
-    display: 'block', color: '#666', fontSize: '0.7rem',
+    display: 'block', color: t.textMuted, fontSize: '0.7rem',
     letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '0.5rem',
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0e0e0e', color: '#fff', fontFamily: 'var(--font-body)' }}>
+    <div style={{ minHeight: '100vh', background: t.bg, color: t.text, fontFamily: 'var(--font-body)', transition: 'background 0.3s' }}>
       {/* Header bar */}
-      <div style={{ background: '#111', borderBottom: '1px solid #1e1e1e', padding: '1rem 2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10 }}>
+      <div style={{ background: t.sidebar, borderBottom: `1px solid ${t.border}`, padding: '1rem 2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <Link to="/admin" style={{ color: '#555', fontSize: '0.8rem', textDecoration: 'none', letterSpacing: '0.5px' }}>← Dashboard</Link>
+          <Link to="/admin" style={{ color: t.textMuted, fontSize: '0.8rem', textDecoration: 'none', letterSpacing: '0.5px' }}>← Dashboard</Link>
           <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', letterSpacing: '2px' }}>Add New Product</h1>
         </div>
-        <Link to="/" style={{ color: '#555', fontSize: '0.75rem', textDecoration: 'none' }}>View Store ↗</Link>
+        <Link to="/" style={{ color: t.textMuted, fontSize: '0.75rem', textDecoration: 'none' }}>View Store ↗</Link>
       </div>
 
       <div style={{ maxWidth: '800px', margin: '0 auto', padding: '3rem 2rem' }}>
@@ -97,7 +98,7 @@ export default function AddProduct() {
                 onChange={e => set('category', e.target.value)}
                 style={{ ...inputStyle(), appearance: 'none' }}
               >
-                {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+                {CATEGORIES.map(c => <option key={c.id} value={c.id} style={{ background: t.surface, color: t.text }}>{c.label}</option>)}
               </select>
             </div>
           </div>
@@ -130,7 +131,7 @@ export default function AddProduct() {
             <div>
               <label style={labelStyle}>Badge</label>
               <select value={form.badge} onChange={e => set('badge', e.target.value)} style={{ ...inputStyle(), appearance: 'none' }}>
-                {BADGES.map(b => <option key={b} value={b}>{b || '(none)'}</option>)}
+                {BADGES.map(b => <option key={b} value={b} style={{ background: t.surface, color: t.text }}>{b || '(none)'}</option>)}
               </select>
             </div>
           </div>
@@ -142,9 +143,9 @@ export default function AddProduct() {
               {SIZES.map(s => (
                 <button key={s} type="button" onClick={() => toggleSize(s)} style={{
                   width: '44px', height: '44px', fontSize: '0.75rem', fontWeight: 600,
-                  border: form.sizes.includes(s) ? '1.5px solid #fff' : '1px solid #2a2a2a',
-                  background: form.sizes.includes(s) ? '#fff' : 'transparent',
-                  color: form.sizes.includes(s) ? '#000' : '#555',
+                  border: form.sizes.includes(s) ? `1.5px solid ${t.text}` : `1px solid ${t.border}`,
+                  background: form.sizes.includes(s) ? t.text : 'transparent',
+                  color: form.sizes.includes(s) ? t.bg : t.textMuted,
                   cursor: 'pointer', letterSpacing: '0.5px', transition: 'all 0.2s',
                 }}>{s}</button>
               ))}
@@ -155,22 +156,22 @@ export default function AddProduct() {
           <div>
             <label style={labelStyle}>Image URL (optional)</label>
             <input style={inputStyle('image')} value={form.image} onChange={e => set('image', e.target.value)} placeholder="/collection1.png  or full URL" />
-            <p style={{ color: '#444', fontSize: '0.72rem', marginTop: '0.4rem' }}>Leave blank to use default image. In future you can upload directly.</p>
+            <p style={{ color: t.textMuted, fontSize: '0.72rem', marginTop: '0.4rem', opacity: 0.6 }}>Leave blank to use default image. In future you can upload directly.</p>
           </div>
 
           {/* Preview strip */}
-          <div style={{ background: '#111', border: '1px solid #1e1e1e', padding: '1.25rem', display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
-            <img src={form.image || '/collection1.png'} alt="preview" style={{ width: '60px', height: '75px', objectFit: 'cover', background: '#1e1e1e' }} />
+          <div style={{ background: t.input, border: `1px solid ${t.border}`, padding: '1.25rem', display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
+            <img src={form.image || '/collection1.png'} alt="preview" style={{ width: '60px', height: '75px', objectFit: 'cover', background: t.surface }} />
             <div>
-              <p style={{ color: '#888', fontSize: '0.7rem', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '0.2rem' }}>
+              <p style={{ color: t.textMuted, fontSize: '0.7rem', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '0.2rem' }}>
                 {CATEGORIES.find(c => c.id === form.category)?.label}
               </p>
-              <p style={{ fontFamily: 'var(--font-heading)', fontSize: '1rem' }}>{form.name || 'Product Name'}</p>
-              <p style={{ color: '#d4af37', fontSize: '0.85rem', marginTop: '0.2rem' }}>
+              <p style={{ fontFamily: 'var(--font-heading)', fontSize: '1rem', color: t.text }}>{form.name || 'Product Name'}</p>
+              <p style={{ color: resolvedTheme === 'dark' ? '#00ff9d' : '#00b894', fontSize: '0.85rem', marginTop: '0.2rem', fontWeight: 600 }}>
                 {form.price ? `KSh ${Number(form.price).toLocaleString()}` : 'KSh —'}
               </p>
             </div>
-            {form.badge && <span style={{ marginLeft: 'auto', background: '#1e1e1e', color: '#aaa', padding: '0.2rem 0.6rem', fontSize: '0.65rem', letterSpacing: '1px' }}>{form.badge}</span>}
+            {form.badge && <span style={{ marginLeft: 'auto', background: t.border, color: t.textMuted, padding: '0.2rem 0.6rem', fontSize: '0.65rem', letterSpacing: '1px' }}>{form.badge}</span>}
           </div>
 
           {/* Submit */}
@@ -178,7 +179,7 @@ export default function AddProduct() {
             whileTap={{ scale: 0.97 }}
             type="submit"
             style={{
-              padding: '1rem', background: '#fff', color: '#000',
+              padding: '1rem', background: t.text, color: t.bg,
               border: 'none', cursor: 'pointer', fontSize: '0.85rem',
               fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase',
               fontFamily: 'var(--font-body)',
