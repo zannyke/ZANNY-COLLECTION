@@ -1,5 +1,5 @@
 import React from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { CartProvider } from './context/CartContext'
 import { ProductProvider } from './context/ProductContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
@@ -85,7 +85,7 @@ function App() {
               <Route path="/register" element={<PublicLayout><CustomerRegister /></PublicLayout>} />
               
               {/* Protected Order Flow */}
-              <Route path="/cart" element={<UserRoute><PublicLayout><CartPage /></PublicLayout></UserRoute>} />
+              <Route path="/cart" element={<PublicLayout><CartPage /></PublicLayout>} />
               
               <Route path="/collections/:categoryId" element={<PublicLayout><CategoryPage /></PublicLayout>} />
               <Route path="/product/:productId" element={<PublicLayout><ProductDetailPage /></PublicLayout>} />

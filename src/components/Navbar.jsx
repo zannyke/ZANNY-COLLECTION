@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useCart, CATEGORIES, PRODUCTS } from '../context/CartContext';
+import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useProducts, CATEGORIES } from '../context/ProductContext';
 
 /* ── Zanny custom SVG icons ────────────────────────────────────── */
 const IconGrid = ({ color }) => (
@@ -46,10 +47,11 @@ export default function Navbar() {
   const shouldBeSolid = !isHomePage || isScrolled;
   const iconColor = shouldBeSolid ? '#1a1a1a' : '#fff';
   const { cartCount } = useCart();
+  const { products } = useProducts();
   const navigate = useNavigate();
 
   const searchResults = searchQuery.trim().length > 1
-    ? PRODUCTS.filter(p =>
+    ? products.filter(p =>
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         CATEGORIES.find(c => c.id === p.category)?.label.toLowerCase().includes(searchQuery.toLowerCase())
       ).slice(0, 6)
@@ -218,7 +220,7 @@ export default function Navbar() {
             </motion.span>
             {/* Diamond badge — unique to Zanny */}
             <AnimatePresence>
-              {cartCount >= 0 && (
+              {cartCount > 0 && (
                 <motion.span
                   key={cartCount}
                   initial={{ scale: 0.6 }} animate={{ scale: 1 }} exit={{ scale: 0.6 }}

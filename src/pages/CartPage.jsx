@@ -1,11 +1,22 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import PageHeader from '../components/PageHeader';
 
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQty, clearCart, cartTotal } = useCart();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  const handleCheckout = () => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: { pathname: '/cart' } } });
+    } else {
+      alert("Checkout system is being integrated. You will be able to complete your purchase soon!");
+    }
+  };
 
   if (cartItems.length === 0) {
     return (
@@ -140,6 +151,7 @@ export default function CartPage() {
 
             <motion.button
               whileTap={{ scale: 0.97 }}
+              onClick={handleCheckout}
               style={{
                 width: '100%', padding: '1rem',
                 background: '#1a1a1a', color: '#fff',
