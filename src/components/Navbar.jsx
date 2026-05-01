@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Search, Menu, X } from 'lucide-react';
+import { ShoppingBag, Search, Menu, X, Heart, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -37,16 +37,15 @@ export default function Navbar() {
         transition: 'all 0.3s ease',
       }}
     >
-      <div style={{ display: 'flex', gap: '2rem', flex: 1 }} className="nav-links">
-        {['Collections', 'Discover', 'World of Zanny'].map((item) => (
-          <a
-            key={item}
-            href={`#${item.toLowerCase().replace(/ /g, '-')}`}
-            style={{ fontSize: '0.875rem', fontWeight: 500, letterSpacing: '1px', textTransform: 'uppercase' }}
-          >
-            {item}
-          </a>
-        ))}
+      <div style={{ display: 'flex', gap: '2rem', flex: 1, alignItems: 'center' }}>
+        <button onClick={() => setMobileMenuOpen(true)} className="nav-icon-btn">
+          <Menu size={20} strokeWidth={1.5} />
+          <span className="nav-text">Menu</span>
+        </button>
+        <button className="nav-icon-btn search-btn">
+          <Search size={20} strokeWidth={1.5} />
+          <span className="nav-text">Search</span>
+        </button>
       </div>
 
       <div style={{ flex: 1, textAlign: 'center' }}>
@@ -56,9 +55,32 @@ export default function Navbar() {
       </div>
 
       <div style={{ display: 'flex', gap: '1.5rem', flex: 1, justifyContent: 'flex-end', alignItems: 'center' }}>
-        <Search size={20} style={{ cursor: 'pointer' }} />
-        <ShoppingBag size={20} style={{ cursor: 'pointer' }} />
-        <Menu size={20} style={{ cursor: 'pointer', display: 'none' }} className="mobile-menu-btn" onClick={() => setMobileMenuOpen(true)} />
+        <Link to="/contact" className="nav-text contact-link" style={{ marginRight: '1rem' }}>Contact Us</Link>
+        <button className="nav-icon-btn">
+          <Heart size={20} strokeWidth={1.5} />
+        </button>
+        <button className="nav-icon-btn user-btn">
+          <User size={20} strokeWidth={1.5} />
+        </button>
+        <button className="nav-icon-btn" style={{ position: 'relative' }}>
+          <ShoppingBag size={20} strokeWidth={1.5} />
+          <span style={{
+            position: 'absolute',
+            top: '-5px',
+            right: '-8px',
+            background: isScrolled ? '#000' : '#fff',
+            color: isScrolled ? '#fff' : '#000',
+            fontSize: '0.6rem',
+            fontWeight: 'bold',
+            width: '16px',
+            height: '16px',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'all 0.3s ease'
+          }}>0</span>
+        </button>
       </div>
 
       {/* Basic Mobile Menu Implementation */}
@@ -98,16 +120,45 @@ export default function Navbar() {
       </AnimatePresence>
       <style>{`
         .navbar-container {
-          padding: 1.5rem 2rem;
+          padding: 1rem 2rem;
         }
         .navbar-logo {
-          font-size: 2rem;
+          font-size: 1.8rem;
+          letter-spacing: 2px !important;
+        }
+        .nav-icon-btn {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          background: none;
+          border: none;
+          color: inherit;
+          cursor: pointer;
+          font-family: inherit;
+          padding: 0;
+        }
+        .nav-icon-btn:hover {
+          opacity: 0.7;
+        }
+        .nav-text {
+          font-size: 0.8rem;
+          font-weight: 500;
+          letter-spacing: 1px;
+        }
+        .contact-link {
+          text-decoration: none;
+        }
+        .contact-link:hover {
+          text-decoration: underline;
+        }
+        @media (max-width: 900px) {
+          .nav-text { display: none; }
+          .search-btn { display: none; }
+          .user-btn { display: none; }
         }
         @media (max-width: 768px) {
           .navbar-container { padding: 1rem !important; }
-          .navbar-logo { font-size: 1.5rem !important; }
-          .nav-links { display: none !important; }
-          .mobile-menu-btn { display: block !important; }
+          .navbar-logo { font-size: 1.3rem !important; }
         }
       `}</style>
     </motion.nav>
