@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingBag, Search, Menu, X, Heart, User } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
+  
+  const isHomePage = location.pathname === '/';
+  const shouldBeSolid = !isHomePage || isScrolled;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -30,10 +34,10 @@ export default function Navbar() {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        background: isScrolled ? 'rgba(255, 255, 255, 0.95)' : 'transparent',
-        backdropFilter: isScrolled ? 'blur(10px)' : 'none',
-        color: isScrolled ? '#000' : '#fff',
-        borderBottom: isScrolled ? '1px solid rgba(0,0,0,0.05)' : 'none',
+        background: shouldBeSolid ? 'rgba(255, 255, 255, 0.95)' : 'transparent',
+        backdropFilter: shouldBeSolid ? 'blur(10px)' : 'none',
+        color: shouldBeSolid ? '#000' : '#fff',
+        borderBottom: shouldBeSolid ? '1px solid rgba(0,0,0,0.05)' : 'none',
         transition: 'all 0.3s ease',
       }}
     >
@@ -68,8 +72,8 @@ export default function Navbar() {
             position: 'absolute',
             top: '-5px',
             right: '-8px',
-            background: isScrolled ? '#000' : '#fff',
-            color: isScrolled ? '#fff' : '#000',
+            background: shouldBeSolid ? '#000' : '#fff',
+            color: shouldBeSolid ? '#fff' : '#000',
             fontSize: '0.6rem',
             fontWeight: 'bold',
             width: '16px',
