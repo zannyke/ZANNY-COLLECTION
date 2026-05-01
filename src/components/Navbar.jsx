@@ -53,10 +53,15 @@ export default function Navbar() {
       ).slice(0, 6)
     : [];
 
-  const handleSearchSelect = () => {
+  const handleSearchSelect = (productId) => {
     setSearchOpen(false);
     setSearchQuery('');
-    navigate('/#collections');
+    if (productId) {
+      navigate(`/product/${productId}`);
+    } else {
+      // If it's a category button (no ID passed)
+      navigate('/#collections');
+    }
   };
 
   useEffect(() => {
@@ -172,29 +177,31 @@ export default function Navbar() {
             CONTACT
           </Link>
 
-          {/* Monogram avatar (unique to Zanny) */}
-          <motion.button
-            whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.92 }}
-            className="user-btn"
-            style={{
-              width: '32px', height: '32px',
-              borderRadius: '50%',
-              border: `1.5px solid ${iconColor}`,
-              background: 'transparent',
-              color: iconColor,
-              cursor: 'pointer',
-              fontFamily: 'var(--font-heading)',
-              fontWeight: 700,
-              fontSize: '0.9rem',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              letterSpacing: 0,
-              transition: 'all 0.35s',
-              flexShrink: 0,
-            }}
-          >
-            Z
-          </motion.button>
+          {/* Monogram avatar (unique to Zanny) - Linked to Admin */}
+          <Link to="/admin" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <motion.button
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.92 }}
+              className="user-btn"
+              style={{
+                width: '32px', height: '32px',
+                borderRadius: '50%',
+                border: `1.5px solid ${iconColor}`,
+                background: 'transparent',
+                color: iconColor,
+                cursor: 'pointer',
+                fontFamily: 'var(--font-heading)',
+                fontWeight: 700,
+                fontSize: '0.9rem',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                letterSpacing: 0,
+                transition: 'all 0.35s',
+                flexShrink: 0,
+              }}
+            >
+              Z
+            </motion.button>
+          </Link>
 
           {/* Cart link with live diamond badge */}
           <Link
@@ -324,7 +331,7 @@ export default function Navbar() {
                 {searchResults.map(product => (
                   <button
                     key={product.id}
-                    onClick={handleSearchSelect}
+                    onClick={() => handleSearchSelect(product.id)}
                     style={{
                       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                       padding: '0.9rem 0', borderBottom: '1px solid #222',

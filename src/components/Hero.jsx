@@ -44,18 +44,18 @@ export default function Hero() {
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 1, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          style={{ fontSize: 'clamp(3rem, 8vw, 6rem)', fontWeight: 800, letterSpacing: '8px', marginBottom: '1rem', textShadow: '0 4px 12px rgba(0,0,0,0.3)' }}
+          style={{ fontSize: 'clamp(3rem, 10vw, 7rem)', fontWeight: 900, letterSpacing: '-2px', lineHeight: 0.9, marginBottom: '1.5rem', textShadow: '0 4px 12px rgba(0,0,0,0.3)' }}
         >
-          ZANNY
+          YOUTH <br />QUAKE
         </motion.h1>
         <motion.p
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 1, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="hero-subtitle"
-          style={{ textTransform: 'uppercase', fontWeight: 300 }}
+          style={{ textTransform: 'uppercase', fontWeight: 500, letterSpacing: '4px' }}
         >
-          The New Standard of Luxury
+          Premium products for those on the way up.
         </motion.p>
         
         <motion.div

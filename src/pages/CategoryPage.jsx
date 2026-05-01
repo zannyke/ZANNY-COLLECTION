@@ -1,0 +1,233 @@
+import React, { useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useProducts, CATEGORIES } from '../context/ProductContext';
+import { useCart } from '../context/CartContext';
+import PageHeader from '../components/PageHeader';
+
+const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+const SORT_OPTIONS = [
+  { value: 'default',     label: 'Featured' },
+  { value: 'price-asc',  label: 'Price: Low → High' },
+  { value: 'price-desc', label: 'Price: High → Low' },
+  { value: 'newest',     label: 'Newest First' },
+];
+
+function ProductCard({ product }) {
+  const { addToCart } = useCart();
+  const [selectedSize, setSelectedSize] = useState('M');
+  const [added, setAdded] = useState(false);
+
+  const handleAdd = () => {
+    addToCart(product, selectedSize);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 1800);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-40px' }}
+      transition={{ duration: 0.55 }}
+      style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}
+    >
+      {/* Image */}
+      <Link to={`/product/${product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+        <div style={{ position: 'relative', overflow: 'hidden', aspectRatio: '3/4', background: '#f4f4f4' }}>
+          <motion.img
+            whileHover={{ scale: 1.06 }}
+            transition={{ duration: 0.5 }}
+            src={product.image}
+            alt={product.name}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          />
+          {product.badge && (
+            <span style={{
+              position: 'absolute', top: '0.75rem', left: '0.75rem',
+              background: product.badge === 'SALE' ? '#c0392b' : '#1a1a1a',
+              color: '#fff', fontSize: '0.6rem', fontWeight: 700,
+              padding: '0.2rem 0.55rem', letterSpacing: '1.5px',
+            }}>
+              {product.badge}
+            </span>
+          )}
+          {product.stock < 10 && (
+            <span style={{
+              position: 'absolute', bottom: '0.75rem', left: '0.75rem',
+              background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: '0.6rem',
+              padding: '0.2rem 0.55rem', letterSpacing: '1px',
+            }}>
+              Only {product.stock} left
+            </span>
+          )}
+        </div>
+      </Link>
+
+      {/* Info */}
+      <Link to={`/product/${product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+        <div>
+          <p style={{ fontFamily: 'var(--font-heading)', fontSize: '1rem', marginBottom: '0.25rem' }}>{product.name}</p>
+          <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '0.3rem', lineHeight: 1.5 }}>{product.description}</p>
+          <p style={{ fontSize: '0.9rem', fontWeight: 600 }}>KSh {product.price.toLocaleString()}</p>
+        </div>
+      </Link>
+
+      {/* Size selector */}
+      <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+        {SIZES.map(s => (
+          <button key={s} onClick={() => setSelectedSize(s)} style={{
+            width: '30px', height: '30px', fontSize: '0.62rem', fontWeight: 600,
+            border: selectedSize === s ? '1.5px solid #1a1a1a' : '1px solid #ddd',
+            background: selectedSize === s ? '#1a1a1a' : 'transparent',
+            color: selectedSize === s ? '#fff' : '#1a1a1a',
+            cursor: 'pointer', transition: 'all 0.2s',
+          }}>{s}</button>
+        ))}
+      </div>
+
+      {/* Add to cart */}
+      <motion.button whileTap={{ scale: 0.96 }} onClick={handleAdd} style={{
+        padding: '0.75rem',
+        background: added ? '#2d6a4f' : '#1a1a1a',
+        color: '#fff', border: 'none', cursor: 'pointer',
+        fontSize: '0.72rem', fontWeight: 600, letterSpacing: '1.5px',
+        textTransform: 'uppercase', transition: 'background 0.3s',
+        fontFamily: 'var(--font-body)',
+      }}>
+        {added ? '✓ Added to Cart' : 'Add to Cart'}
+      </motion.button>
+    </motion.div>
+  );
+}
+
+export default function CategoryPage() {
+  const { categoryId } = useParams();
+  const { getByCategory } = useProducts();
+  const [sortBy, setSortBy] = useState('default');
+  const [search, setSearch] = useState('');
+
+  const cat = CATEGORIES.find(c => c.id === categoryId);
+  const rawProducts = getByCategory(categoryId);
+
+  // Search filter
+  const searched = rawProducts.filter(p =>
+    p.name.toLowerCase().includes(search.toLowerCase()) ||
+    p.description.toLowerCase().includes(search.toLowerCase())
+  );
+
+  // Sort
+  const sorted = [...searched].sort((a, b) => {
+    if (sortBy === 'price-asc')  return a.price - b.price;
+    if (sortBy === 'price-desc') return b.price - a.price;
+    if (sortBy === 'newest')     return b.id - a.id;
+    return 0;
+  });
+
+  if (!cat) return (
+    <div style={{ paddingTop: '120px', textAlign: 'center', minHeight: '60vh' }}>
+      <h2>Category not found</h2>
+      <Link to="/#collections">← Back to Collections</Link>
+    </div>
+  );
+
+  return (
+    <div style={{ minHeight: '80vh', background: '#fff', color: '#1a1a1a' }}>
+      <PageHeader title={cat.label} subtitle={cat.description} />
+
+      <div className="container" style={{ padding: '3rem 2rem' }}>
+        {/* Breadcrumb */}
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '2rem', fontSize: '0.78rem', color: '#aaa' }}>
+          <Link to="/" style={{ color: '#aaa', textDecoration: 'none' }}>Home</Link>
+          <span>/</span>
+          <Link to="/#collections" style={{ color: '#aaa', textDecoration: 'none' }}>Collections</Link>
+          <span>/</span>
+          <span style={{ color: '#1a1a1a' }}>{cat.label}</span>
+        </div>
+
+        {/* Toolbar */}
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2.5rem', flexWrap: 'wrap' }}>
+          {/* Search */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid #ddd', padding: '0.5rem 1rem', flex: '1', maxWidth: '320px' }}>
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="#aaa" strokeWidth="1.5">
+              <circle cx="8.5" cy="8.5" r="5" /><path d="M13 13L18 18" strokeLinecap="round" />
+            </svg>
+            <input
+              type="text" value={search} onChange={e => setSearch(e.target.value)}
+              placeholder={`Search ${cat.label}...`}
+              style={{ border: 'none', outline: 'none', fontSize: '0.85rem', fontFamily: 'var(--font-body)', width: '100%', background: 'transparent' }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <p style={{ fontSize: '0.8rem', color: '#aaa' }}>{sorted.length} {sorted.length === 1 ? 'product' : 'products'}</p>
+            <select
+              value={sortBy}
+              onChange={e => setSortBy(e.target.value)}
+              style={{
+                border: '1px solid #ddd', padding: '0.5rem 0.85rem',
+                fontSize: '0.8rem', outline: 'none', fontFamily: 'var(--font-body)',
+                background: '#fff', cursor: 'pointer',
+              }}
+            >
+              {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {/* Category sidebar nav + products grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: '3rem', alignItems: 'start' }}>
+          {/* Other categories */}
+          <div style={{ position: 'sticky', top: '90px' }}>
+            <p style={{ fontSize: '0.7rem', letterSpacing: '2px', textTransform: 'uppercase', color: '#aaa', marginBottom: '1rem' }}>Categories</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+              {CATEGORIES.map(c => (
+                <Link
+                  key={c.id}
+                  to={`/collections/${c.id}`}
+                  style={{
+                    padding: '0.65rem 0',
+                    borderBottom: '1px solid #f0f0f0',
+                    fontSize: '0.85rem',
+                    color: c.id === categoryId ? '#1a1a1a' : '#888',
+                    fontWeight: c.id === categoryId ? 700 : 400,
+                    textDecoration: 'none',
+                    letterSpacing: '0.3px',
+                    transition: 'color 0.2s',
+                  }}
+                >
+                  {c.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Products */}
+          <AnimatePresence mode="wait">
+            {sorted.length === 0 ? (
+              <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ textAlign: 'center', padding: '5rem 0', color: '#aaa' }}>
+                <p style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>No products found</p>
+                <p style={{ fontSize: '0.85rem' }}>{search ? 'Try a different search term.' : 'Check back soon — new drops coming.'}</p>
+              </motion.div>
+            ) : (
+              <motion.div
+                key={sortBy + search}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '2.5rem 2rem' }}
+              >
+                {sorted.map(p => <ProductCard key={p.id} product={p} />)}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      <style>{`
+        @media (max-width: 768px) {
+          div[style*='grid-template-columns: 180px'] { grid-template-columns: 1fr !important; }
+          div[style*='grid-template-columns: 180px'] > div:first-child { display: none; }
+        }
+      `}</style>
+    </div>
+  );
+}

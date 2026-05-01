@@ -8,7 +8,7 @@ export default function Footer() {
         <div>
           <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.5rem', marginBottom: '1.5rem', letterSpacing: '2px' }}>ZANNY</h4>
           <p style={{ color: '#999', fontSize: '0.875rem' }}>
-            Elevating everyday luxury. Founded in 2026, Zanny Collection redefines modern elegance with a commitment to uncompromising quality.
+            Premium for the hustle. Founded in 2026, Zanny Collection provides high-end design for the dreamers, the doers, and the ones on the way up.
           </p>
         </div>
         
@@ -32,18 +32,25 @@ export default function Footer() {
         </div>
 
         <div>
-          <h5 style={{ textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '1.5rem', fontSize: '0.875rem' }}>Newsletter</h5>
-          <p style={{ color: '#999', fontSize: '0.875rem', marginBottom: '1rem' }}>Subscribe to receive updates, access to exclusive deals, and more.</p>
-          <form style={{ display: 'flex', borderBottom: '1px solid #333', paddingBottom: '0.5rem' }}>
-            <input 
-              type="email" 
-              placeholder="Enter your email address" 
-              style={{ background: 'transparent', border: 'none', color: '#fff', flex: 1, outline: 'none', fontSize: '0.875rem' }}
-            />
-            <button type="submit" style={{ background: 'transparent', border: 'none', color: '#fff', textTransform: 'uppercase', fontSize: '0.75rem', cursor: 'pointer', letterSpacing: '1px' }}>
-              Subscribe
-            </button>
-          </form>
+          <h5 style={{ textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '1.5rem', fontSize: '0.875rem' }}>Management</h5>
+          <Link to="/admin" style={{
+            display: 'inline-block',
+            padding: '0.75rem 1.5rem',
+            background: 'transparent',
+            color: '#fff',
+            border: '1px solid #fff',
+            textDecoration: 'none',
+            fontSize: '0.75rem',
+            fontWeight: 700,
+            letterSpacing: '2px',
+            textTransform: 'uppercase',
+            transition: 'all 0.3s'
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#000'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#fff'; }}
+          >
+            Admin Console
+          </Link>
         </div>
       </div>
 
