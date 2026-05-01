@@ -51,16 +51,22 @@ export default function Navbar() {
   const navigate = useNavigate();
 
   const searchResults = searchQuery.trim().length > 1
-    ? products.filter(p =>
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        CATEGORIES.find(c => c.id === p.category)?.label.toLowerCase().includes(searchQuery.toLowerCase())
-      ).slice(0, 6)
+    ? [
+        ...products.filter(p =>
+          p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          CATEGORIES.find(c => c.id === p.category)?.label.toLowerCase().includes(searchQuery.toLowerCase())
+        ),
+        // Secret admin entry
+        ...(searchQuery.toLowerCase() === 'zanny-admin' ? [{ id: 'admin-portal', name: 'Admin Console', category: 'System' }] : [])
+      ].slice(0, 6)
     : [];
 
   const handleSearchSelect = (productId) => {
     setSearchOpen(false);
     setSearchQuery('');
-    if (productId) {
+    if (productId === 'admin-portal') {
+      navigate('/admin');
+    } else if (productId) {
       navigate(`/product/${productId}`);
     } else {
       // If it's a category button (no ID passed)
@@ -178,31 +184,29 @@ export default function Navbar() {
             {isAuthenticated ? user.firstName.toUpperCase() : "SIGN IN"}
           </Link>
 
-          {/* Monogram avatar (unique to Zanny) - Linked to Admin */}
-          <Link to="/admin" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <motion.button
-              whileHover={{ scale: 1.08 }}
-              whileTap={{ scale: 0.92 }}
-              className="user-btn"
-              style={{
-                width: '32px', height: '32px',
-                borderRadius: '50%',
-                border: `1.5px solid ${iconColor}`,
-                background: 'transparent',
-                color: iconColor,
-                cursor: 'pointer',
-                fontFamily: 'var(--font-heading)',
-                fontWeight: 700,
-                fontSize: '0.9rem',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                letterSpacing: 0,
-                transition: 'all 0.35s',
-                flexShrink: 0,
-              }}
-            >
-              {isAuthenticated ? user.firstName[0] : "Z"}
-            </motion.button>
-          </Link>
+          {/* Monogram avatar (unique to Zanny) */}
+          <motion.button
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.92 }}
+            className="user-btn"
+            style={{
+              width: '32px', height: '32px',
+              borderRadius: '50%',
+              border: `1.5px solid ${iconColor}`,
+              background: 'transparent',
+              color: iconColor,
+              cursor: 'default',
+              fontFamily: 'var(--font-heading)',
+              fontWeight: 700,
+              fontSize: '0.9rem',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              letterSpacing: 0,
+              transition: 'all 0.35s',
+              flexShrink: 0,
+            }}
+          >
+            {isAuthenticated ? user.firstName[0] : "Z"}
+          </motion.button>
 
           {/* Cart link with live diamond badge */}
           <Link
