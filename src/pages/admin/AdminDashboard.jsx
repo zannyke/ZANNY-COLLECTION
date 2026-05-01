@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 import { useProducts, CATEGORIES } from '../../context/ProductContext';
 import { useTheme } from '../../context/ThemeContext';
-import { Sun, Moon, Monitor } from 'lucide-react';
+import { Sun, Moon, Monitor, TrendingUp, BarChart3, Activity } from 'lucide-react';
 
 // ── Simulated Analytics Data (unchanged) ─────────────────────────────
 const daily = Array.from({ length: 30 }, (_, i) => ({
