@@ -4,6 +4,7 @@ import { CartProvider } from './context/CartContext'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import ScrollToTop from './components/ScrollToTop'
+import CookieConsent from './components/CookieConsent'
 import Home from './pages/Home'
 import ContactUs from './pages/ContactUs'
 import ShippingReturns from './pages/ShippingReturns'
@@ -33,6 +34,7 @@ function App() {
           <Route path="/cart" element={<CartPage />} />
         </Routes>
         <Footer />
+        <CookieConsent />
       </Router>
     </CartProvider>
   )
