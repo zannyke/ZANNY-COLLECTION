@@ -3,7 +3,15 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProducts } from '../context/ProductContext';
 import { useCart } from '../context/CartContext';
-import { IconChevronRight, IconChevronLeft, IconPlus, IconMinus, IconShieldCheck, IconTruck, IconRefreshCcw } from 'lucide-react';
+import { 
+  ChevronRight as IconChevronRight, 
+  ChevronLeft as IconChevronLeft, 
+  Plus as IconPlus, 
+  Minus as IconMinus, 
+  ShieldCheck as IconShieldCheck, 
+  Truck as IconTruck, 
+  RefreshCcw as IconRefreshCcw 
+} from 'lucide-react';
 
 const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 
