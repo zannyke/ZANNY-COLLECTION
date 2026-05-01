@@ -30,28 +30,6 @@ export default function Footer() {
             <li><Link to="/cookie" className="footer-link">Cookie Policy</Link></li>
           </ul>
         </div>
-
-        <div>
-          <h5 style={{ textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '1.5rem', fontSize: '0.875rem' }}>Management</h5>
-          <Link to="/admin" style={{
-            display: 'inline-block',
-            padding: '0.75rem 1.5rem',
-            background: 'transparent',
-            color: '#fff',
-            border: '1px solid #fff',
-            textDecoration: 'none',
-            fontSize: '0.75rem',
-            fontWeight: 700,
-            letterSpacing: '2px',
-            textTransform: 'uppercase',
-            transition: 'all 0.3s'
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#000'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#fff'; }}
-          >
-            Admin Console
-          </Link>
-        </div>
       </div>
 
       <div style={{ borderTop: '1px solid #333', paddingTop: '2rem', textAlign: 'center', color: '#666', fontSize: '0.75rem' }}>
