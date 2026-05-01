@@ -70,6 +70,7 @@ export default function AdminDashboard() {
   const { products, deleteProduct, getBestSellers } = useProducts();
   const { theme, setTheme, t, resolvedTheme } = useTheme();
   const [period, setPeriod] = useState('daily');
+  const [chartType, setChartType] = useState('area');
   const bestSellers = getBestSellers();
 
   const totalVisitors = monthly.reduce((s, m) => s + m.Visitors, 0);
@@ -83,6 +84,61 @@ export default function AdminDashboard() {
 
   const chartColor = resolvedTheme === 'dark' ? '#ffffff' : '#1a1a1a';
   const accentColor = resolvedTheme === 'dark' ? '#00ff9d' : '#00b894';
+
+  const renderChart = () => {
+    const data = DATA[period];
+    const commonProps = { data, margin: { top: 5, right: 10, left: 0, bottom: 5 } };
+
+    if (chartType === 'bar') {
+      return (
+        <BarChart {...commonProps}>
+          <CartesianGrid strokeDasharray="3 3" stroke={t.border} vertical={false} />
+          <XAxis dataKey="date" tick={{ fill: t.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+          <YAxis tick={{ fill: t.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+          <Tooltip content={<CustomTooltip t={t} />} cursor={{ fill: t.surfaceHover }} />
+          <Legend wrapperStyle={{ color: t.textMuted, fontSize: '0.75rem' }} />
+          <Bar dataKey="Visitors" fill={chartColor} radius={[2, 2, 0, 0]} />
+          <Bar dataKey="PageViews" fill={accentColor} radius={[2, 2, 0, 0]} />
+        </BarChart>
+      );
+    }
+
+    if (chartType === 'line') {
+      return (
+        <LineChart {...commonProps}>
+          <CartesianGrid strokeDasharray="3 3" stroke={t.border} />
+          <XAxis dataKey="date" tick={{ fill: t.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+          <YAxis tick={{ fill: t.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+          <Tooltip content={<CustomTooltip t={t} />} />
+          <Legend wrapperStyle={{ color: t.textMuted, fontSize: '0.75rem' }} />
+          <Line type="monotone" dataKey="Visitors" stroke={chartColor} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+          <Line type="monotone" dataKey="PageViews" stroke={accentColor} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+        </LineChart>
+      );
+    }
+
+    return (
+      <AreaChart {...commonProps}>
+        <defs>
+          <linearGradient id="colorV" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor={chartColor} stopOpacity={0.15} />
+            <stop offset="95%" stopColor={chartColor} stopOpacity={0} />
+          </linearGradient>
+          <linearGradient id="colorP" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor={accentColor} stopOpacity={0.15} />
+            <stop offset="95%" stopColor={accentColor} stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid strokeDasharray="3 3" stroke={t.border} />
+        <XAxis dataKey="date" tick={{ fill: t.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+        <YAxis tick={{ fill: t.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+        <Tooltip content={<CustomTooltip t={t} />} />
+        <Legend wrapperStyle={{ color: t.textMuted, fontSize: '0.75rem' }} />
+        <Area type="monotone" dataKey="Visitors" stroke={chartColor} strokeWidth={1.5} fill="url(#colorV)" />
+        <Area type="monotone" dataKey="PageViews" stroke={accentColor} strokeWidth={1.5} fill="url(#colorP)" />
+      </AreaChart>
+    );
+  };
 
   return (
     <div style={{ minHeight: '100vh', background: t.bg, color: t.text, fontFamily: 'var(--font-body)', transition: 'background 0.3s, color 0.3s' }}>
