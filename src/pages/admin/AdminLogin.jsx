@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTheme } from '../../context/ThemeContext';
 
 // Simple hashed check — change this password as needed
 const ADMIN_PASSWORD = 'zanny@2026';

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useProducts, CATEGORIES } from '../../context/ProductContext';
+import { useTheme } from '../../context/ThemeContext';
 
 const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 const BADGES = ['', 'NEW', 'HOT', 'SALE'];
