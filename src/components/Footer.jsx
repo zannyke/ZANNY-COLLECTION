@@ -2,8 +2,8 @@ import React from 'react';
 
 export default function Footer() {
   return (
-    <footer style={{ backgroundColor: '#111', color: '#fff', padding: '6rem 0 2rem' }}>
-      <div className="container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '4rem', marginBottom: '4rem' }}>
+    <footer className="footer-container" style={{ backgroundColor: '#111', color: '#fff' }}>
+      <div className="container footer-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', marginBottom: '4rem' }}>
         <div>
           <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.5rem', marginBottom: '1.5rem', letterSpacing: '2px' }}>ZANNY</h4>
           <p style={{ color: '#999', fontSize: '0.875rem' }}>
@@ -50,7 +50,14 @@ export default function Footer() {
         &copy; {new Date().getFullYear()} Zanny Collection. All rights reserved.
       </div>
       <style>{`
+        .footer-container { padding: 6rem 0 2rem; }
+        .footer-grid { gap: 4rem; }
         .footer-link:hover { color: #fff; transition: color 0.3s; }
+        
+        @media (max-width: 768px) {
+          .footer-container { padding: 4rem 0 2rem; }
+          .footer-grid { gap: 2rem; }
+        }
       `}</style>
     </footer>
   );

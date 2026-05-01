@@ -20,7 +20,7 @@ const collections = [
 
 export default function CollectionShowcase() {
   return (
-    <section id="collections" style={{ padding: '8rem 0', backgroundColor: '#fff' }}>
+    <section id="collections" className="collection-section" style={{ backgroundColor: '#fff' }}>
       <div className="container">
         <motion.h2
           initial={{ opacity: 0, y: 30 }}
@@ -32,7 +32,7 @@ export default function CollectionShowcase() {
           Curated For The Bold
         </motion.h2>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8rem', marginTop: '4rem' }}>
+        <div className="collection-list" style={{ display: 'flex', flexDirection: 'column' }}>
           {collections.map((item, index) => (
             <div
               key={item.id}
@@ -65,12 +65,13 @@ export default function CollectionShowcase() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true, margin: '-100px' }}
                 transition={{ duration: 0.8, delay: 0.2 }}
-                style={{ flex: 1, padding: '2rem' }}
+                style={{ flex: 1 }}
+                className="collection-item-padding"
               >
                 <span style={{ textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.875rem', color: '#666' }}>
                   {item.subtitle}
                 </span>
-                <h3 style={{ fontSize: '3rem', margin: '1rem 0 2rem', fontFamily: 'var(--font-heading)' }}>
+                <h3 className="collection-title" style={{ fontFamily: 'var(--font-heading)' }}>
                   {item.title}
                 </h3>
                 <a
@@ -96,11 +97,19 @@ export default function CollectionShowcase() {
         </div>
       </div>
       <style>{`
+        .collection-section { padding: 8rem 0; }
+        .collection-list { gap: 8rem; margin-top: 4rem; }
+        .collection-item-padding { padding: 2rem; }
+        .collection-title { font-size: 3rem; margin: 1rem 0 2rem; }
         @media (max-width: 900px) {
+          .collection-section { padding: 4rem 0; }
+          .collection-list { gap: 4rem; margin-top: 2rem; }
           .collection-row {
             flex-direction: column !important;
             gap: 2rem !important;
           }
+          .collection-item-padding { padding: 1rem 0; text-align: center; }
+          .collection-title { font-size: 2rem; margin: 0.5rem 0 1.5rem; }
         }
       `}</style>
     </section>

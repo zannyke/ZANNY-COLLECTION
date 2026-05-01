@@ -77,3 +77,16 @@ ul {
 ::-webkit-scrollbar-thumb:hover {
   background: #000;
 }
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  :root {
+    --spacing-lg: 1rem;
+    --spacing-xl: 2.5rem;
+    --spacing-xxl: 4rem;
+  }
+  
+  .section-title {
+    font-size: 1.8rem;
+  }
+}

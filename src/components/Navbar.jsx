@@ -19,13 +19,13 @@ export default function Navbar() {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      className="navbar-container"
       style={{
         position: 'fixed',
         top: 0,
         left: 0,
         right: 0,
         zIndex: 50,
-        padding: '1.5rem 2rem',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -49,7 +49,7 @@ export default function Navbar() {
       </div>
 
       <div style={{ flex: 1, textAlign: 'center' }}>
-        <a href="#" style={{ fontFamily: 'var(--font-heading)', fontSize: '2rem', fontWeight: 800, letterSpacing: '4px' }}>
+        <a href="#" className="navbar-logo" style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, letterSpacing: '4px' }}>
           ZANNY
         </a>
       </div>
@@ -96,7 +96,15 @@ export default function Navbar() {
         )}
       </AnimatePresence>
       <style>{`
+        .navbar-container {
+          padding: 1.5rem 2rem;
+        }
+        .navbar-logo {
+          font-size: 2rem;
+        }
         @media (max-width: 768px) {
+          .navbar-container { padding: 1rem !important; }
+          .navbar-logo { font-size: 1.5rem !important; }
           .nav-links { display: none !important; }
           .mobile-menu-btn { display: block !important; }
         }

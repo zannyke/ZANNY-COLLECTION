@@ -52,7 +52,8 @@ export default function Hero() {
           initial={{ y: 30, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 1, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          style={{ fontSize: '1.2rem', letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 300 }}
+          className="hero-subtitle"
+          style={{ textTransform: 'uppercase', fontWeight: 300 }}
         >
           The New Standard of Luxury
         </motion.p>
@@ -64,15 +65,13 @@ export default function Hero() {
           style={{ marginTop: '3rem' }}
         >
           <a href="#collections" style={{
-            padding: '1rem 3rem',
             border: '1px solid #fff',
             textTransform: 'uppercase',
             letterSpacing: '2px',
-            fontSize: '0.875rem',
             transition: 'all 0.3s ease',
             backgroundColor: 'transparent',
             cursor: 'pointer'
-          }} className="btn-outline">
+          }} className="btn-outline hero-btn">
             Explore Collection
           </a>
         </motion.div>
@@ -93,9 +92,26 @@ export default function Hero() {
         </div>
       </motion.div>
       <style>{`
+        .hero-subtitle {
+          font-size: 1.2rem;
+          letter-spacing: 2px;
+        }
+        .hero-btn {
+          padding: 1rem 3rem;
+          font-size: 0.875rem;
+        }
         .btn-outline:hover {
           background-color: #fff !important;
           color: #000 !important;
+        }
+        @media (max-width: 768px) {
+          .hero-subtitle {
+            font-size: 0.9rem !important;
+            letter-spacing: 1px !important;
+          }
+          .hero-btn {
+            padding: 0.8rem 2rem !important;
+          }
         }
       `}</style>
     </section>
