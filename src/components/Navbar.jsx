@@ -50,27 +50,75 @@ export default function Navbar() {
   const { products } = useProducts();
   const navigate = useNavigate();
 
-  const searchResults = searchQuery.trim().length > 1
-    ? [
-        ...products.filter(p =>
-          p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          CATEGORIES.find(c => c.id === p.category)?.label.toLowerCase().includes(searchQuery.toLowerCase())
-        ),
-        // Secret admin entry
-        ...(searchQuery.toLowerCase() === 'zanny-admin' ? [{ id: 'admin-portal', name: 'Admin Console', category: 'System' }] : [])
-      ].slice(0, 6)
-    : [];
+  const PAGES = [
+    { id: 'collections', title: 'Collections', path: '/#collections' },
+    { id: 'discover', title: 'Discover', path: '/discover' },
+    { id: 'world-of-zanny', title: 'World of Zanny', path: '/world-of-zanny' },
+    { id: 'contact', title: 'Contact Us', path: '/contact' },
+    { id: 'shipping', title: 'Shipping & Returns', path: '/shipping' },
+    { id: 'faqs', title: 'FAQs', path: '/faqs' },
+    { id: 'care', title: 'Care Guide', path: '/care' },
+  ];
 
-  const handleSearchSelect = (productId) => {
+  const getSearchResults = () => {
+    const sq = searchQuery.toLowerCase().trim();
+    if (sq.length < 2) return [];
+
+    const results = [];
+
+    // 1. Match Pages
+    PAGES.forEach(page => {
+      if (page.title.toLowerCase().includes(sq)) {
+        results.push({ type: 'page', id: page.id, title: page.title, subtitle: 'Page', path: page.path });
+      }
+    });
+
+    // 2. Match Categories
+    CATEGORIES.forEach(cat => {
+      if (cat.label.toLowerCase().includes(sq) || cat.description.toLowerCase().includes(sq)) {
+        results.push({ type: 'category', id: cat.id, title: cat.label, subtitle: 'Category', path: `/collections/${cat.id}` });
+      }
+    });
+
+    // 3. Match Products
+    products.forEach(p => {
+      const catLabel = CATEGORIES.find(c => c.id === p.category)?.label || 'Product';
+      if (p.name.toLowerCase().includes(sq) || catLabel.toLowerCase().includes(sq) || (p.description && p.description.toLowerCase().includes(sq))) {
+        results.push({ 
+          type: 'product', 
+          id: p.id, 
+          title: p.name, 
+          subtitle: catLabel,
+          price: p.price,
+          path: `/product/${p.id}`
+        });
+      }
+    });
+
+    // 4. Admin Portal
+    if (sq === 'zanny-admin') {
+      results.push({ type: 'admin', id: 'admin', title: 'Admin Console', subtitle: 'System', path: '/admin' });
+    }
+
+    return results.slice(0, 8); // Return top 8 results
+  };
+
+  const searchResults = getSearchResults();
+
+  const handleSearchSelect = (path) => {
     setSearchOpen(false);
     setSearchQuery('');
-    if (productId === 'admin-portal') {
-      navigate('/admin');
-    } else if (productId) {
-      navigate(`/product/${productId}`);
+    if (!path) return;
+    
+    if (path.startsWith('/#')) {
+      navigate('/');
+      setTimeout(() => {
+        const id = path.split('#')[1];
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
     } else {
-      // If it's a category button (no ID passed)
-      navigate('/#collections');
+      navigate(path);
     }
   };
 
@@ -325,7 +373,7 @@ export default function Navbar() {
                 {CATEGORIES.map(cat => (
                   <button
                     key={cat.id}
-                    onClick={handleSearchSelect}
+                    onClick={() => handleSearchSelect(`/collections/${cat.id}`)}
                     style={{
                       padding: '0.4rem 1rem', border: '1px solid #333',
                       background: 'transparent', color: '#aaa',
@@ -348,24 +396,26 @@ export default function Navbar() {
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                 style={{ width: 'min(600px, 90vw)', display: 'flex', flexDirection: 'column', gap: '0' }}
               >
-                {searchResults.map(product => (
+                {searchResults.map((res, i) => (
                   <button
-                    key={product.id}
-                    onClick={() => handleSearchSelect(product.id)}
+                    key={`${res.type}-${res.id}-${i}`}
+                    onClick={() => handleSearchSelect(res.path)}
                     style={{
                       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                       padding: '0.9rem 0', borderBottom: '1px solid #222',
-                      background: 'none', border: 'none', borderBottom: '1px solid #222',
+                      background: 'none', border: 'none',
                       cursor: 'pointer', textAlign: 'left', width: '100%',
                     }}
                   >
                     <div>
-                      <p style={{ color: '#fff', fontSize: '0.95rem', marginBottom: '0.15rem', fontFamily: 'var(--font-heading)' }}>{product.name}</p>
+                      <p style={{ color: '#fff', fontSize: '0.95rem', marginBottom: '0.15rem', fontFamily: 'var(--font-heading)' }}>{res.title}</p>
                       <p style={{ color: '#666', fontSize: '0.75rem', letterSpacing: '1px', textTransform: 'uppercase' }}>
-                        {CATEGORIES.find(c => c.id === product.category)?.label}
+                        {res.subtitle}
                       </p>
                     </div>
-                    <p style={{ color: '#aaa', fontSize: '0.85rem', flexShrink: 0, marginLeft: '1rem' }}>KSh {product.price.toLocaleString()}</p>
+                    {res.price !== undefined && (
+                      <p style={{ color: '#aaa', fontSize: '0.85rem', flexShrink: 0, marginLeft: '1rem' }}>KSh {res.price.toLocaleString()}</p>
+                    )}
                   </button>
                 ))}
               </motion.div>
