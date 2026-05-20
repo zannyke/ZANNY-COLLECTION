@@ -15,38 +15,42 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }, []);
 
-  const login = (email, password) => {
-    // Simulate API call
-    const users = JSON.parse(localStorage.getItem('zanny_registered_users') || '[]');
-    // Mock security: Compare base64 encoded passwords to avoid plaintext storage matching
-    const encodedPassword = btoa(password);
-    const foundUser = users.find(u => u.email === email && u.password === encodedPassword);
-    
-    if (foundUser) {
-      const { password: _pw, ...userSafe } = foundUser;
-      setUser(userSafe);
-      localStorage.setItem('zanny_user', JSON.stringify(userSafe));
-      return { success: true };
+  const login = async (email, password) => {
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setUser(data.user);
+        localStorage.setItem('zanny_user', JSON.stringify(data.user));
+        return { success: true };
+      }
+      return { success: false, message: data.message };
+    } catch (err) {
+      return { success: false, message: 'Server error' };
     }
-    return { success: false, message: 'Invalid credentials' };
   };
 
-  const register = (userData) => {
-    const users = JSON.parse(localStorage.getItem('zanny_registered_users') || '[]');
-    if (users.find(u => u.email === userData.email)) {
-      return { success: false, message: 'Email already exists' };
+  const register = async (userData) => {
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData)
+      });
+      const data = await res.json();
+      if (data.success) {
+        setUser(data.user);
+        localStorage.setItem('zanny_user', JSON.stringify(data.user));
+        return { success: true };
+      }
+      return { success: false, message: data.message };
+    } catch (err) {
+      return { success: false, message: 'Server error' };
     }
-    
-    // Mock security: encode password before saving to local storage
-    const newUser = { ...userData, password: btoa(userData.password), id: Date.now() };
-    users.push(newUser);
-    localStorage.setItem('zanny_registered_users', JSON.stringify(users));
-    
-    // Auto login
-    const { password: _pw, ...userSafe } = newUser;
-    setUser(userSafe);
-    localStorage.setItem('zanny_user', JSON.stringify(userSafe));
-    return { success: true };
   };
 
   const logout = () => {
@@ -54,12 +58,14 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('zanny_user');
   };
 
-  const deleteAccount = () => {
+  const deleteAccount = async () => {
     if (user) {
-      const users = JSON.parse(localStorage.getItem('zanny_registered_users') || '[]');
-      const updatedUsers = users.filter(u => u.email !== user.email);
-      localStorage.setItem('zanny_registered_users', JSON.stringify(updatedUsers));
-      logout();
+      try {
+        await fetch(`/api/auth/delete?id=${user.id}`, { method: 'DELETE' });
+        logout();
+      } catch (err) {
+        console.error("Failed to delete account", err);
+      }
     }
   };
 
