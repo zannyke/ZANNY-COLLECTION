@@ -71,13 +71,19 @@ export default function CollectionShowcase() {
                   >
                     {/* Category image */}
                     <div style={{ position: 'relative', aspectRatio: '4/5', overflow: 'hidden', background: '#f4f4f4' }}>
-                      <motion.img
-                        whileHover={{ scale: 1.07 }}
-                        transition={{ duration: 0.6 }}
-                        src={displayImage}
-                        alt={cat.label}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                      />
+                      {displayImage ? (
+                        <motion.img
+                          whileHover={{ scale: 1.07 }}
+                          transition={{ duration: 0.6 }}
+                          src={displayImage}
+                          alt={cat.label}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                        />
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f4f4f4' }}>
+                          <span style={{ color: '#aaa', fontSize: '0.7rem', letterSpacing: '2px', textTransform: 'uppercase' }}>ZANNY</span>
+                        </div>
+                      )}
                       {/* Dark overlay on hover */}
                       <motion.div
                         initial={{ opacity: 0 }}

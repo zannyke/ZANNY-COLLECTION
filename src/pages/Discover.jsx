@@ -15,12 +15,11 @@ export default function Discover() {
           </h1>
         </motion.div>
 
-        {/* Hero Image Placeholder */}
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, delay: 0.2 }}
-          style={{ width: '100%', height: '60vh', background: '#f4f4f4', marginBottom: '4rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          style={{ width: '100%', height: '60vh', background: '#f4f4f4', marginBottom: '4rem', overflow: 'hidden' }}
         >
-          <p style={{ color: '#aaa', letterSpacing: '2px', textTransform: 'uppercase', fontSize: '0.8rem' }}>[Brand Story Image / Video Placeholder]</p>
+          <img src="/discover_zanny_image.jpg" alt="Discover Zanny" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
         </motion.div>
 
         {/* Text Section */}

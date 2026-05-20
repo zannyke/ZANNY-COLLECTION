@@ -35,13 +35,19 @@ function ProductCard({ product }) {
       {/* Image */}
       <Link to={`/product/${product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
         <div style={{ position: 'relative', overflow: 'hidden', aspectRatio: '3/4', background: '#f4f4f4' }}>
-          <motion.img
-            whileHover={{ scale: 1.06 }}
-            transition={{ duration: 0.5 }}
-            src={product.image}
-            alt={product.name}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-          />
+          {product.image ? (
+            <motion.img
+              whileHover={{ scale: 1.06 }}
+              transition={{ duration: 0.5 }}
+              src={product.image}
+              alt={product.name}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            />
+          ) : (
+            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f4f4f4' }}>
+              <span style={{ color: '#aaa', fontSize: '0.7rem', letterSpacing: '2px', textTransform: 'uppercase' }}>ZANNY</span>
+            </div>
+          )}
           {product.badge && (
             <span style={{
               position: 'absolute', top: '0.75rem', left: '0.75rem',

@@ -126,8 +126,8 @@ export default function CustomerRegister() {
 
       {/* Left side: Visual */}
       <div style={{ 
-        flex: 1, background: 'url(/collection3.png)', backgroundSize: 'cover', 
-        backgroundPosition: 'center', position: 'relative' 
+        flex: 1, background: '#111', 
+        position: 'relative' 
       }} className="hide-mobile">
         <div style={{ 
           position: 'absolute', inset: 0, 

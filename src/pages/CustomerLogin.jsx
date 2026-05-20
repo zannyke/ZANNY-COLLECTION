@@ -35,8 +35,8 @@ export default function CustomerLogin() {
     <div style={{ minHeight: '100vh', display: 'flex', background: '#fff', fontFamily: 'var(--font-body)' }}>
       {/* Left side: Visual */}
       <div style={{ 
-        flex: 1, background: 'url(/collection2.png)', backgroundSize: 'cover', 
-        backgroundPosition: 'center', position: 'relative' 
+        flex: 1, background: '#111', 
+        position: 'relative' 
       }} className="hide-mobile">
         <div style={{ 
           position: 'absolute', inset: 0, 

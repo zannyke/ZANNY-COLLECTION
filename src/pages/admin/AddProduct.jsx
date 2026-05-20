@@ -44,7 +44,7 @@ export default function AddProduct() {
       ...form,
       price: Number(form.price),
       stock: Number(form.stock),
-      image: form.image || '/collection1.png',
+      image: form.image || '',
     });
     setSubmitted(true);
     setTimeout(() => navigate('/admin'), 1500);
@@ -156,13 +156,19 @@ export default function AddProduct() {
           {/* Image URL */}
           <div>
             <label style={labelStyle}>Image URL (optional)</label>
-            <input style={inputStyle('image')} value={form.image} onChange={e => set('image', e.target.value)} placeholder="/collection1.png  or full URL" />
-            <p style={{ color: t.textMuted, fontSize: '0.72rem', marginTop: '0.4rem', opacity: 0.6 }}>Leave blank to use default image. In future you can upload directly.</p>
+            <input style={inputStyle('image')} value={form.image} onChange={e => set('image', e.target.value)} placeholder="Full image URL" />
+            <p style={{ color: t.textMuted, fontSize: '0.72rem', marginTop: '0.4rem', opacity: 0.6 }}>Leave blank to upload later from database.</p>
           </div>
 
           {/* Preview strip */}
           <div style={{ background: t.input, border: `1px solid ${t.border}`, padding: '1.25rem', display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
-            <img src={form.image || '/collection1.png'} alt="preview" style={{ width: '60px', height: '75px', objectFit: 'cover', background: t.surface }} />
+            {form.image ? (
+              <img src={form.image} alt="preview" style={{ width: '60px', height: '75px', objectFit: 'cover', background: t.surface }} />
+            ) : (
+              <div style={{ width: '60px', height: '75px', background: t.surface, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px dashed ${t.border}` }}>
+                <span style={{ fontSize: '0.6rem', color: t.textMuted }}>NO IMG</span>
+              </div>
+            )}
             <div>
               <p style={{ color: t.textMuted, fontSize: '0.7rem', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '0.2rem' }}>
                 {CATEGORIES.find(c => c.id === form.category)?.label}

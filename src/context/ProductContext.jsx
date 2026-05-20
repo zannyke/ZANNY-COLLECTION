@@ -1,15 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export const CATEGORIES = [
-  { id: 'new-arrivals',     label: 'New Arrivals',         description: 'Fresh drops, just landed.',                fallbackImage: '/collection2.png', emoji: '✦' },
-  { id: 'shirts-tees',      label: 'Shirts & T-Shirts',    description: 'Graphic tees, button-downs and essentials.', fallbackImage: '/collection1.png', emoji: '👕' },
-  { id: 'hoodies',          label: 'Hoodies',              description: 'Premium heavy-cotton hoodies.',            fallbackImage: '/collection2.png', emoji: '🧥' },
-  { id: 'sweaters',         label: 'Sweaters',             description: 'Cozy knits and stylish pullovers.',        fallbackImage: '/collection1.png', emoji: '🧶' },
-  { id: 'shorts-sweatpants',label: 'Shorts & Sweatpants',  description: 'Comfortable bottoms for any occasion.',    fallbackImage: '/collection2.png', emoji: '👖' },
-  { id: 'shoes',            label: 'Shoes',                description: 'Sneakers, boots, and everyday kicks.',     fallbackImage: '/collection1.png', emoji: '👟' },
-  { id: 'innerwear',        label: 'Innerwear',            description: 'Premium basics for men.',                  fallbackImage: '/collection2.png', emoji: '🩲' },
-  { id: 'accessories',      label: 'Accessories',          description: 'Caps, durags, socks and more.',            fallbackImage: '/collection1.png', emoji: '🔗' },
-  { id: 'sale',             label: 'Sale',                 description: 'Premium pieces, reduced prices.',          fallbackImage: '/collection2.png', emoji: '🔥' },
+  { id: 'new-arrivals',     label: 'New Arrivals',         description: 'Fresh drops, just landed.',                fallbackImage: '', emoji: '✦' },
+  { id: 'shirts-tees',      label: 'Shirts & T-Shirts',    description: 'Graphic tees, button-downs and essentials.', fallbackImage: '', emoji: '👕' },
+  { id: 'hoodies',          label: 'Hoodies',              description: 'Premium heavy-cotton hoodies.',            fallbackImage: '', emoji: '🧥' },
+  { id: 'sweaters',         label: 'Sweaters',             description: 'Cozy knits and stylish pullovers.',        fallbackImage: '', emoji: '🧶' },
+  { id: 'shorts-sweatpants',label: 'Shorts & Sweatpants',  description: 'Comfortable bottoms for any occasion.',    fallbackImage: '', emoji: '👖' },
+  { id: 'shoes',            label: 'Shoes',                description: 'Sneakers, boots, and everyday kicks.',     fallbackImage: '', emoji: '👟' },
+  { id: 'innerwear',        label: 'Innerwear',            description: 'Premium basics for men.',                  fallbackImage: '', emoji: '🩲' },
+  { id: 'accessories',      label: 'Accessories',          description: 'Caps, durags, socks and more.',            fallbackImage: '', emoji: '🔗' },
+  { id: 'sale',             label: 'Sale',                 description: 'Premium pieces, reduced prices.',          fallbackImage: '', emoji: '🔥' },
 ];
 
 const DEFAULT_PRODUCTS = [];
@@ -35,7 +35,7 @@ export function ProductProvider({ children }) {
       id: Date.now(),
       badge: 'NEW',
       sold: 0,
-      image: product.image || '/collection1.png',
+      image: product.image || '',
     };
     setProducts(prev => {
       const updated = [newProduct, ...prev];
