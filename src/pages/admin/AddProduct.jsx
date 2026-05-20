@@ -12,7 +12,7 @@ export default function AddProduct() {
   const { t, resolvedTheme } = useTheme();
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    name: '', category: 'shirts-tees', price: '', description: '',
+    name: '', category: 'shirts-tees', price: '', original_price: '', discount_label: '', description: '',
     stock: '', badge: 'NEW', sizes: ['S','M','L'],
   });
   const [file, setFile] = useState(null);
@@ -50,6 +50,7 @@ export default function AddProduct() {
     const result = await addProduct({
       ...form,
       price: Number(form.price),
+      original_price: form.original_price ? Number(form.original_price) : null,
       stock: Number(form.stock),
     }, file);
 
@@ -150,6 +151,18 @@ export default function AddProduct() {
             </div>
           </div>
 
+          {/* Row: Optional Pricing (Original Price + Discount Label) */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', background: resolvedTheme === 'dark' ? 'rgba(255,255,255,0.02)' : '#fdfdfd', padding: '1.5rem', border: `1px solid ${t.border}` }}>
+            <div>
+              <label style={labelStyle}>Previous Price (Optional)</label>
+              <input type="number" style={inputStyle('original_price')} value={form.original_price} onChange={e => set('original_price', e.target.value)} placeholder="e.g. 5000" min="0" />
+            </div>
+            <div>
+              <label style={labelStyle}>Discount Label (Optional)</label>
+              <input type="text" style={inputStyle('discount_label')} value={form.discount_label} onChange={e => set('discount_label', e.target.value)} placeholder="e.g. -20% or KSh 1,500 OFF" />
+            </div>
+          </div>
+
           {/* Available Sizes */}
           <div>
             <label style={labelStyle}>Available Sizes</label>
@@ -197,9 +210,21 @@ export default function AddProduct() {
                 {CATEGORIES.find(c => c.id === form.category)?.label}
               </p>
               <p style={{ fontFamily: 'var(--font-heading)', fontSize: '1rem', color: t.text }}>{form.name || 'Product Name'}</p>
-              <p style={{ color: resolvedTheme === 'dark' ? '#00ff9d' : '#00b894', fontSize: '0.85rem', marginTop: '0.2rem', fontWeight: 600 }}>
-                {form.price ? `KSh ${Number(form.price).toLocaleString()}` : 'KSh —'}
-              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
+                <p style={{ color: resolvedTheme === 'dark' ? '#00ff9d' : '#00b894', fontSize: '0.85rem', fontWeight: 600 }}>
+                  {form.price ? `KSh ${Number(form.price).toLocaleString()}` : 'KSh —'}
+                </p>
+                {form.original_price && (
+                  <p style={{ color: t.textMuted, fontSize: '0.7rem', textDecoration: 'line-through' }}>
+                    KSh {Number(form.original_price).toLocaleString()}
+                  </p>
+                )}
+                {form.discount_label && (
+                  <span style={{ background: '#c0392b', color: '#fff', fontSize: '0.6rem', padding: '0.1rem 0.3rem', letterSpacing: '1px' }}>
+                    {form.discount_label}
+                  </span>
+                )}
+              </div>
             </div>
             {form.badge && <span style={{ marginLeft: 'auto', background: t.border, color: t.textMuted, padding: '0.2rem 0.6rem', fontSize: '0.65rem', letterSpacing: '1px' }}>{form.badge}</span>}
           </div>

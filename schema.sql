@@ -47,6 +47,8 @@ CREATE TABLE products (
   category TEXT NOT NULL,
   description TEXT,
   price REAL NOT NULL,
+  original_price REAL,
+  discount_label TEXT,
   stock INTEGER DEFAULT 0,
   sold INTEGER DEFAULT 0,
   badge TEXT,

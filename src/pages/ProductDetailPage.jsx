@@ -98,9 +98,21 @@ export default function ProductDetailPage() {
               <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(2rem, 4vw, 3rem)', lineHeight: 1.1, marginBottom: '1rem' }}>
                 {product.name}
               </h1>
-              <p style={{ fontSize: '1.5rem', fontWeight: 600, color: '#1a1a1a' }}>
-                KSh {product.price.toLocaleString()}
-              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '1rem' }}>
+                <p style={{ fontFamily: 'var(--font-heading)', fontSize: '1.5rem', fontWeight: 600 }}>
+                  KSh {product.price.toLocaleString()}
+                </p>
+                {product.original_price && (
+                  <p style={{ color: '#888', fontSize: '1.1rem', textDecoration: 'line-through' }}>
+                    KSh {Number(product.original_price).toLocaleString()}
+                  </p>
+                )}
+                {product.discount_label && (
+                  <span style={{ background: '#c0392b', color: '#fff', fontSize: '0.75rem', padding: '0.2rem 0.5rem', letterSpacing: '1px', fontWeight: 600 }}>
+                    {product.discount_label}
+                  </span>
+                )}
+              </div>
             </div>
 
             <p style={{ color: '#555', lineHeight: 1.8, fontSize: '0.95rem' }}>

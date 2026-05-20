@@ -15,14 +15,16 @@ export async function onRequestPost(context) {
     const id = crypto.randomUUID();
 
     await context.env.DB.prepare(
-      `INSERT INTO products (id, name, category, description, price, stock, sold, badge, image_url)
-       VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)`
+      `INSERT INTO products (id, name, category, description, price, original_price, discount_label, stock, sold, badge, image_url)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)`
     ).bind(
       id,
       data.name,
       data.category,
       data.description || '',
       Number(data.price),
+      data.original_price ? Number(data.original_price) : null,
+      data.discount_label || null,
       Number(data.stock),
       data.badge || null,
       data.image || ''

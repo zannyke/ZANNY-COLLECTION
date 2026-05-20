@@ -108,10 +108,21 @@ function ProductCard({ product }) {
 
       {/* Info */}
       <Link to={`/product/${product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-        <div>
-          <p style={{ fontFamily: 'var(--font-heading)', fontSize: '1rem', marginBottom: '0.25rem' }}>{product.name}</p>
-          <ExpandableDescription text={product.description} />
-          <p style={{ fontSize: '0.9rem', fontWeight: 600 }}>KSh {product.price.toLocaleString()}</p>
+        <div style={{ padding: '1.25rem 1rem' }}>
+          <p style={{ fontFamily: 'var(--font-heading)', fontSize: '1rem', marginBottom: '0.25rem', letterSpacing: '0.5px' }}>{product.name}</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <p style={{ fontSize: '0.9rem', fontWeight: 600 }}>KSh {product.price.toLocaleString()}</p>
+            {product.original_price && (
+              <p style={{ color: '#888', fontSize: '0.75rem', textDecoration: 'line-through' }}>
+                KSh {Number(product.original_price).toLocaleString()}
+              </p>
+            )}
+            {product.discount_label && (
+              <span style={{ background: '#c0392b', color: '#fff', fontSize: '0.6rem', padding: '0.1rem 0.3rem', letterSpacing: '1px' }}>
+                {product.discount_label}
+              </span>
+            )}
+          </div>
         </div>
       </Link>
 
