@@ -13,6 +13,42 @@ const SORT_OPTIONS = [
   { value: 'newest',     label: 'Newest First' },
 ];
 
+// Truncate description with See More / See Less toggle
+const CHAR_LIMIT = 90;
+function ExpandableDescription({ text }) {
+  const [expanded, setExpanded] = React.useState(false);
+  if (!text) return null;
+  const isLong = text.length > CHAR_LIMIT;
+
+  return (
+    <p
+      style={{ fontSize: '0.8rem', color: '#888', marginBottom: '0.3rem', lineHeight: 1.6 }}
+      onClick={e => { e.preventDefault(); e.stopPropagation(); if (isLong) setExpanded(v => !v); }}
+    >
+      {isLong && !expanded ? (
+        <>
+          {text.slice(0, CHAR_LIMIT).trimEnd()}
+          <span style={{ color: '#1a1a1a', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            {' '}... <span style={{ textDecoration: 'underline' }}>more</span>
+          </span>
+        </>
+      ) : (
+        <>
+          {text}
+          {isLong && (
+            <span
+              onClick={e => { e.preventDefault(); e.stopPropagation(); setExpanded(false); }}
+              style={{ color: '#1a1a1a', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+            >
+              {' '}... <span style={{ textDecoration: 'underline' }}>less</span>
+            </span>
+          )}
+        </>
+      )}
+    </p>
+  );
+}
+
 function ProductCard({ product }) {
   const { addToCart } = useCart();
   const [selectedSize, setSelectedSize] = useState('M');
@@ -74,7 +110,7 @@ function ProductCard({ product }) {
       <Link to={`/product/${product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
         <div>
           <p style={{ fontFamily: 'var(--font-heading)', fontSize: '1rem', marginBottom: '0.25rem' }}>{product.name}</p>
-          <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '0.3rem', lineHeight: 1.5 }}>{product.description}</p>
+          <ExpandableDescription text={product.description} />
           <p style={{ fontSize: '0.9rem', fontWeight: 600 }}>KSh {product.price.toLocaleString()}</p>
         </div>
       </Link>
@@ -119,7 +155,7 @@ export default function CategoryPage() {
   // Search filter
   const searched = rawProducts.filter(p =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.description.toLowerCase().includes(search.toLowerCase())
+    (p.description || '').toLowerCase().includes(search.toLowerCase())
   );
 
   // Sort
