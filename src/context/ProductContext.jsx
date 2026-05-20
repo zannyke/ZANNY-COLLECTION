@@ -26,8 +26,14 @@ export function ProductProvider({ children }) {
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
-          // Normalize the key from image_url to image for our frontend
-          setProducts(data.map(p => ({ ...p, image: p.image_url || '' })));
+          // Normalize properties for frontend rendering to prevent undefined values crashing Recharts
+          setProducts(data.map(p => ({ 
+            ...p, 
+            image: p.image_url || '',
+            sold: p.sold || 0,
+            price: Number(p.price) || 0,
+            stock: Number(p.stock) || 0
+          })));
         } else {
           setProducts([]);
         }
@@ -74,6 +80,7 @@ export function ProductProvider({ children }) {
           ...product,
           id: data.id,
           image: imageUrl,
+          sold: 0,
           created_at: new Date().toISOString()
         };
         setProducts(prev => [newProd, ...prev]);
