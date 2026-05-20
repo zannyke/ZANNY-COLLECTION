@@ -36,11 +36,10 @@ const IconX = ({ color, size = 22 }) => (
 );
 
 export default function Navbar() {
-  const { user, isAuthenticated, logout, deleteAccount } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const location = useLocation();
 
@@ -171,7 +170,7 @@ export default function Navbar() {
 
         {/* ── RIGHT: contact + monogram + cart ── */}
         <div style={{ display: 'flex', gap: '1.2rem', flex: 1, justifyContent: 'flex-end', alignItems: 'center' }}>
-          {/* Auth Link / Dropdown */}
+          {/* Auth Link */}
           {!isAuthenticated ? (
             <Link
               to="/login"
@@ -186,36 +185,18 @@ export default function Navbar() {
               SIGN IN
             </Link>
           ) : (
-            <div style={{ position: 'relative' }}>
-              <button
-                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                className="zanny-text-link"
-                style={{
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  fontSize: '0.78rem', fontWeight: 700, letterSpacing: '1px',
-                  color: iconColor, textDecoration: 'none',
-                  paddingBottom: '1px', padding: 0,
-                  transition: 'opacity 0.2s', display: 'flex', alignItems: 'center', gap: '0.3rem'
-                }}
-              >
-                {user.firstName.toUpperCase()}
-              </button>
-              <AnimatePresence>
-                {profileDropdownOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
-                    style={{
-                      position: 'absolute', top: '100%', right: 0, marginTop: '1rem',
-                      background: '#fff', border: '1px solid #eee', boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                      padding: '0.5rem 0', minWidth: '160px', zIndex: 100, display: 'flex', flexDirection: 'column'
-                    }}
-                  >
-                    <button onClick={() => { logout(); setProfileDropdownOpen(false); }} style={{ padding: '0.8rem 1.2rem', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '0.8rem', color: '#1a1a1a', fontFamily: 'var(--font-body)' }}>Sign Out</button>
-                    <button onClick={() => { deleteAccount(); setProfileDropdownOpen(false); }} style={{ padding: '0.8rem 1.2rem', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '0.8rem', color: '#c0392b', fontFamily: 'var(--font-body)' }}>Delete Account</button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+            <Link
+              to="/account"
+              className="zanny-text-link"
+              style={{
+                fontSize: '0.78rem', fontWeight: 700, letterSpacing: '1px',
+                color: iconColor, textDecoration: 'none',
+                paddingBottom: '1px', padding: 0,
+                transition: 'opacity 0.2s', display: 'flex', alignItems: 'center', gap: '0.3rem'
+              }}
+            >
+              {user.firstName.toUpperCase()}
+            </Link>
           )}
 
           {/* Monogram avatar (unique to Zanny) */}
@@ -523,8 +504,7 @@ export default function Navbar() {
                     <>
                       <p style={{ fontSize: '0.8rem', fontWeight: 600, letterSpacing: '1px', margin: 0, textTransform: 'uppercase' }}>{user.firstName} {user.lastName}</p>
                       <div style={{ display: 'flex', gap: '0.8rem', marginTop: '0.3rem' }}>
-                        <button onClick={() => { logout(); setMobileMenuOpen(false); }} style={{ background: 'none', border: 'none', padding: 0, fontSize: '0.75rem', color: '#555', cursor: 'pointer', textDecoration: 'underline' }}>Sign Out</button>
-                        <button onClick={() => { deleteAccount(); setMobileMenuOpen(false); }} style={{ background: 'none', border: 'none', padding: 0, fontSize: '0.75rem', color: '#c0392b', cursor: 'pointer', textDecoration: 'underline' }}>Delete Account</button>
+                        <Link to="/account" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: '0.75rem', color: '#555', textDecoration: 'underline' }}>Manage Account</Link>
                       </div>
                     </>
                   ) : (

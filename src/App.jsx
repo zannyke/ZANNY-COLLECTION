@@ -23,6 +23,7 @@ import CategoryPage from './pages/CategoryPage'
 import ProductDetailPage from './pages/ProductDetailPage'
 import CustomerLogin from './pages/CustomerLogin'
 import CustomerRegister from './pages/CustomerRegister'
+import AccountPage from './pages/AccountPage'
 
 // Admin pages (no Navbar/Footer)
 import AdminLogin from './pages/admin/AdminLogin'
@@ -83,6 +84,7 @@ function App() {
               
               <Route path="/login" element={<PublicLayout><CustomerLogin /></PublicLayout>} />
               <Route path="/register" element={<PublicLayout><CustomerRegister /></PublicLayout>} />
+              <Route path="/account" element={<UserRoute><PublicLayout><AccountPage /></PublicLayout></UserRoute>} />
               
               {/* Protected Order Flow */}
               <Route path="/cart" element={<PublicLayout><CartPage /></PublicLayout>} />
