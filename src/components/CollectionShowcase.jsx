@@ -49,7 +49,12 @@ export default function CollectionShowcase() {
               latestProduct = products.filter(p => p.category === cat.id).sort((a, b) => b.id - a.id)[0];
             }
             
-            const count = products.filter(p => p.category === cat.id).length;
+            // Count: new-arrivals = NEW badge, sale = SALE badge, others = by category
+            const count = cat.id === 'new-arrivals'
+              ? products.filter(p => p.badge === 'NEW').length
+              : cat.id === 'sale'
+              ? products.filter(p => p.badge === 'SALE').length
+              : products.filter(p => p.category === cat.id).length;
             const displayImage = latestProduct?.image || cat.fallbackImage;
             
             return (

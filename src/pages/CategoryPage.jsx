@@ -145,12 +145,23 @@ function ProductCard({ product }) {
 
 export default function CategoryPage() {
   const { categoryId } = useParams();
-  const { getByCategory } = useProducts();
+  const { products, getByCategory } = useProducts();
   const [sortBy, setSortBy] = useState('default');
   const [search, setSearch] = useState('');
 
   const cat = CATEGORIES.find(c => c.id === categoryId);
-  const rawProducts = getByCategory(categoryId);
+
+  // NEW ARRIVALS: show all products with badge='NEW' across every category.
+  // If none are badged yet, fall back to the 8 most recently uploaded.
+  const isNewArrivals = categoryId === 'new-arrivals';
+  const rawProducts = isNewArrivals
+    ? (() => {
+        const badged = products.filter(p => p.badge === 'NEW');
+        return badged.length > 0
+          ? badged
+          : [...products].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 8);
+      })()
+    : getByCategory(categoryId);
 
   // Search filter
   const searched = rawProducts.filter(p =>
