@@ -6,7 +6,10 @@ export default function Footer() {
     <footer className="footer-container" style={{ backgroundColor: '#111', color: '#fff' }}>
       <div className="container footer-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', marginBottom: '2.5rem' }}>
         <div>
-          <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.5rem', marginBottom: '1.5rem', letterSpacing: '2px' }}>ZANNY</h4>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+            <img src="/zanny_collection_icon.png" alt="Zanny Icon" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
+            <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.5rem', letterSpacing: '2px', margin: 0 }}>ZANNY</h4>
+          </div>
           <p style={{ color: '#999', fontSize: '0.875rem' }}>
             Premium for the hustle. Founded in 2026, Zanny Collection provides high-end design for the dreamers, the doers, and the ones on the way up.
           </p>
