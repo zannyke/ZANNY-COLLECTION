@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
 
-// Expected hash for the admin password
-const ADMIN_HASH = '77c48bca0bfafbbdb784c50c9ffcb8b7a5d7fe7fa7562668de24e2465a838086';
+// Expected hash for the admin password (zanny2026)
+const ADMIN_HASH = '8bef858d3755303abebcbb3b9aacc446dd90e5c5aa268731388a4c5a4b14a8cb';
 
 export default function AdminLogin() {
   const [pw, setPw] = useState('');
