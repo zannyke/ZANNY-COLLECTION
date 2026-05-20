@@ -1,14 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export const CATEGORIES = [
-  { id: 'new-arrivals',  label: 'New Arrivals',       description: 'Fresh drops, just landed.',                image: '/cat_new_arrivals.png', emoji: '✦' },
-  { id: 'tops-tees',     label: 'Tops & Tees',         description: 'Graphic tees, essentials & statement tops.', image: '/cat_tops_tees.png', emoji: '👕' },
-  { id: 'hoodies',       label: 'Hoodies & Sweats',    description: 'Comfort meets edge.',                      image: '/cat_hoodies.png', emoji: '🧥' },
-  { id: 'outerwear',     label: 'Outerwear',            description: 'Jackets, coats and statement layers.',     image: '/cat_outerwear.png', emoji: '🧣' },
-  { id: 'bottoms',       label: 'Bottoms',              description: 'Cargos, joggers and tailored cuts.',       image: '/cat_bottoms.png', emoji: '👖' },
-  { id: 'accessories',   label: 'Accessories',          description: 'Caps, chains and finishing touches.',      image: '/cat_accessories.png', emoji: '🔗' },
-  { id: 'tech-wear',     label: 'Tech-Wear',            description: 'The future of street-functional fashion.', image: '/cat_tech_wear.png', emoji: '⚡' },
-  { id: 'sale',          label: 'Sale',                 description: 'Premium pieces, reduced prices.',          image: '/cat_sale.png', emoji: '🔥' },
+  { id: 'new-arrivals',     label: 'New Arrivals',         description: 'Fresh drops, just landed.',                fallbackImage: '/collection2.png', emoji: '✦' },
+  { id: 'shirts-tees',      label: 'Shirts & T-Shirts',    description: 'Graphic tees, button-downs and essentials.', fallbackImage: '/collection1.png', emoji: '👕' },
+  { id: 'hoodies',          label: 'Hoodies',              description: 'Premium heavy-cotton hoodies.',            fallbackImage: '/collection2.png', emoji: '🧥' },
+  { id: 'sweaters',         label: 'Sweaters',             description: 'Cozy knits and stylish pullovers.',        fallbackImage: '/collection1.png', emoji: '🧶' },
+  { id: 'shorts-sweatpants',label: 'Shorts & Sweatpants',  description: 'Comfortable bottoms for any occasion.',    fallbackImage: '/collection2.png', emoji: '👖' },
+  { id: 'shoes',            label: 'Shoes',                description: 'Sneakers, boots, and everyday kicks.',     fallbackImage: '/collection1.png', emoji: '👟' },
+  { id: 'innerwear',        label: 'Innerwear',            description: 'Premium basics for men.',                  fallbackImage: '/collection2.png', emoji: '🩲' },
+  { id: 'accessories',      label: 'Accessories',          description: 'Caps, durags, socks and more.',            fallbackImage: '/collection1.png', emoji: '🔗' },
+  { id: 'sale',             label: 'Sale',                 description: 'Premium pieces, reduced prices.',          fallbackImage: '/collection2.png', emoji: '🔥' },
 ];
 
 const DEFAULT_PRODUCTS = [];

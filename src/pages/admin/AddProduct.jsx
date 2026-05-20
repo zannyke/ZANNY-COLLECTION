@@ -12,7 +12,7 @@ export default function AddProduct() {
   const { t, resolvedTheme } = useTheme();
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    name: '', category: 'tops-tees', price: '', description: '',
+    name: '', category: 'shirts-tees', price: '', description: '',
     stock: '', badge: 'NEW', sizes: ['S','M','L'], image: '',
   });
   const [errors, setErrors] = useState({});
