@@ -11,11 +11,7 @@ export default function CartPage() {
   const navigate = useNavigate();
 
   const handleCheckout = () => {
-    if (!isAuthenticated) {
-      navigate('/login', { state: { from: { pathname: '/cart' } } });
-    } else {
-      alert("Checkout system is being integrated. You will be able to complete your purchase soon!");
-    }
+    navigate('/checkout');
   };
 
   if (cartItems.length === 0) {

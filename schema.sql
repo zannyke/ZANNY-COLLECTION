@@ -33,6 +33,8 @@ CREATE TABLE orders (
   user_id TEXT NOT NULL,
   total_amount REAL NOT NULL,
   status TEXT DEFAULT 'pending',
+  shipping_address TEXT,
+  phone_number TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
