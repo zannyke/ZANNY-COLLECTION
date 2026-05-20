@@ -9,8 +9,10 @@ export default function CustomerLogin() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
   
-  const { login } = useAuth();
+  const { login, verify } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || "/";
@@ -20,8 +22,26 @@ export default function CustomerLogin() {
     setLoading(true);
     setError('');
 
-    setTimeout(() => {
-      const res = login(email, password);
+    setTimeout(async () => {
+      const res = await login(email, password);
+      if (res.success) {
+        navigate(from, { replace: true });
+      } else if (res.needsVerification) {
+        setNeedsVerification(true);
+      } else {
+        setError(res.message);
+      }
+      setLoading(false);
+    }, 800);
+  };
+
+  const handleVerify = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    
+    setTimeout(async () => {
+      const res = await verify(email, verificationCode);
       if (res.success) {
         navigate(from, { replace: true });
       } else {
@@ -62,50 +82,106 @@ export default function CustomerLogin() {
             <p style={{ color: '#888', fontSize: '0.9rem', letterSpacing: '1px' }}>SIGN IN TO YOUR ACCOUNT</p>
           </div>
 
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>
-                <Mail size={18} style={{ color: '#aaa', marginRight: '0.75rem' }} />
-                <input 
-                  type="email" 
-                  placeholder="Email Address" 
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  required
-                  style={{ border: 'none', outline: 'none', flex: 1, fontSize: '1rem', background: 'transparent' }}
-                />
+          {needsVerification ? (
+            <form onSubmit={handleVerify} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <p style={{ color: '#555', fontSize: '0.9rem', textAlign: 'center' }}>
+                We sent a 6-digit verification code to <strong>{email}</strong>.
+              </p>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>
+                  <Lock size={18} style={{ color: '#aaa', marginRight: '0.75rem' }} />
+                  <input 
+                    type="text" 
+                    placeholder="6-digit Code" 
+                    value={verificationCode}
+                    onChange={e => setVerificationCode(e.target.value)}
+                    required
+                    style={{ border: 'none', outline: 'none', flex: 1, fontSize: '1.5rem', letterSpacing: '4px', textAlign: 'center', background: 'transparent' }}
+                  />
+                </div>
+                {error && <p style={{ color: '#c0392b', fontSize: '0.75rem', marginTop: '0.5rem' }}>{error}</p>}
               </div>
-            </div>
 
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>
-                <Lock size={18} style={{ color: '#aaa', marginRight: '0.75rem' }} />
-                <input 
-                  type="password" 
-                  placeholder="Password" 
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required
-                  style={{ border: 'none', outline: 'none', flex: 1, fontSize: '1rem', background: 'transparent' }}
-                />
+              <button 
+                type="submit" 
+                disabled={loading}
+                style={{ 
+                  background: '#1a1a1a', color: '#fff', border: 'none', padding: '1rem', 
+                  fontSize: '0.85rem', fontWeight: 700, letterSpacing: '2px', 
+                  textTransform: 'uppercase', cursor: 'pointer', display: 'flex', 
+                  alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                  marginTop: '1rem'
+                }}
+              >
+                {loading ? 'Verifying...' : <>Verify Email <ArrowRight size={16} /></>}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>
+                  <Mail size={18} style={{ color: '#aaa', marginRight: '0.75rem' }} />
+                  <input 
+                    type="email" 
+                    placeholder="Email Address" 
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    required
+                    style={{ border: 'none', outline: 'none', flex: 1, fontSize: '1rem', background: 'transparent' }}
+                  />
+                </div>
               </div>
-              {error && <p style={{ color: '#c0392b', fontSize: '0.75rem', marginTop: '0.5rem' }}>{error}</p>}
-            </div>
 
-            <button 
-              type="submit" 
-              disabled={loading}
-              style={{ 
-                background: '#1a1a1a', color: '#fff', border: 'none', padding: '1rem', 
-                fontSize: '0.85rem', fontWeight: 700, letterSpacing: '2px', 
-                textTransform: 'uppercase', cursor: 'pointer', display: 'flex', 
-                alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                marginTop: '1rem'
-              }}
-            >
-              {loading ? 'Authenticating...' : <>Sign In <ArrowRight size={16} /></>}
-            </button>
-          </form>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>
+                  <Lock size={18} style={{ color: '#aaa', marginRight: '0.75rem' }} />
+                  <input 
+                    type="password" 
+                    placeholder="Password" 
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    required
+                    style={{ border: 'none', outline: 'none', flex: 1, fontSize: '1rem', background: 'transparent' }}
+                  />
+                </div>
+                {error && <p style={{ color: '#c0392b', fontSize: '0.75rem', marginTop: '0.5rem' }}>{error}</p>}
+              </div>
+
+              <button 
+                type="submit" 
+                disabled={loading}
+                style={{ 
+                  background: '#1a1a1a', color: '#fff', border: 'none', padding: '1rem', 
+                  fontSize: '0.85rem', fontWeight: 700, letterSpacing: '2px', 
+                  textTransform: 'uppercase', cursor: 'pointer', display: 'flex', 
+                  alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                  marginTop: '1rem'
+                }}
+              >
+                {loading ? 'Authenticating...' : <>Sign In <ArrowRight size={16} /></>}
+              </button>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', margin: '1rem 0' }}>
+                <div style={{ flex: 1, height: '1px', background: '#eee' }}></div>
+                <span style={{ fontSize: '0.8rem', color: '#888', textTransform: 'uppercase', letterSpacing: '1px' }}>or</span>
+                <div style={{ flex: 1, height: '1px', background: '#eee' }}></div>
+              </div>
+
+              <a 
+                href="/api/auth/google"
+                style={{ 
+                  background: '#fff', color: '#1a1a1a', border: '1px solid #ddd', padding: '1rem', 
+                  fontSize: '0.85rem', fontWeight: 700, letterSpacing: '1px', 
+                  textTransform: 'uppercase', cursor: 'pointer', display: 'flex', 
+                  alignItems: 'center', justifyContent: 'center', gap: '0.75rem',
+                  textDecoration: 'none'
+                }}
+              >
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" alt="Google" />
+                Continue with Google
+              </a>
+            </form>
+          )}
 
           <div style={{ marginTop: '2rem', textAlign: 'center', borderTop: '1px solid #f5f5f5', paddingTop: '2rem' }}>
             <p style={{ color: '#888', fontSize: '0.85rem', marginBottom: '1rem' }}>New to Zanny Collection?</p>

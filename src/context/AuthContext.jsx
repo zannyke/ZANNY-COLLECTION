@@ -7,12 +7,21 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load user from localStorage
-    const savedUser = localStorage.getItem('zanny_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setLoading(false);
+    // Check session securely from backend via HttpOnly cookie
+    const checkSession = async () => {
+      try {
+        const res = await fetch('/api/auth/me');
+        const data = await res.json();
+        if (data.authenticated) {
+          setUser(data.user);
+        }
+      } catch (err) {
+        console.error("Session check failed");
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkSession();
   }, []);
 
   const login = async (email, password) => {
@@ -25,10 +34,9 @@ export function AuthProvider({ children }) {
       const data = await res.json();
       if (data.success) {
         setUser(data.user);
-        localStorage.setItem('zanny_user', JSON.stringify(data.user));
         return { success: true };
       }
-      return { success: false, message: data.message };
+      return { success: false, message: data.message, needsVerification: data.needsVerification, email: data.email };
     } catch (err) {
       return { success: false, message: 'Server error' };
     }
@@ -43,8 +51,24 @@ export function AuthProvider({ children }) {
       });
       const data = await res.json();
       if (data.success) {
+        return { success: true, email: data.email };
+      }
+      return { success: false, message: data.message };
+    } catch (err) {
+      return { success: false, message: 'Server error' };
+    }
+  };
+
+  const verify = async (email, code) => {
+    try {
+      const res = await fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code })
+      });
+      const data = await res.json();
+      if (data.success) {
         setUser(data.user);
-        localStorage.setItem('zanny_user', JSON.stringify(data.user));
         return { success: true };
       }
       return { success: false, message: data.message };
@@ -53,16 +77,20 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('zanny_user');
+  const logout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      setUser(null);
+    } catch (err) {
+      console.error("Logout failed");
+    }
   };
 
   const deleteAccount = async () => {
     if (user) {
       try {
         await fetch(`/api/auth/delete?id=${user.id}`, { method: 'DELETE' });
-        logout();
+        await logout();
       } catch (err) {
         console.error("Failed to delete account", err);
       }
@@ -70,7 +98,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, deleteAccount, loading, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, register, verify, logout, deleteAccount, loading, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );

@@ -7,13 +7,37 @@ DROP TABLE IF EXISTS orders;
 DROP TABLE IF EXISTS products;
 DROP TABLE IF EXISTS users;
 
+DROP TABLE IF EXISTS verification_codes;
+DROP TABLE IF EXISTS sessions;
+
 CREATE TABLE users (
   id TEXT PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,
+  password_hash TEXT,
+  salt TEXT,
   first_name TEXT NOT NULL,
   last_name TEXT NOT NULL,
   role TEXT DEFAULT 'customer',
+  is_verified INTEGER DEFAULT 0,
+  auth_provider TEXT DEFAULT 'local', -- 'local' or 'google'
+  login_count INTEGER DEFAULT 0,
+  last_login DATETIME,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE sessions (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  expires_at DATETIME NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE verification_codes (
+  id TEXT PRIMARY KEY,
+  email TEXT NOT NULL,
+  code TEXT NOT NULL,
+  expires_at DATETIME NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
