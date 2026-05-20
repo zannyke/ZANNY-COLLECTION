@@ -54,7 +54,8 @@ export default function Hero() {
             letterSpacing: '2px', 
             textTransform: 'uppercase', 
             backdropFilter: 'blur(4px)',
-            background: 'rgba(0,0,0,0.1)'
+            background: 'rgba(0,0,0,0.1)',
+            whiteSpace: 'nowrap'
           }}
         >
           <span style={{ marginRight: '-2px' }}>Online Store</span>
