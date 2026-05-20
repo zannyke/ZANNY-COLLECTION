@@ -25,7 +25,7 @@ export default function Hero() {
           height: '100%',
           backgroundImage: 'url(/homepage-background.jpg)',
           backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          backgroundPosition: 'center 20%',
           zIndex: -1
         }}
       />
@@ -46,12 +46,12 @@ export default function Hero() {
           transition={{ duration: 0.8, delay: 0.3, ease: 'easeOut' }}
           style={{ 
             display: 'inline-block', 
-            padding: '0.5rem 1.5rem', 
+            padding: '0.35rem 1rem', 
             border: '1px solid rgba(255,255,255,0.4)', 
             borderRadius: '50px', 
             marginBottom: '1.5rem', 
-            fontSize: '0.75rem', 
-            letterSpacing: '3px', 
+            fontSize: '0.65rem', 
+            letterSpacing: '2px', 
             textTransform: 'uppercase', 
             backdropFilter: 'blur(4px)',
             background: 'rgba(0,0,0,0.1)'
