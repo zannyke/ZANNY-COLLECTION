@@ -1,0 +1,14 @@
+name = "zanny-collection"
+pages_build_output_dir = "dist"
+compatibility_date = "2024-03-20"
+
+# Bind your D1 Database
+[[d1_databases]]
+binding = "DB" # In our backend code, we will use env.DB to query the database
+database_name = "zanny-db"
+database_id = "PASTE_YOUR_DATABASE_ID_HERE"
+
+# Bind your R2 Storage Bucket
+[[r2_buckets]]
+binding = "BUCKET" # In our backend code, we will use env.BUCKET to access images
+bucket_name = "zanny-images"
