@@ -285,23 +285,26 @@ export default function Navbar() {
             <motion.span whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }} style={{ display: 'flex' }}>
               <IconBag color={iconColor} />
             </motion.span>
-            {/* Diamond badge — unique to Zanny */}
+            {/* Minimal circular badge */}
             <AnimatePresence>
               {cartCount > 0 && (
                 <motion.span
                   key={cartCount}
-                  initial={{ scale: 0.6 }} animate={{ scale: 1 }} exit={{ scale: 0.6 }}
+                  initial={{ scale: 0.6, opacity: 0 }} 
+                  animate={{ scale: 1, opacity: 1 }} 
+                  exit={{ scale: 0.6, opacity: 0 }}
                   style={{
-                    position: 'absolute', top: '-6px', right: '-7px',
-                    width: '15px', height: '15px',
+                    position: 'absolute', top: '-4px', right: '-6px',
+                    width: '16px', height: '16px',
+                    borderRadius: '50%',
                     background: shouldBeSolid ? '#1a1a1a' : '#fff',
                     color: shouldBeSolid ? '#fff' : '#1a1a1a',
-                    fontSize: '0.5rem', fontWeight: 700,
+                    fontSize: '0.65rem', fontWeight: 700,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    transform: 'rotate(45deg)', transition: 'background 0.35s, color 0.35s',
+                    transition: 'background 0.35s, color 0.35s',
                   }}
                 >
-                  <span style={{ transform: 'rotate(-45deg)' }}>{cartCount}</span>
+                  {cartCount}
                 </motion.span>
               )}
             </AnimatePresence>
