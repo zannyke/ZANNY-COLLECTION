@@ -6,7 +6,7 @@ compatibility_date = "2024-03-20"
 [[d1_databases]]
 binding = "DB" # In our backend code, we will use env.DB to query the database
 database_name = "zanny-db"
-database_id = "PASTE_YOUR_DATABASE_ID_HERE"
+database_id = "45211bea-5e32-4507-9863-7acac07a2f12"
 
 # Bind your R2 Storage Bucket
 [[r2_buckets]]
