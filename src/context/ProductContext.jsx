@@ -17,51 +17,90 @@ const DEFAULT_PRODUCTS = [];
 const ProductContext = createContext();
 
 export function ProductProvider({ children }) {
-  const [products, setProducts] = useState(() => {
-    try {
-      const saved = localStorage.getItem('zanny_products');
-      if (saved) {
-        const custom = JSON.parse(saved);
-        const ids = new Set(custom.map(p => p.id));
-        return [...DEFAULT_PRODUCTS.filter(p => !ids.has(p.id)), ...custom];
-      }
-    } catch { /* ignore */ }
-    return DEFAULT_PRODUCTS;
-  });
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const addProduct = (product) => {
-    const newProduct = {
-      ...product,
-      id: Date.now(),
-      badge: 'NEW',
-      sold: 0,
-      image: product.image || '',
-    };
-    setProducts(prev => {
-      const updated = [newProduct, ...prev];
-      // persist only custom products
-      const custom = updated.filter(p => !DEFAULT_PRODUCTS.find(d => d.id === p.id));
-      localStorage.setItem('zanny_products', JSON.stringify(custom));
-      return updated;
-    });
-    return newProduct;
+  // Fetch products from D1 API on load
+  useEffect(() => {
+    fetch('/api/products')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          // Normalize the key from image_url to image for our frontend
+          setProducts(data.map(p => ({ ...p, image: p.image_url || '' })));
+        } else {
+          setProducts([]);
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to fetch products', err);
+        setProducts([]);
+        setLoading(false);
+      });
+  }, []);
+
+  const addProduct = async (product, file) => {
+    let imageUrl = '';
+
+    // Upload to R2 if file exists
+    if (file) {
+      const formData = new FormData();
+      formData.append('file', file);
+      try {
+        const uploadRes = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const uploadData = await uploadRes.json();
+        if (uploadData.success) {
+          imageUrl = uploadData.url;
+        }
+      } catch (err) {
+        console.error("Image upload failed", err);
+      }
+    }
+
+    // Save to D1
+    try {
+      const res = await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...product, image: imageUrl })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const newProd = {
+          ...product,
+          id: data.id,
+          image: imageUrl,
+          created_at: new Date().toISOString()
+        };
+        setProducts(prev => [newProd, ...prev]);
+        return newProd;
+      }
+    } catch (err) {
+      console.error("Database insert failed", err);
+    }
   };
 
-  const deleteProduct = (id) => {
-    setProducts(prev => {
-      const updated = prev.filter(p => p.id !== id);
-      const custom = updated.filter(p => !DEFAULT_PRODUCTS.find(d => d.id === p.id));
-      localStorage.setItem('zanny_products', JSON.stringify(custom));
-      return updated;
-    });
+  const deleteProduct = async (id) => {
+    try {
+      const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setProducts(prev => prev.filter(p => p.id !== id));
+      }
+    } catch (err) {
+      console.error("Failed to delete product", err);
+    }
   };
 
   const getByCategory = (categoryId) => products.filter(p => p.category === categoryId);
   const getNewArrivals = () => products.filter(p => p.badge === 'NEW');
-  const getBestSellers = () => [...products].sort((a, b) => b.sold - a.sold).slice(0, 6);
+  const getBestSellers = () => [...products].sort((a, b) => (b.sold || 0) - (a.sold || 0)).slice(0, 6);
 
   return (
-    <ProductContext.Provider value={{ products, addProduct, deleteProduct, getByCategory, getNewArrivals, getBestSellers }}>
+    <ProductContext.Provider value={{ products, loading, addProduct, deleteProduct, getByCategory, getNewArrivals, getBestSellers }}>
       {children}
     </ProductContext.Provider>
   );

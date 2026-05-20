@@ -13,10 +13,13 @@ export default function AddProduct() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
     name: '', category: 'shirts-tees', price: '', description: '',
-    stock: '', badge: 'NEW', sizes: ['S','M','L'], image: '',
+    stock: '', badge: 'NEW', sizes: ['S','M','L'],
   });
+  const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState(null);
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const set = (field, val) => setForm(prev => ({ ...prev, [field]: val }));
 
@@ -37,15 +40,18 @@ export default function AddProduct() {
     return Object.keys(e).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
-    addProduct({
+    setUploading(true);
+    
+    await addProduct({
       ...form,
       price: Number(form.price),
       stock: Number(form.stock),
-      image: form.image || '',
-    });
+    }, file);
+    
+    setUploading(false);
     setSubmitted(true);
     setTimeout(() => navigate('/admin'), 1500);
   };
@@ -153,17 +159,27 @@ export default function AddProduct() {
             </div>
           </div>
 
-          {/* Image URL */}
+          {/* Image Upload */}
           <div>
-            <label style={labelStyle}>Image URL (optional)</label>
-            <input style={inputStyle('image')} value={form.image} onChange={e => set('image', e.target.value)} placeholder="Full image URL" />
-            <p style={{ color: t.textMuted, fontSize: '0.72rem', marginTop: '0.4rem', opacity: 0.6 }}>Leave blank to upload later from database.</p>
+            <label style={labelStyle}>Product Image</label>
+            <input 
+              type="file" 
+              accept="image/*"
+              style={{ ...inputStyle('image'), padding: '0.65rem 1rem', cursor: 'pointer' }} 
+              onChange={(e) => {
+                const selected = e.target.files[0];
+                if (selected) {
+                  setFile(selected);
+                  setPreview(URL.createObjectURL(selected));
+                }
+              }} 
+            />
           </div>
 
           {/* Preview strip */}
           <div style={{ background: t.input, border: `1px solid ${t.border}`, padding: '1.25rem', display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
-            {form.image ? (
-              <img src={form.image} alt="preview" style={{ width: '60px', height: '75px', objectFit: 'cover', background: t.surface }} />
+            {preview ? (
+              <img src={preview} alt="preview" style={{ width: '60px', height: '75px', objectFit: 'cover', background: t.surface }} />
             ) : (
               <div style={{ width: '60px', height: '75px', background: t.surface, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px dashed ${t.border}` }}>
                 <span style={{ fontSize: '0.6rem', color: t.textMuted }}>NO IMG</span>
@@ -183,16 +199,17 @@ export default function AddProduct() {
 
           {/* Submit */}
           <motion.button
-            whileTap={{ scale: 0.97 }}
+            whileTap={{ scale: uploading ? 1 : 0.97 }}
+            disabled={uploading}
             type="submit"
             style={{
-              padding: '1rem', background: t.text, color: t.bg,
-              border: 'none', cursor: 'pointer', fontSize: '0.85rem',
+              padding: '1rem', background: uploading ? t.border : t.text, color: uploading ? t.textMuted : t.bg,
+              border: 'none', cursor: uploading ? 'wait' : 'pointer', fontSize: '0.85rem',
               fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase',
               fontFamily: 'var(--font-body)',
             }}
           >
-            Publish Product to Store
+            {uploading ? 'Uploading to Server...' : 'Publish Product to Store'}
           </motion.button>
         </form>
       </div>
