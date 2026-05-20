@@ -23,7 +23,7 @@ export default function Hero() {
           left: 0,
           width: '100%',
           height: '100%',
-          backgroundImage: 'url(/hero.png)',
+          backgroundImage: 'url(/homepage-background.jpg)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           zIndex: -1
@@ -40,6 +40,25 @@ export default function Hero() {
       }} />
 
       <div style={{ textAlign: 'center', zIndex: 10, padding: '0 2rem' }}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.3, ease: 'easeOut' }}
+          style={{ 
+            display: 'inline-block', 
+            padding: '0.5rem 1.5rem', 
+            border: '1px solid rgba(255,255,255,0.4)', 
+            borderRadius: '50px', 
+            marginBottom: '1.5rem', 
+            fontSize: '0.75rem', 
+            letterSpacing: '3px', 
+            textTransform: 'uppercase', 
+            backdropFilter: 'blur(4px)',
+            background: 'rgba(0,0,0,0.1)'
+          }}
+        >
+          Online Store
+        </motion.div>
         <motion.h1
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
