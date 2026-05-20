@@ -45,20 +45,22 @@ export default function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.3, ease: 'easeOut' }}
           style={{ 
-            display: 'inline-block', 
-            padding: '0.35rem 1rem', 
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '0.45rem 1.5rem', 
             border: '1px solid rgba(255,255,255,0.4)', 
             borderRadius: '50px', 
             marginBottom: '1.5rem', 
-            fontSize: '0.65rem', 
-            letterSpacing: '2px', 
+            fontSize: '0.75rem', 
+            letterSpacing: '3px', 
             textTransform: 'uppercase', 
             backdropFilter: 'blur(4px)',
             background: 'rgba(0,0,0,0.1)',
             whiteSpace: 'nowrap'
           }}
         >
-          <span style={{ marginRight: '-2px' }}>Online Store</span>
+          <span style={{ paddingLeft: '3px' }}>Online Store</span>
         </motion.div>
         <motion.h1
           initial={{ y: 50, opacity: 0 }}
