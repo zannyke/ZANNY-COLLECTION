@@ -74,20 +74,24 @@ export function ProductProvider({ children }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...product, image: imageUrl })
       });
-      if (res.ok) {
-        const data = await res.json();
+      const data = await res.json();
+      if (data.success && data.id) {
         const newProd = {
           ...product,
           id: data.id,
           image: imageUrl,
+          image_url: imageUrl,
           sold: 0,
           created_at: new Date().toISOString()
         };
         setProducts(prev => [newProd, ...prev]);
-        return newProd;
+        return newProd;  // success — has .id
       }
+      // Return the error object so the UI can display it
+      return { error: data.error || 'Database insert failed' };
     } catch (err) {
-      console.error("Database insert failed", err);
+      console.error('Database insert failed', err);
+      return { error: err.message };
     }
   };
 

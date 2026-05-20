@@ -20,6 +20,7 @@ export default function AddProduct() {
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [apiError, setApiError] = useState('');
 
   const set = (field, val) => setForm(prev => ({ ...prev, [field]: val }));
 
@@ -44,16 +45,22 @@ export default function AddProduct() {
     e.preventDefault();
     if (!validate()) return;
     setUploading(true);
-    
-    await addProduct({
+    setApiError('');
+
+    const result = await addProduct({
       ...form,
       price: Number(form.price),
       stock: Number(form.stock),
     }, file);
-    
+
     setUploading(false);
-    setSubmitted(true);
-    setTimeout(() => navigate('/admin'), 1500);
+
+    if (result && result.id) {
+      setSubmitted(true);
+      setTimeout(() => navigate('/admin'), 1500);
+    } else {
+      setApiError('Failed to save product to database. Check the Cloudflare D1 schema has been applied (see schema.sql). Error: ' + (result?.error || 'unknown'));
+    }
   };
 
   if (submitted) return (
@@ -196,6 +203,13 @@ export default function AddProduct() {
             </div>
             {form.badge && <span style={{ marginLeft: 'auto', background: t.border, color: t.textMuted, padding: '0.2rem 0.6rem', fontSize: '0.65rem', letterSpacing: '1px' }}>{form.badge}</span>}
           </div>
+
+          {/* API Error Banner */}
+          {apiError && (
+            <div style={{ background: '#fff5f5', border: '1px solid #fecaca', padding: '1rem 1.25rem', borderRadius: '4px' }}>
+              <p style={{ color: '#c0392b', fontSize: '0.82rem', lineHeight: 1.6 }}>⚠️ {apiError}</p>
+            </div>
+          )}
 
           {/* Submit */}
           <motion.button

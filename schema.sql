@@ -1,5 +1,6 @@
 -- schema.sql
--- Run this in Cloudflare dashboard or via Wrangler to set up your tables
+-- Run this ENTIRE script in: Cloudflare Dashboard > D1 > zanny-db > Console > Execute
+-- WARNING: This drops all existing data and recreates the tables fresh.
 
 DROP TABLE IF EXISTS order_items;
 DROP TABLE IF EXISTS orders;
@@ -12,7 +13,7 @@ CREATE TABLE users (
   password_hash TEXT NOT NULL,
   first_name TEXT NOT NULL,
   last_name TEXT NOT NULL,
-  role TEXT DEFAULT 'customer', -- 'customer' or 'admin'
+  role TEXT DEFAULT 'customer',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -23,8 +24,9 @@ CREATE TABLE products (
   description TEXT,
   price REAL NOT NULL,
   stock INTEGER DEFAULT 0,
-  badge TEXT, -- 'NEW', 'SALE', 'HOT', etc.
-  image_url TEXT, -- This will be the R2 bucket URL
+  sold INTEGER DEFAULT 0,
+  badge TEXT,
+  image_url TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -35,8 +37,7 @@ CREATE TABLE orders (
   status TEXT DEFAULT 'pending',
   shipping_address TEXT,
   phone_number TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id)
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE order_items (
@@ -49,8 +50,3 @@ CREATE TABLE order_items (
   FOREIGN KEY (order_id) REFERENCES orders(id),
   FOREIGN KEY (product_id) REFERENCES products(id)
 );
-
--- Insert a default admin account
--- The password hash here should be updated with a real hash for security
-INSERT INTO users (id, email, password_hash, first_name, last_name, role) 
-VALUES ('admin-1', 'admin@zanny.com', 'admin_hash_placeholder', 'Zanny', 'Admin', 'admin');
