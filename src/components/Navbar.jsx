@@ -430,29 +430,51 @@ export default function Navbar() {
                 <p style={{ fontSize: '0.7rem', letterSpacing: '2px', color: '#aaa', marginBottom: '1.2rem', textTransform: 'uppercase' }}>Discover</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
                   {[
-                    { label: 'Collections', href: '/#collections' },
-                    { label: 'Discover', href: '/#discover' },
-                    { label: 'World of Zanny', href: '/#world-of-zanny' },
+                    { label: 'Collections', to: '/#collections' },
+                    { label: 'Discover', to: '/discover' },
+                    { label: 'World of Zanny', to: '/world-of-zanny' },
                   ].map((item) => (
-                    <a
-                      key={item.label}
-                      href={item.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="sidebar-nav-item"
-                      style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        padding: '1rem 0',
-                        borderBottom: '1px solid #f0f0f0',
-                        fontFamily: 'var(--font-heading)',
-                        fontSize: '1.1rem',
-                        color: '#1a1a1a',
-                        textDecoration: 'none',
-                        letterSpacing: '1px',
-                      }}
-                    >
-                      {item.label}
-                      <span style={{ fontSize: '1.2rem', color: '#ccc' }}>›</span>
-                    </a>
+                    item.to.startsWith('/#') ? (
+                      <a
+                        key={item.label}
+                        href={item.to}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="sidebar-nav-item"
+                        style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          padding: '1rem 0',
+                          borderBottom: '1px solid #f0f0f0',
+                          fontFamily: 'var(--font-heading)',
+                          fontSize: '1.1rem',
+                          color: '#1a1a1a',
+                          textDecoration: 'none',
+                          letterSpacing: '1px',
+                        }}
+                      >
+                        {item.label}
+                        <span style={{ fontSize: '1.2rem', color: '#ccc' }}>›</span>
+                      </a>
+                    ) : (
+                      <Link
+                        key={item.label}
+                        to={item.to}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="sidebar-nav-item"
+                        style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          padding: '1rem 0',
+                          borderBottom: '1px solid #f0f0f0',
+                          fontFamily: 'var(--font-heading)',
+                          fontSize: '1.1rem',
+                          color: '#1a1a1a',
+                          textDecoration: 'none',
+                          letterSpacing: '1px',
+                        }}
+                      >
+                        {item.label}
+                        <span style={{ fontSize: '1.2rem', color: '#ccc' }}>›</span>
+                      </Link>
+                    )
                   ))}
                 </div>
 

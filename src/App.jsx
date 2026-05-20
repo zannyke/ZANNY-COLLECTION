@@ -23,6 +23,8 @@ import ProductDetailPage from './pages/ProductDetailPage'
 import CustomerLogin from './pages/CustomerLogin'
 import CustomerRegister from './pages/CustomerRegister'
 import AccountPage from './pages/AccountPage'
+import Discover from './pages/Discover'
+import WorldOfZanny from './pages/WorldOfZanny'
 
 // Admin pages (no Navbar/Footer)
 import AdminLogin from './pages/admin/AdminLogin'
@@ -86,6 +88,9 @@ function App() {
               
               {/* Protected Order Flow */}
               <Route path="/cart" element={<PublicLayout><CartPage /></PublicLayout>} />
+              
+              <Route path="/discover" element={<PublicLayout><Discover /></PublicLayout>} />
+              <Route path="/world-of-zanny" element={<PublicLayout><WorldOfZanny /></PublicLayout>} />
               
               <Route path="/collections/:categoryId" element={<PublicLayout><CategoryPage /></PublicLayout>} />
               <Route path="/product/:productId" element={<PublicLayout><ProductDetailPage /></PublicLayout>} />
