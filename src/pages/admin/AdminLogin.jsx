@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
 
-// Simple hashed check — change this password as needed
-const ADMIN_PASSWORD = 'zanny@2026';
+// Expected hash for the admin password
+const ADMIN_HASH = '77c48bca0bfafbbdb784c50c9ffcb8b7a5d7fe7fa7562668de24e2465a838086';
 
 export default function AdminLogin() {
   const [pw, setPw] = useState('');
@@ -13,19 +13,30 @@ export default function AdminLogin() {
   const { t, resolvedTheme } = useTheme();
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      if (pw === ADMIN_PASSWORD) {
-        sessionStorage.setItem('zanny_admin', 'true');
-        navigate('/admin');
-      } else {
-        setError('Incorrect password. Please try again.');
-        setPw('');
-      }
+
+    try {
+      const msgBuffer = new TextEncoder().encode(pw);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashedInput = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+      setTimeout(() => {
+        if (hashedInput === ADMIN_HASH) {
+          sessionStorage.setItem('zanny_admin', 'true');
+          navigate('/admin');
+        } else {
+          setError('Incorrect password. Please try again.');
+          setPw('');
+        }
+        setLoading(false);
+      }, 600);
+    } catch (err) {
+      setError('Security verification failed.');
       setLoading(false);
-    }, 600);
+    }
   };
 
   return (

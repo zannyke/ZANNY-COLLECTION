@@ -18,10 +18,12 @@ export function AuthProvider({ children }) {
   const login = (email, password) => {
     // Simulate API call
     const users = JSON.parse(localStorage.getItem('zanny_registered_users') || '[]');
-    const foundUser = users.find(u => u.email === email && u.password === password);
+    // Mock security: Compare base64 encoded passwords to avoid plaintext storage matching
+    const encodedPassword = btoa(password);
+    const foundUser = users.find(u => u.email === email && u.password === encodedPassword);
     
     if (foundUser) {
-      const { password, ...userSafe } = foundUser;
+      const { password: _pw, ...userSafe } = foundUser;
       setUser(userSafe);
       localStorage.setItem('zanny_user', JSON.stringify(userSafe));
       return { success: true };
@@ -35,12 +37,13 @@ export function AuthProvider({ children }) {
       return { success: false, message: 'Email already exists' };
     }
     
-    const newUser = { ...userData, id: Date.now() };
+    // Mock security: encode password before saving to local storage
+    const newUser = { ...userData, password: btoa(userData.password), id: Date.now() };
     users.push(newUser);
     localStorage.setItem('zanny_registered_users', JSON.stringify(users));
     
     // Auto login
-    const { password, ...userSafe } = newUser;
+    const { password: _pw, ...userSafe } = newUser;
     setUser(userSafe);
     localStorage.setItem('zanny_user', JSON.stringify(userSafe));
     return { success: true };
@@ -51,8 +54,17 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('zanny_user');
   };
 
+  const deleteAccount = () => {
+    if (user) {
+      const users = JSON.parse(localStorage.getItem('zanny_registered_users') || '[]');
+      const updatedUsers = users.filter(u => u.email !== user.email);
+      localStorage.setItem('zanny_registered_users', JSON.stringify(updatedUsers));
+      logout();
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, register, logout, deleteAccount, loading, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );

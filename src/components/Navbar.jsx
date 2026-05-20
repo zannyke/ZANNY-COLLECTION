@@ -36,10 +36,11 @@ const IconX = ({ color, size = 22 }) => (
 );
 
 export default function Navbar() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, logout, deleteAccount } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const location = useLocation();
 
@@ -170,19 +171,52 @@ export default function Navbar() {
 
         {/* ── RIGHT: contact + monogram + cart ── */}
         <div style={{ display: 'flex', gap: '1.2rem', flex: 1, justifyContent: 'flex-end', alignItems: 'center' }}>
-          {/* Auth Link */}
-          <Link
-            to={isAuthenticated ? "/account" : "/login"}
-            className="zanny-text-link"
-            style={{
-              fontSize: '0.78rem', fontWeight: 700, letterSpacing: '1px',
-              color: iconColor, textDecoration: 'none',
-              paddingBottom: '1px',
-              transition: 'opacity 0.2s',
-            }}
-          >
-            {isAuthenticated ? user.firstName.toUpperCase() : "SIGN IN"}
-          </Link>
+          {/* Auth Link / Dropdown */}
+          {!isAuthenticated ? (
+            <Link
+              to="/login"
+              className="zanny-text-link"
+              style={{
+                fontSize: '0.78rem', fontWeight: 700, letterSpacing: '1px',
+                color: iconColor, textDecoration: 'none',
+                paddingBottom: '1px',
+                transition: 'opacity 0.2s',
+              }}
+            >
+              SIGN IN
+            </Link>
+          ) : (
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                className="zanny-text-link"
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  fontSize: '0.78rem', fontWeight: 700, letterSpacing: '1px',
+                  color: iconColor, textDecoration: 'none',
+                  paddingBottom: '1px', padding: 0,
+                  transition: 'opacity 0.2s', display: 'flex', alignItems: 'center', gap: '0.3rem'
+                }}
+              >
+                {user.firstName.toUpperCase()}
+              </button>
+              <AnimatePresence>
+                {profileDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+                    style={{
+                      position: 'absolute', top: '100%', right: 0, marginTop: '1rem',
+                      background: '#fff', border: '1px solid #eee', boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                      padding: '0.5rem 0', minWidth: '160px', zIndex: 100, display: 'flex', flexDirection: 'column'
+                    }}
+                  >
+                    <button onClick={() => { logout(); setProfileDropdownOpen(false); }} style={{ padding: '0.8rem 1.2rem', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '0.8rem', color: '#1a1a1a', fontFamily: 'var(--font-body)' }}>Sign Out</button>
+                    <button onClick={() => { deleteAccount(); setProfileDropdownOpen(false); }} style={{ padding: '0.8rem 1.2rem', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '0.8rem', color: '#c0392b', fontFamily: 'var(--font-body)' }}>Delete Account</button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
 
           {/* Monogram avatar (unique to Zanny) */}
           <motion.button
@@ -481,10 +515,28 @@ export default function Navbar() {
                   border: '1.5px solid #1a1a1a',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem',
-                }}>Z</div>
-                <div>
-                  <p style={{ fontSize: '0.8rem', fontWeight: 600, letterSpacing: '1px', margin: 0 }}>MY ACCOUNT</p>
-                  <p style={{ fontSize: '0.7rem', color: '#aaa', margin: 0 }}>Sign in or register</p>
+                }}>
+                  {isAuthenticated ? user.firstName[0].toUpperCase() : 'Z'}
+                </div>
+                <div style={{ flex: 1 }}>
+                  {isAuthenticated ? (
+                    <>
+                      <p style={{ fontSize: '0.8rem', fontWeight: 600, letterSpacing: '1px', margin: 0, textTransform: 'uppercase' }}>{user.firstName} {user.lastName}</p>
+                      <div style={{ display: 'flex', gap: '0.8rem', marginTop: '0.3rem' }}>
+                        <button onClick={() => { logout(); setMobileMenuOpen(false); }} style={{ background: 'none', border: 'none', padding: 0, fontSize: '0.75rem', color: '#555', cursor: 'pointer', textDecoration: 'underline' }}>Sign Out</button>
+                        <button onClick={() => { deleteAccount(); setMobileMenuOpen(false); }} style={{ background: 'none', border: 'none', padding: 0, fontSize: '0.75rem', color: '#c0392b', cursor: 'pointer', textDecoration: 'underline' }}>Delete Account</button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p style={{ fontSize: '0.8rem', fontWeight: 600, letterSpacing: '1px', margin: 0 }}>MY ACCOUNT</p>
+                      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.2rem' }}>
+                        <Link to="/login" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: '0.75rem', color: '#555', textDecoration: 'none' }}>Sign In</Link>
+                        <span style={{ color: '#ccc', fontSize: '0.75rem' }}>|</span>
+                        <Link to="/register" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: '0.75rem', color: '#555', textDecoration: 'none' }}>Register</Link>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </motion.div>
