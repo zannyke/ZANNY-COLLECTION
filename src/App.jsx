@@ -4,7 +4,6 @@ import { CartProvider } from './context/CartContext'
 import { ProductProvider } from './context/ProductContext'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Navbar from './components/Navbar'
-import Footer from './components/Footer'
 import ScrollToTop from './components/ScrollToTop'
 import CookieConsent from './components/CookieConsent'
 import { ThemeProvider } from './context/ThemeContext'
@@ -53,7 +52,6 @@ function PublicLayout({ children }) {
     <>
       <Navbar />
       {children}
-      <Footer />
       <CookieConsent />
     </>
   )

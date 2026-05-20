@@ -40,7 +40,18 @@ export default function CollectionShowcase() {
           gap: '1.5rem',
         }}>
           {CATEGORIES.map((cat, i) => {
+            let latestProduct;
+            if (cat.id === 'new-arrivals') {
+              latestProduct = products.filter(p => p.badge === 'NEW').sort((a, b) => b.id - a.id)[0];
+            } else if (cat.id === 'sale') {
+              latestProduct = products.filter(p => p.badge === 'SALE' || p.discount).sort((a, b) => b.id - a.id)[0];
+            } else {
+              latestProduct = products.filter(p => p.category === cat.id).sort((a, b) => b.id - a.id)[0];
+            }
+            
             const count = products.filter(p => p.category === cat.id).length;
+            const displayImage = latestProduct?.image || cat.fallbackImage;
+            
             return (
               <motion.div
                 key={cat.id}
@@ -63,7 +74,7 @@ export default function CollectionShowcase() {
                       <motion.img
                         whileHover={{ scale: 1.07 }}
                         transition={{ duration: 0.6 }}
-                        src={cat.image}
+                        src={displayImage}
                         alt={cat.label}
                         style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                       />
