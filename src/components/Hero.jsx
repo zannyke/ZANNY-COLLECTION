@@ -57,7 +57,7 @@ export default function Hero() {
             background: 'rgba(0,0,0,0.1)'
           }}
         >
-          Online Store
+          <span style={{ marginRight: '-2px' }}>Online Store</span>
         </motion.div>
         <motion.h1
           initial={{ y: 50, opacity: 0 }}
