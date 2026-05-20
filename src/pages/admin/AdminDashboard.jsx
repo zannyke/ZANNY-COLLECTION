@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -7,32 +7,24 @@ import {
 } from 'recharts';
 import { useProducts, CATEGORIES } from '../../context/ProductContext';
 import { useTheme } from '../../context/ThemeContext';
-import { Sun, Moon, Monitor, TrendingUp, BarChart3, Activity } from 'lucide-react';
+import { Sun, Moon, Monitor, TrendingUp, BarChart3, Activity, Package, ShoppingBag, LayoutDashboard } from 'lucide-react';
 
-// ── Simulated Analytics Data (unchanged) ─────────────────────────────
-const daily = Array.from({ length: 30 }, (_, i) => ({
-  date: `Day ${i + 1}`,
-  Visitors: 0,
-  PageViews: 0,
-}));
-const weekly = ['Week 1','Week 2','Week 3','Week 4'].map(w => ({
-  date: w,
-  Visitors: 0,
-  PageViews: 0,
-}));
-const monthly = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map(m => ({
-  date: m,
-  Visitors: 0,
-  PageViews: 0,
-}));
-const yearly = ['2023','2024','2025','2026'].map(y => ({
-  date: y,
-  Visitors: 0,
-  PageViews: 0,
-}));
+// ── Simulated Analytics Data ─────────────────────────────────────────
+const daily   = Array.from({ length: 30 }, (_, i) => ({ date: `Day ${i + 1}`, Visitors: 0, PageViews: 0 }));
+const weekly  = ['Week 1','Week 2','Week 3','Week 4'].map(w => ({ date: w, Visitors: 0, PageViews: 0 }));
+const monthly = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map(m => ({ date: m, Visitors: 0, PageViews: 0 }));
+const yearly  = ['2023','2024','2025','2026'].map(y => ({ date: y, Visitors: 0, PageViews: 0 }));
 const DATA = { daily, weekly, monthly, yearly };
 
-// ── Stat Card ────────────────────────────────────────────
+const STATUS_COLORS = {
+  pending:   { bg: '#fff8e1', text: '#f59e0b', border: '#fde68a' },
+  confirmed: { bg: '#e0f2fe', text: '#0284c7', border: '#bae6fd' },
+  shipped:   { bg: '#ede9fe', text: '#7c3aed', border: '#ddd6fe' },
+  fulfilled: { bg: '#dcfce7', text: '#16a34a', border: '#bbf7d0' },
+  cancelled: { bg: '#fee2e2', text: '#dc2626', border: '#fecaca' },
+};
+
+// ── Stat Card ─────────────────────────────────────────────────────────
 function StatCard({ label, value, sub, accent, t }) {
   return (
     <motion.div
@@ -50,7 +42,6 @@ function StatCard({ label, value, sub, accent, t }) {
   );
 }
 
-// ── Tooltip style ────────────────────────────────────────
 const CustomTooltip = ({ active, payload, label, t }) => {
   if (!active || !payload?.length) return null;
   return (
@@ -65,67 +56,198 @@ const CustomTooltip = ({ active, payload, label, t }) => {
   );
 };
 
+// ── Orders Tab ────────────────────────────────────────────────────────
+function OrdersTab({ t, accentColor }) {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(null);
+  const [expanded, setExpanded] = useState(null);
+
+  const fetchOrders = () => {
+    setLoading(true);
+    fetch('/api/orders')
+      .then(r => r.json())
+      .then(data => { setOrders(Array.isArray(data) ? data : []); setLoading(false); })
+      .catch(() => setLoading(false));
+  };
+
+  useEffect(() => { fetchOrders(); }, []);
+
+  const updateStatus = async (id, status) => {
+    setUpdating(id);
+    await fetch('/api/orders', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status })
+    });
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+    setUpdating(null);
+  };
+
+  if (loading) return <p style={{ color: t.textMuted, padding: '2rem' }}>Loading orders…</p>;
+  if (!orders.length) return (
+    <div style={{ textAlign: 'center', padding: '4rem', color: t.textMuted }}>
+      <p style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>📦</p>
+      <p style={{ fontFamily: 'var(--font-heading)', fontSize: '1.2rem', letterSpacing: '1px', marginBottom: '0.5rem' }}>No Orders Yet</p>
+      <p style={{ fontSize: '0.82rem' }}>Orders placed by customers will appear here.</p>
+    </div>
+  );
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', letterSpacing: '1px' }}>All Orders ({orders.length})</h2>
+        <button onClick={fetchOrders} style={{ background: 'none', border: `1px solid ${t.border}`, color: t.textMuted, padding: '0.4rem 0.9rem', cursor: 'pointer', fontSize: '0.72rem', letterSpacing: '1px', textTransform: 'uppercase', fontFamily: 'var(--font-body)' }}>↻ Refresh</button>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        {orders.map(order => {
+          const sc = STATUS_COLORS[order.status] || STATUS_COLORS.pending;
+          const isExpanded = expanded === order.id;
+          return (
+            <motion.div
+              key={order.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              style={{ background: t.surface, border: `1px solid ${t.border}`, overflow: 'hidden' }}
+            >
+              {/* Order Header Row */}
+              <div
+                style={{ padding: '1.1rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', flexWrap: 'wrap' }}
+                onClick={() => setExpanded(isExpanded ? null : order.id)}
+              >
+                <div style={{ flex: '0 0 auto' }}>
+                  <p style={{ fontWeight: 700, fontSize: '0.88rem', letterSpacing: '0.5px' }}>{order.id}</p>
+                  <p style={{ color: t.textMuted, fontSize: '0.72rem', marginTop: '0.15rem' }}>
+                    {order.created_at ? new Date(order.created_at).toLocaleString('en-KE', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}
+                  </p>
+                </div>
+
+                <div style={{ flex: 1, minWidth: '180px' }}>
+                  <p style={{ fontSize: '0.82rem', color: t.textMuted }}>📍 {order.shipping_address || '—'}</p>
+                  <p style={{ fontSize: '0.82rem', color: t.textMuted, marginTop: '0.15rem' }}>📞 {order.phone_number || '—'}</p>
+                </div>
+
+                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <p style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem' }}>
+                    KSh {Number(order.total_amount).toLocaleString()}
+                  </p>
+
+                  <span style={{
+                    padding: '0.3rem 0.75rem', borderRadius: '50px', fontSize: '0.7rem', fontWeight: 700,
+                    letterSpacing: '0.5px', textTransform: 'uppercase',
+                    background: sc.bg, color: sc.text, border: `1px solid ${sc.border}`
+                  }}>{order.status}</span>
+
+                  <span style={{ color: t.textMuted, fontSize: '0.9rem', userSelect: 'none' }}>{isExpanded ? '▲' : '▼'}</span>
+                </div>
+              </div>
+
+              {/* Expanded Details */}
+              {isExpanded && (
+                <div style={{ borderTop: `1px solid ${t.border}`, padding: '1.25rem 1.5rem', background: t.bg }}>
+                  {/* Items */}
+                  <p style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '1.5px', color: t.textMuted, marginBottom: '0.75rem' }}>Items Ordered</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                    {(order.items || []).map((item, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.5rem 0', borderBottom: `1px solid ${t.border}` }}>
+                        {item.image_url && (
+                          <img src={item.image_url} alt={item.product_name} style={{ width: '40px', height: '48px', objectFit: 'cover', background: t.surface }} />
+                        )}
+                        <div style={{ flex: 1 }}>
+                          <p style={{ fontSize: '0.85rem', fontWeight: 600 }}>{item.product_name || 'Unknown Product'}</p>
+                          <p style={{ fontSize: '0.75rem', color: t.textMuted }}>Size: {item.size || '—'} · Qty: {item.quantity}</p>
+                        </div>
+                        <p style={{ fontWeight: 600, fontSize: '0.85rem' }}>KSh {Number(item.price_at_purchase).toLocaleString()}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Status Updater */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    <p style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '1.5px', color: t.textMuted }}>Update Status:</p>
+                    {['pending','confirmed','shipped','fulfilled','cancelled'].map(s => {
+                      const c = STATUS_COLORS[s];
+                      const isActive = order.status === s;
+                      return (
+                        <button
+                          key={s}
+                          disabled={updating === order.id || isActive}
+                          onClick={() => updateStatus(order.id, s)}
+                          style={{
+                            padding: '0.35rem 0.85rem', fontSize: '0.7rem', fontWeight: 700,
+                            letterSpacing: '0.5px', textTransform: 'uppercase', cursor: isActive ? 'default' : 'pointer',
+                            border: `1.5px solid ${isActive ? c.border : t.border}`,
+                            background: isActive ? c.bg : 'transparent',
+                            color: isActive ? c.text : t.textMuted,
+                            borderRadius: '4px', fontFamily: 'var(--font-body)',
+                            transition: 'all 0.2s',
+                            opacity: updating === order.id && !isActive ? 0.5 : 1,
+                          }}
+                        >{s}</button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Main Dashboard ────────────────────────────────────────────────────
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const { products, deleteProduct, getBestSellers } = useProducts();
   const { theme, setTheme, t, resolvedTheme } = useTheme();
   const [period, setPeriod] = useState('daily');
   const [chartType, setChartType] = useState('area');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const bestSellers = getBestSellers();
 
-  const totalVisitors = monthly.reduce((s, m) => s + m.Visitors, 0);
-  const totalViews   = monthly.reduce((s, m) => s + m.PageViews, 0);
   const totalRevenue = products.reduce((s, p) => s + p.price * p.sold, 0);
+  const logout = () => { sessionStorage.removeItem('zanny_admin'); navigate('/admin/login'); };
 
-  const logout = () => {
-    sessionStorage.removeItem('zanny_admin');
-    navigate('/admin/login');
-  };
-
-  const chartColor = resolvedTheme === 'dark' ? '#ffffff' : '#1a1a1a';
+  const chartColor  = resolvedTheme === 'dark' ? '#ffffff' : '#1a1a1a';
   const accentColor = resolvedTheme === 'dark' ? '#00ff9d' : '#00b894';
 
   const renderChart = () => {
     const data = DATA[period];
     const commonProps = { data, margin: { top: 5, right: 10, left: 0, bottom: 5 } };
-
-    if (chartType === 'bar') {
-      return (
-        <BarChart {...commonProps}>
-          <CartesianGrid strokeDasharray="3 3" stroke={t.border} vertical={false} />
-          <XAxis dataKey="date" tick={{ fill: t.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
-          <YAxis tick={{ fill: t.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
-          <Tooltip content={<CustomTooltip t={t} />} cursor={{ fill: t.surfaceHover }} />
-          <Legend wrapperStyle={{ color: t.textMuted, fontSize: '0.75rem' }} />
-          <Bar dataKey="Visitors" fill={chartColor} radius={[2, 2, 0, 0]} />
-          <Bar dataKey="PageViews" fill={accentColor} radius={[2, 2, 0, 0]} />
-        </BarChart>
-      );
-    }
-
-    if (chartType === 'line') {
-      return (
-        <LineChart {...commonProps}>
-          <CartesianGrid strokeDasharray="3 3" stroke={t.border} />
-          <XAxis dataKey="date" tick={{ fill: t.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
-          <YAxis tick={{ fill: t.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
-          <Tooltip content={<CustomTooltip t={t} />} />
-          <Legend wrapperStyle={{ color: t.textMuted, fontSize: '0.75rem' }} />
-          <Line type="monotone" dataKey="Visitors" stroke={chartColor} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-          <Line type="monotone" dataKey="PageViews" stroke={accentColor} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-        </LineChart>
-      );
-    }
-
+    if (chartType === 'bar') return (
+      <BarChart {...commonProps}>
+        <CartesianGrid strokeDasharray="3 3" stroke={t.border} vertical={false} />
+        <XAxis dataKey="date" tick={{ fill: t.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+        <YAxis tick={{ fill: t.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+        <Tooltip content={<CustomTooltip t={t} />} cursor={{ fill: t.surfaceHover }} />
+        <Legend wrapperStyle={{ color: t.textMuted, fontSize: '0.75rem' }} />
+        <Bar dataKey="Visitors" fill={chartColor} radius={[2,2,0,0]} />
+        <Bar dataKey="PageViews" fill={accentColor} radius={[2,2,0,0]} />
+      </BarChart>
+    );
+    if (chartType === 'line') return (
+      <LineChart {...commonProps}>
+        <CartesianGrid strokeDasharray="3 3" stroke={t.border} />
+        <XAxis dataKey="date" tick={{ fill: t.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+        <YAxis tick={{ fill: t.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
+        <Tooltip content={<CustomTooltip t={t} />} />
+        <Legend wrapperStyle={{ color: t.textMuted, fontSize: '0.75rem' }} />
+        <Line type="monotone" dataKey="Visitors" stroke={chartColor} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+        <Line type="monotone" dataKey="PageViews" stroke={accentColor} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+      </LineChart>
+    );
     return (
       <AreaChart {...commonProps}>
         <defs>
           <linearGradient id="colorV" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor={chartColor} stopOpacity={0.15} />
-            <stop offset="95%" stopColor={chartColor} stopOpacity={0} />
+            <stop offset="5%"  stopColor={chartColor}  stopOpacity={0.15} />
+            <stop offset="95%" stopColor={chartColor}  stopOpacity={0} />
           </linearGradient>
           <linearGradient id="colorP" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor={accentColor} stopOpacity={0.15} />
+            <stop offset="5%"  stopColor={accentColor} stopOpacity={0.15} />
             <stop offset="95%" stopColor={accentColor} stopOpacity={0} />
           </linearGradient>
         </defs>
@@ -134,11 +256,18 @@ export default function AdminDashboard() {
         <YAxis tick={{ fill: t.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
         <Tooltip content={<CustomTooltip t={t} />} />
         <Legend wrapperStyle={{ color: t.textMuted, fontSize: '0.75rem' }} />
-        <Area type="monotone" dataKey="Visitors" stroke={chartColor} strokeWidth={1.5} fill="url(#colorV)" />
+        <Area type="monotone" dataKey="Visitors"  stroke={chartColor}  strokeWidth={1.5} fill="url(#colorV)" />
         <Area type="monotone" dataKey="PageViews" stroke={accentColor} strokeWidth={1.5} fill="url(#colorP)" />
       </AreaChart>
     );
   };
+
+  const navItems = [
+    { id: 'dashboard', label: '▪ Dashboard',   icon: <LayoutDashboard size={14} />, path: null },
+    { id: 'orders',    label: '▪ Orders',       icon: <ShoppingBag size={14} />,    path: null },
+    { id: 'products',  label: '▪ Add Product',  icon: <Package size={14} />,        path: '/admin/add-product' },
+    { id: 'store',     label: '▪ View Store',   icon: null,                          path: '/' },
+  ];
 
   return (
     <div style={{ minHeight: '100vh', background: t.bg, color: t.text, fontFamily: 'var(--font-body)', transition: 'background 0.3s, color 0.3s' }}>
@@ -164,48 +293,52 @@ export default function AdminDashboard() {
         </div>
 
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1 }}>
-          {[
-            { label: '▪ Dashboard',      path: '/admin' },
-            { label: '▪ Add Product',    path: '/admin/add-product' },
-            { label: '▪ View Store',     path: '/' },
-          ].map(item => (
-            <Link key={item.label} to={item.path} style={{
-              padding: '0.65rem 0.75rem', color: t.textMuted, textDecoration: 'none',
+          {navItems.map(item => {
+            const isActive = activeTab === item.id;
+            const baseStyle = {
+              padding: '0.65rem 0.75rem', textDecoration: 'none',
               fontSize: '0.82rem', letterSpacing: '0.5px', borderRadius: '4px',
-              transition: 'all 0.2s',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = t.surfaceHover; e.currentTarget.style.color = t.text; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = t.textMuted; }}
-            >
-              {item.label}
-            </Link>
-          ))}
+              transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '0.5rem',
+              color: isActive ? t.text : t.textMuted,
+              background: isActive ? t.surfaceHover : 'transparent',
+              border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', width: '100%', textAlign: 'left',
+            };
+
+            if (item.path) {
+              return (
+                <Link key={item.id} to={item.path} style={{ ...baseStyle, color: isActive ? t.text : t.textMuted }}
+                  onMouseEnter={e => { e.currentTarget.style.background = t.surfaceHover; e.currentTarget.style.color = t.text; }}
+                  onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = t.textMuted; } }}
+                >{item.label}</Link>
+              );
+            }
+
+            return (
+              <button key={item.id} onClick={() => setActiveTab(item.id)} style={baseStyle}
+                onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = t.surfaceHover; e.currentTarget.style.color = t.text; } }}
+                onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = t.textMuted; } }}
+              >{item.label}</button>
+            );
+          })}
         </nav>
 
         {/* Theme Switcher */}
-        <div style={{ 
-          marginBottom: '1.5rem', padding: '0.5rem', background: t.surface, 
-          borderRadius: '8px', display: 'flex', gap: '0.25rem' 
-        }}>
+        <div style={{ marginBottom: '1.5rem', padding: '0.5rem', background: t.surface, borderRadius: '8px', display: 'flex', gap: '0.25rem' }}>
           {[
-            { id: 'light', icon: <Sun size={14} />, label: 'Light' },
-            { id: 'dark',  icon: <Moon size={14} />, label: 'Dark' },
-            { id: 'system',icon: <Monitor size={14} />, label: 'System' },
+            { id: 'light',  icon: <Sun size={14} />,     label: 'Light' },
+            { id: 'dark',   icon: <Moon size={14} />,    label: 'Dark' },
+            { id: 'system', icon: <Monitor size={14} />, label: 'System' },
           ].map(item => (
             <button
-              key={item.id}
-              onClick={() => setTheme(item.id)}
+              key={item.id} onClick={() => setTheme(item.id)}
               style={{
                 flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
                 padding: '0.5rem', border: 'none', borderRadius: '4px',
                 background: theme === item.id ? (resolvedTheme === 'dark' ? '#333' : '#eee') : 'transparent',
                 color: theme === item.id ? t.text : t.textMuted,
                 cursor: 'pointer', transition: 'all 0.2s',
-              }}
-              title={item.label}
-            >
-              {item.icon}
-            </button>
+              }} title={item.label}
+            >{item.icon}</button>
           ))}
         </div>
 
@@ -215,155 +348,173 @@ export default function AdminDashboard() {
           letterSpacing: '1px', textTransform: 'uppercase', fontFamily: 'var(--font-body)',
           transition: 'all 0.2s',
         }}
-        onMouseEnter={e => { e.currentTarget.style.borderColor = '#c0392b'; e.currentTarget.style.color = '#c0392b'; }}
-        onMouseLeave={e => { e.currentTarget.style.borderColor = t.border; e.currentTarget.style.color = t.textMuted; }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = '#c0392b'; e.currentTarget.style.color = '#c0392b'; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = t.border; e.currentTarget.style.color = t.textMuted; }}
         >Sign Out</button>
       </div>
 
-      {/* ── Main content ── */}
+      {/* ── Main Content ── */}
       <div style={{ marginLeft: '240px', padding: '2.5rem 3rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2.5rem' }}>
-          <div>
-            <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '2rem', letterSpacing: '2px', marginBottom: '0.3rem' }}>Dashboard</h1>
-            <p style={{ color: t.textMuted, fontSize: '0.8rem' }}>Welcome back. Here's what's happening with Zanny Collection.</p>
-          </div>
-          <Link to="/admin/add-product" style={{
-            padding: '0.75rem 1.5rem', background: t.text, color: t.bg,
-            textDecoration: 'none', fontSize: '0.78rem', fontWeight: 700,
-            letterSpacing: '1.5px', textTransform: 'uppercase',
-          }}>+ Add Product</Link>
-        </div>
 
-        {/* ── KPI Cards ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '2.5rem' }}>
-          <StatCard label="Daily Hustlers" value={totalVisitors.toLocaleString()} sub="Site visits" t={t} />
-          <StatCard label="Hype Factor" value={totalViews.toLocaleString()} sub="Page views" t={t} />
-          <StatCard label="Street Rep" value={products.reduce((s, p) => s + p.sold, 0).toLocaleString()} sub="Total items in the street" accent={accentColor} t={t} />
-          <StatCard label="Zanny Drops" value={products.length} sub={`${CATEGORIES.length} categories`} t={t} />
-        </div>
+        {/* ── DASHBOARD TAB ── */}
+        {activeTab === 'dashboard' && (
+          <>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2.5rem' }}>
+              <div>
+                <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '2rem', letterSpacing: '2px', marginBottom: '0.3rem' }}>Dashboard</h1>
+                <p style={{ color: t.textMuted, fontSize: '0.8rem' }}>Welcome back. Here's what's happening with Zanny Collection.</p>
+              </div>
+              <Link to="/admin/add-product" style={{
+                padding: '0.75rem 1.5rem', background: t.text, color: t.bg,
+                textDecoration: 'none', fontSize: '0.78rem', fontWeight: 700,
+                letterSpacing: '1.5px', textTransform: 'uppercase',
+              }}>+ Add Product</Link>
+            </div>
 
-        {/* ── Traffic Chart ── */}
-        <div style={{ background: t.surface, border: `1px solid ${t.border}`, padding: '2rem', marginBottom: '2rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-            <div>
-              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', letterSpacing: '1px' }}>Website Traffic</h2>
-              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                {[
-                  { id: 'area', icon: <TrendingUp size={14} />, label: 'Area' },
-                  { id: 'bar',  icon: <BarChart3 size={14}  />, label: 'Bar' },
-                  { id: 'line', icon: <Activity size={14}   />, label: 'Line' },
-                ].map(type => (
-                  <button key={type.id} onClick={() => setChartType(type.id)} style={{
-                    display: 'flex', alignItems: 'center', gap: '0.4rem',
-                    padding: '0.35rem 0.65rem', background: chartType === type.id ? t.text : 'transparent',
-                    color: chartType === type.id ? t.bg : t.textMuted, border: `1px solid ${t.border}`,
-                    cursor: 'pointer', fontSize: '0.65rem', textTransform: 'uppercase',
-                    letterSpacing: '0.5px', transition: 'all 0.2s',
-                  }}>
-                    {type.icon} {type.label}
-                  </button>
-                ))}
+            {/* KPI Cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '2.5rem' }}>
+              <StatCard label="Daily Hustlers" value="0" sub="Site visits" t={t} />
+              <StatCard label="Hype Factor"    value="0" sub="Page views"  t={t} />
+              <StatCard label="Street Rep"     value={products.reduce((s, p) => s + p.sold, 0).toLocaleString()} sub="Total items sold" accent={accentColor} t={t} />
+              <StatCard label="Zanny Drops"    value={products.length} sub={`${CATEGORIES.length} categories`} t={t} />
+            </div>
+
+            {/* Traffic Chart */}
+            <div style={{ background: t.surface, border: `1px solid ${t.border}`, padding: '2rem', marginBottom: '2rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <div>
+                  <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', letterSpacing: '1px' }}>Website Traffic</h2>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                    {[
+                      { id: 'area', icon: <TrendingUp size={14} />, label: 'Area' },
+                      { id: 'bar',  icon: <BarChart3 size={14} />,  label: 'Bar' },
+                      { id: 'line', icon: <Activity size={14} />,   label: 'Line' },
+                    ].map(type => (
+                      <button key={type.id} onClick={() => setChartType(type.id)} style={{
+                        display: 'flex', alignItems: 'center', gap: '0.4rem',
+                        padding: '0.35rem 0.65rem',
+                        background: chartType === type.id ? t.text : 'transparent',
+                        color: chartType === type.id ? t.bg : t.textMuted,
+                        border: `1px solid ${t.border}`, cursor: 'pointer',
+                        fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.5px', transition: 'all 0.2s',
+                      }}>{type.icon} {type.label}</button>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  {['daily','weekly','monthly','yearly'].map(p => (
+                    <button key={p} onClick={() => setPeriod(p)} style={{
+                      padding: '0.35rem 0.85rem',
+                      background: period === p ? t.text : 'transparent',
+                      color: period === p ? t.bg : t.textMuted,
+                      border: `1px solid ${t.border}`, cursor: 'pointer',
+                      fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.5px',
+                      fontFamily: 'var(--font-body)', transition: 'all 0.2s',
+                    }}>{p}</button>
+                  ))}
+                </div>
+              </div>
+              <ResponsiveContainer width="100%" height={260}>{renderChart()}</ResponsiveContainer>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+              {/* Best Sellers */}
+              <div style={{ background: t.surface, border: `1px solid ${t.border}`, padding: '2rem' }}>
+                <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', letterSpacing: '1px', marginBottom: '1.5rem' }}>Best Sellers</h2>
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={bestSellers} layout="vertical" margin={{ left: 10, right: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={t.border} horizontal={false} />
+                    <XAxis type="number" tick={{ fill: t.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis type="category" dataKey="name" tick={{ fill: t.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} width={120} />
+                    <Tooltip content={<CustomTooltip t={t} />} />
+                    <Bar dataKey="sold" name="Units Sold" fill={chartColor} radius={[0,2,2,0]} barSize={14} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Category Breakdown */}
+              <div style={{ background: t.surface, border: `1px solid ${t.border}`, padding: '2rem' }}>
+                <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', letterSpacing: '1px', marginBottom: '1.5rem' }}>By Category</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {CATEGORIES.map(cat => {
+                    const count    = products.filter(p => p.category === cat.id).length;
+                    const soldCount = products.filter(p => p.category === cat.id).reduce((s, p) => s + p.sold, 0);
+                    const maxSold   = Math.max(1, ...CATEGORIES.map(c => products.filter(p => p.category === c.id).reduce((s, p) => s + p.sold, 0)));
+                    return (
+                      <div key={cat.id}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                          <span style={{ fontSize: '0.75rem', color: t.textMuted }}>{cat.label}</span>
+                          <span style={{ fontSize: '0.75rem', color: t.textMuted, opacity: 0.6 }}>{soldCount} sold · {count} items</span>
+                        </div>
+                        <div style={{ height: '4px', background: t.border, borderRadius: '2px' }}>
+                          <div style={{ height: '100%', width: `${(soldCount / maxSold) * 100}%`, background: chartColor, borderRadius: '2px', transition: 'width 0.8s ease' }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              {['daily','weekly','monthly','yearly'].map(p => (
-                <button key={p} onClick={() => setPeriod(p)} style={{
-                  padding: '0.35rem 0.85rem', background: period === p ? t.text : 'transparent',
-                  color: period === p ? t.bg : t.textMuted, border: `1px solid ${t.border}`,
-                  cursor: 'pointer', fontSize: '0.7rem', textTransform: 'uppercase',
-                  letterSpacing: '0.5px', fontFamily: 'var(--font-body)', transition: 'all 0.2s',
-                }}>{p}</button>
-              ))}
+
+            {/* Product Management Table */}
+            <div style={{ background: t.surface, border: `1px solid ${t.border}`, padding: '2rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', letterSpacing: '1px' }}>All Products ({products.length})</h2>
+              </div>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
+                  <thead>
+                    <tr style={{ borderBottom: `1px solid ${t.border}`, color: t.textMuted }}>
+                      {['Product','Category','Price','Stock','Sold','Badge','Action'].map(h => (
+                        <th key={h} style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.7rem', whiteSpace: 'nowrap' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {products.length === 0 && (
+                      <tr><td colSpan={7} style={{ padding: '2rem', textAlign: 'center', color: t.textMuted }}>No products added yet. <Link to="/admin/add-product" style={{ color: t.text }}>Add your first product →</Link></td></tr>
+                    )}
+                    {products.map(p => (
+                      <tr key={p.id} style={{ borderBottom: `1px solid ${t.border}`, transition: 'background 0.2s' }}
+                        onMouseEnter={e => e.currentTarget.style.background = t.surfaceHover}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <td style={{ padding: '0.85rem 1rem', color: t.text, fontWeight: 500 }}>{p.name}</td>
+                        <td style={{ padding: '0.85rem 1rem', color: t.textMuted }}>{CATEGORIES.find(c => c.id === p.category)?.label}</td>
+                        <td style={{ padding: '0.85rem 1rem', color: t.textMuted }}>KSh {p.price.toLocaleString()}</td>
+                        <td style={{ padding: '0.85rem 1rem', color: p.stock < 15 ? '#c0392b' : t.textMuted }}>{p.stock}</td>
+                        <td style={{ padding: '0.85rem 1rem', color: accentColor, fontWeight: 600 }}>{p.sold}</td>
+                        <td style={{ padding: '0.85rem 1rem' }}>
+                          {p.badge && <span style={{ background: t.border, color: t.textMuted, padding: '0.2rem 0.5rem', fontSize: '0.65rem', letterSpacing: '1px' }}>{p.badge}</span>}
+                        </td>
+                        <td style={{ padding: '0.85rem 1rem' }}>
+                          <button onClick={() => deleteProduct(p.id)} style={{
+                            background: 'none', border: `1px solid ${t.border}`, color: t.textMuted,
+                            padding: '0.3rem 0.75rem', cursor: 'pointer', fontSize: '0.7rem', fontFamily: 'var(--font-body)',
+                          }}
+                            onMouseEnter={e => { e.currentTarget.style.borderColor = '#c0392b'; e.currentTarget.style.color = '#c0392b'; }}
+                            onMouseLeave={e => { e.currentTarget.style.borderColor = t.border; e.currentTarget.style.color = t.textMuted; }}
+                          >Remove</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
-          <ResponsiveContainer width="100%" height={260}>
-            {renderChart()}
-          </ResponsiveContainer>
-        </div>
+          </>
+        )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
-          {/* ── Best Sellers Chart ── */}
-          <div style={{ background: t.surface, border: `1px solid ${t.border}`, padding: '2rem' }}>
-            <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', letterSpacing: '1px', marginBottom: '1.5rem' }}>Best Sellers</h2>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={bestSellers} layout="vertical" margin={{ left: 10, right: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={t.border} horizontal={false} />
-                <XAxis type="number" tick={{ fill: t.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
-                <YAxis type="category" dataKey="name" tick={{ fill: t.textMuted, fontSize: 10 }} axisLine={false} tickLine={false} width={120} />
-                <Tooltip content={<CustomTooltip t={t} />} />
-                <Bar dataKey="sold" name="Units Sold" fill={chartColor} radius={[0, 2, 2, 0]} barSize={14} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* ── Category breakdown ── */}
-          <div style={{ background: t.surface, border: `1px solid ${t.border}`, padding: '2rem' }}>
-            <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', letterSpacing: '1px', marginBottom: '1.5rem' }}>By Category</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {CATEGORIES.map(cat => {
-                const count = products.filter(p => p.category === cat.id).length;
-                const soldCount = products.filter(p => p.category === cat.id).reduce((s, p) => s + p.sold, 0);
-                const maxSold = Math.max(...CATEGORIES.map(c => products.filter(p => p.category === c.id).reduce((s, p) => s + p.sold, 0)));
-                return (
-                  <div key={cat.id}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                      <span style={{ fontSize: '0.75rem', color: t.textMuted }}>{cat.label}</span>
-                      <span style={{ fontSize: '0.75rem', color: t.textMuted, opacity: 0.6 }}>{soldCount} sold · {count} items</span>
-                    </div>
-                    <div style={{ height: '4px', background: t.border, borderRadius: '2px' }}>
-                      <div style={{ height: '100%', width: `${maxSold ? (soldCount / maxSold) * 100 : 0}%`, background: chartColor, borderRadius: '2px', transition: 'width 0.8s ease' }} />
-                    </div>
-                  </div>
-                );
-              })}
+        {/* ── ORDERS TAB ── */}
+        {activeTab === 'orders' && (
+          <>
+            <div style={{ marginBottom: '2.5rem' }}>
+              <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '2rem', letterSpacing: '2px', marginBottom: '0.3rem' }}>Orders</h1>
+              <p style={{ color: t.textMuted, fontSize: '0.8rem' }}>Manage and fulfil customer orders from your D1 database.</p>
             </div>
-          </div>
-        </div>
-
-        {/* ── Product Management Table ── */}
-        <div style={{ background: t.surface, border: `1px solid ${t.border}`, padding: '2rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-            <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', letterSpacing: '1px' }}>All Products ({products.length})</h2>
-          </div>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
-              <thead>
-                <tr style={{ borderBottom: `1px solid ${t.border}`, color: t.textMuted }}>
-                  {['Product', 'Category', 'Price', 'Stock', 'Sold', 'Badge', 'Action'].map(h => (
-                    <th key={h} style={{ padding: '0.75rem 1rem', textAlign: 'left', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.7rem', whiteSpace: 'nowrap' }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {products.map(p => (
-                  <tr key={p.id} style={{ borderBottom: `1px solid ${t.border}`, transition: 'background 0.2s' }}
-                    onMouseEnter={e => e.currentTarget.style.background = t.surfaceHover}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                  >
-                    <td style={{ padding: '0.85rem 1rem', color: t.text, fontWeight: 500 }}>{p.name}</td>
-                    <td style={{ padding: '0.85rem 1rem', color: t.textMuted }}>{CATEGORIES.find(c => c.id === p.category)?.label}</td>
-                    <td style={{ padding: '0.85rem 1rem', color: t.textMuted }}>KSh {p.price.toLocaleString()}</td>
-                    <td style={{ padding: '0.85rem 1rem', color: p.stock < 15 ? '#c0392b' : t.textMuted }}>{p.stock}</td>
-                    <td style={{ padding: '0.85rem 1rem', color: accentColor, fontWeight: 600 }}>{p.sold}</td>
-                    <td style={{ padding: '0.85rem 1rem' }}>
-                      {p.badge && <span style={{ background: t.border, color: t.textMuted, padding: '0.2rem 0.5rem', fontSize: '0.65rem', letterSpacing: '1px' }}>{p.badge}</span>}
-                    </td>
-                    <td style={{ padding: '0.85rem 1rem' }}>
-                      <button onClick={() => deleteProduct(p.id)} style={{
-                        background: 'none', border: `1px solid ${t.border}`, color: t.textMuted,
-                        padding: '0.3rem 0.75rem', cursor: 'pointer', fontSize: '0.7rem',
-                        fontFamily: 'var(--font-body)',
-                      }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor = '#c0392b'; e.currentTarget.style.color = '#c0392b'; }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = t.border; e.currentTarget.style.color = t.textMuted; }}
-                      >Remove</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+            <OrdersTab t={t} accentColor={accentColor} />
+          </>
+        )}
       </div>
 
       <style>{`
