@@ -11,24 +11,24 @@ import { Sun, Moon, Monitor, TrendingUp, BarChart3, Activity } from 'lucide-reac
 
 // ── Simulated Analytics Data (unchanged) ─────────────────────────────
 const daily = Array.from({ length: 30 }, (_, i) => ({
-  date: `May ${i + 1}`,
-  Visitors: Math.floor(80 + Math.random() * 320),
-  PageViews: Math.floor(200 + Math.random() * 800),
+  date: `Day ${i + 1}`,
+  Visitors: 0,
+  PageViews: 0,
 }));
-const weekly = ['Week 1','Week 2','Week 3','Week 4','Week 5','Week 6','Week 7','Week 8'].map(w => ({
+const weekly = ['Week 1','Week 2','Week 3','Week 4'].map(w => ({
   date: w,
-  Visitors: Math.floor(400 + Math.random() * 1600),
-  PageViews: Math.floor(1000 + Math.random() * 4000),
+  Visitors: 0,
+  PageViews: 0,
 }));
 const monthly = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map(m => ({
   date: m,
-  Visitors: Math.floor(1500 + Math.random() * 6000),
-  PageViews: Math.floor(4000 + Math.random() * 15000),
+  Visitors: 0,
+  PageViews: 0,
 }));
-const yearly = ['2022','2023','2024','2025','2026'].map(y => ({
+const yearly = ['2023','2024','2025','2026'].map(y => ({
   date: y,
-  Visitors: Math.floor(8000 + Math.random() * 40000),
-  PageViews: Math.floor(20000 + Math.random() * 100000),
+  Visitors: 0,
+  PageViews: 0,
 }));
 const DATA = { daily, weekly, monthly, yearly };
 
