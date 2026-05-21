@@ -148,17 +148,19 @@ export default function ProductDetailPage() {
             {/* Quantity */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
               <span style={{ fontSize: '0.8rem', fontWeight: 600, letterSpacing: '1px' }}>QUANTITY</span>
-              <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #eee', padding: '0.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #eee', padding: '0.25rem', opacity: product.stock <= 0 ? 0.5 : 1 }}>
                 <button
+                  disabled={product.stock <= 0}
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  style={{ background: 'none', border: 'none', padding: '0.5rem', cursor: 'pointer' }}
+                  style={{ background: 'none', border: 'none', padding: '0.5rem', cursor: product.stock <= 0 ? 'not-allowed' : 'pointer' }}
                 >
                   <IconMinus size={16} />
                 </button>
-                <span style={{ width: '40px', textAlign: 'center', fontSize: '0.9rem', fontWeight: 600 }}>{quantity}</span>
+                <span style={{ width: '40px', textAlign: 'center', fontSize: '0.9rem', fontWeight: 600 }}>{product.stock <= 0 ? 0 : quantity}</span>
                 <button
-                  onClick={() => setQuantity(quantity + 1)}
-                  style={{ background: 'none', border: 'none', padding: '0.5rem', cursor: 'pointer' }}
+                  disabled={product.stock <= 0 || quantity >= product.stock}
+                  onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                  style={{ background: 'none', border: 'none', padding: '0.5rem', cursor: (product.stock <= 0 || quantity >= product.stock) ? 'not-allowed' : 'pointer' }}
                 >
                   <IconPlus size={16} />
                 </button>
@@ -167,20 +169,34 @@ export default function ProductDetailPage() {
 
             {/* CTA */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <motion.button
-                whileTap={{ scale: 0.98 }}
-                onClick={handleAddToCart}
-                style={{
-                  padding: '1.25rem',
-                  background: added ? '#27ae60' : '#1a1a1a',
-                  color: '#fff', border: 'none',
-                  fontSize: '0.9rem', fontWeight: 700, letterSpacing: '2px',
-                  textTransform: 'uppercase', cursor: 'pointer',
-                  transition: 'background 0.3s ease'
-                }}
-              >
-                {added ? '✓ Added to Cart' : 'Add to Cart'}
-              </motion.button>
+              {product.stock <= 0 ? (
+                <button
+                  disabled
+                  style={{
+                    padding: '1.25rem',
+                    background: '#e0e0e0', color: '#888', border: 'none',
+                    fontSize: '0.9rem', fontWeight: 700, letterSpacing: '2px',
+                    textTransform: 'uppercase', cursor: 'not-allowed',
+                  }}
+                >
+                  Out of Stock
+                </button>
+              ) : (
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleAddToCart}
+                  style={{
+                    padding: '1.25rem',
+                    background: added ? '#27ae60' : '#1a1a1a',
+                    color: '#fff', border: 'none',
+                    fontSize: '0.9rem', fontWeight: 700, letterSpacing: '2px',
+                    textTransform: 'uppercase', cursor: 'pointer',
+                    transition: 'background 0.3s ease'
+                  }}
+                >
+                  {added ? '✓ Added to Cart' : 'Add to Cart'}
+                </motion.button>
+              )}
             </div>
 
             {/* Trust Badges */}

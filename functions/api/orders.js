@@ -53,10 +53,10 @@ export async function onRequestPost(context) {
         itemId, orderId, item.id, item.qty, item.size, item.price
       ).run();
 
-      // Increment sold count in products table
+      // Increment sold count AND decrement stock in products table
       await context.env.DB.prepare(
-        "UPDATE products SET sold = sold + ? WHERE id = ?"
-      ).bind(item.qty, item.id).run();
+        "UPDATE products SET sold = sold + ?, stock = MAX(0, stock - ?) WHERE id = ?"
+      ).bind(item.qty, item.qty, item.id).run();
     }
 
     // Send email notification to Admin
@@ -102,7 +102,7 @@ export async function onRequestPost(context) {
 export async function onRequestPatch(context) {
   try {
     const { id, status } = await context.request.json();
-    const allowed = ['pending', 'confirmed', 'shipped', 'fulfilled', 'cancelled'];
+    const allowed = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
     if (!allowed.includes(status)) {
       return Response.json({ error: 'Invalid status' }, { status: 400 });
     }

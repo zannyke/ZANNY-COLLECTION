@@ -7,6 +7,7 @@ DROP TABLE IF EXISTS orders;
 DROP TABLE IF EXISTS products;
 DROP TABLE IF EXISTS users;
 
+DROP TABLE IF EXISTS feedback;
 DROP TABLE IF EXISTS verification_codes;
 DROP TABLE IF EXISTS sessions;
 
@@ -75,4 +76,13 @@ CREATE TABLE order_items (
   price_at_purchase REAL NOT NULL,
   FOREIGN KEY (order_id) REFERENCES orders(id),
   FOREIGN KEY (product_id) REFERENCES products(id)
+);
+
+CREATE TABLE feedback (
+  id TEXT PRIMARY KEY,
+  order_id TEXT NOT NULL,
+  rating INTEGER NOT NULL,
+  comment TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (order_id) REFERENCES orders(id)
 );
