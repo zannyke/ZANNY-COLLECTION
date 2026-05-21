@@ -59,7 +59,10 @@ export async function onRequestPost(context) {
       ).bind(item.qty, item.qty, item.id).run();
     }
 
-    // Send email notification to Admin
+    // Fetch user details for customer email
+    const user = await context.env.DB.prepare("SELECT email, first_name FROM users WHERE id = ?").bind(data.userId).first();
+
+    // Send email notification to Admin and Customer
     if (context.env.RESEND_API_KEY) {
       try {
         const itemsHtml = data.items.map(item => `<li>${item.qty}x Item ID [${item.id}] (Size: ${item.size}) - KSh ${item.price.toLocaleString()}</li>`).join('');
@@ -87,8 +90,35 @@ export async function onRequestPost(context) {
             `
           })
         });
+
+        // Send Email to Customer
+        if (user && user.email) {
+          await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${context.env.RESEND_API_KEY}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              from: 'Zanny Collection <onboarding@resend.dev>',
+              to: user.email,
+              subject: `Order Confirmation - #${orderId}`,
+              html: `
+                <div style="font-family:sans-serif; padding: 20px;">
+                  <h2>Hi ${user.first_name},</h2>
+                  <p>Thank you for shopping with Zanny Collection! Your order <strong>#${orderId}</strong> has been received successfully.</p>
+                  <p><strong>Total:</strong> KSh ${data.totalAmount.toLocaleString()}</p>
+                  <p><strong>Delivery Address:</strong> ${data.shippingAddress}</p>
+                  <h3>Items Ordered:</h3>
+                  <ul>${itemsHtml}</ul>
+                  <p>We will notify you when your order is shipped!</p>
+                </div>
+              `
+            })
+          });
+        }
       } catch (emailErr) {
-        console.error("Failed to send admin notification email", emailErr);
+        console.error("Failed to send email notifications", emailErr);
       }
     }
 
@@ -101,14 +131,70 @@ export async function onRequestPost(context) {
 // PATCH /api/orders  — update order status
 export async function onRequestPatch(context) {
   try {
-    const { id, status } = await context.request.json();
+    const { id, status, trackingNumber } = await context.request.json();
     const allowed = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
     if (!allowed.includes(status)) {
       return Response.json({ error: 'Invalid status' }, { status: 400 });
     }
+    
     await context.env.DB.prepare(
       "UPDATE orders SET status = ? WHERE id = ?"
     ).bind(status, id).run();
+
+    // Send Customer Email if shipped or delivered
+    if (context.env.RESEND_API_KEY && (status === 'shipped' || status === 'delivered')) {
+      try {
+        const order = await context.env.DB.prepare(`
+          SELECT o.*, u.email, u.first_name 
+          FROM orders o JOIN users u ON o.user_id = u.id 
+          WHERE o.id = ?
+        `).bind(id).first();
+
+        if (order && order.email) {
+          let subject = '';
+          let html = '';
+
+          if (status === 'shipped') {
+            subject = `Your Order #${id} has Shipped!`;
+            html = `
+              <div style="font-family:sans-serif; padding: 20px;">
+                <h2>Great news, ${order.first_name}!</h2>
+                <p>Your order <strong>#${id}</strong> has been handed over to our delivery partners and is on its way to you.</p>
+                ${trackingNumber ? `<p><strong>Tracking Number / Link:</strong> ${trackingNumber}</p>` : ''}
+                <p>If you have any questions, feel free to reply to this email.</p>
+              </div>
+            `;
+          } else if (status === 'delivered') {
+            subject = `Your Order #${id} has been Delivered!`;
+            html = `
+              <div style="font-family:sans-serif; padding: 20px;">
+                <h2>Hi ${order.first_name},</h2>
+                <p>Your order <strong>#${id}</strong> has been marked as delivered.</p>
+                <p>We'd love to hear your thoughts! Please log into your account at <a href="https://zannycollection.com/account">Zanny Collection</a> to leave feedback on your purchase.</p>
+                <p>Enjoy your gear!</p>
+              </div>
+            `;
+          }
+
+          await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${context.env.RESEND_API_KEY}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              from: 'Zanny Collection <onboarding@resend.dev>',
+              to: order.email,
+              subject: subject,
+              html: html
+            })
+          });
+        }
+      } catch (e) {
+        console.error("Failed to send status update email", e);
+      }
+    }
+
     return Response.json({ success: true });
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 });

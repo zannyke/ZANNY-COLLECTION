@@ -3,15 +3,98 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import PageHeader from '../components/PageHeader';
-import { User, LogOut, Trash2, PlusCircle, Package, ChevronDown, ChevronUp } from 'lucide-react';
+import { User, LogOut, Trash2, PlusCircle, Package, ChevronDown, ChevronUp, Star } from 'lucide-react';
 
 const STATUS_BADGE = {
   pending:   { bg: '#fff8e1', color: '#f59e0b', label: 'Pending' },
   confirmed: { bg: '#e0f2fe', color: '#0284c7', label: 'Confirmed' },
   shipped:   { bg: '#ede9fe', color: '#7c3aed', label: 'Shipped' },
-  fulfilled: { bg: '#dcfce7', color: '#16a34a', label: 'Fulfilled ✓' },
+  delivered: { bg: '#dcfce7', color: '#16a34a', label: 'Delivered ✓' },
   cancelled: { bg: '#fee2e2', color: '#dc2626', label: 'Cancelled' },
 };
+
+const FEEDBACK_SUGGESTIONS = {
+  1: "Very disappointed with the quality/delivery.",
+  2: "Not quite what I expected.",
+  3: "It's okay, but could be better.",
+  4: "Great product, very satisfied.",
+  5: "Excellent quality, fast delivery! Highly recommended."
+};
+
+function FeedbackForm({ orderId }) {
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [comment, setComment] = useState('');
+  const [status, setStatus] = useState('idle'); // idle, loading, success, error
+
+  const handleStarClick = (value) => {
+    setRating(value);
+    setComment(FEEDBACK_SUGGESTIONS[value]);
+  };
+
+  const submitFeedback = async () => {
+    if (rating === 0) return;
+    setStatus('loading');
+    try {
+      const res = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, rating, comment })
+      });
+      if (!res.ok) throw new Error('Failed to submit feedback');
+      setStatus('success');
+    } catch (err) {
+      setStatus('error');
+    }
+  };
+
+  if (status === 'success') {
+    return (
+      <div style={{ marginTop: '1rem', padding: '1rem', background: '#e8f5e9', color: '#2e7d32', border: '1px solid #c8e6c9', borderRadius: '4px', fontSize: '0.85rem' }}>
+        Thank you for your feedback! It helps us improve.
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ marginTop: '1rem', padding: '1.25rem', background: '#fff', border: '1px solid #eee', borderRadius: '4px' }}>
+      <p style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Leave Feedback</p>
+      
+      <div style={{ display: 'flex', gap: '0.25rem', marginBottom: '1rem' }}>
+        {[1, 2, 3, 4, 5].map((star) => (
+          <button
+            key={star}
+            type="button"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem' }}
+            onMouseEnter={() => setHoverRating(star)}
+            onMouseLeave={() => setHoverRating(0)}
+            onClick={() => handleStarClick(star)}
+          >
+            <Star size={24} fill={(hoverRating || rating) >= star ? '#f59e0b' : 'transparent'} color={(hoverRating || rating) >= star ? '#f59e0b' : '#ddd'} />
+          </button>
+        ))}
+      </div>
+
+      <textarea
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        placeholder="Tell us what you think..."
+        style={{ width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '0.85rem', minHeight: '80px', resize: 'vertical', marginBottom: '0.75rem', fontFamily: 'var(--font-body)' }}
+      />
+      
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <button 
+          disabled={rating === 0 || status === 'loading'}
+          onClick={submitFeedback}
+          style={{ padding: '0.6rem 1.5rem', background: '#1a1a1a', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600, cursor: rating === 0 ? 'not-allowed' : 'pointer', opacity: rating === 0 ? 0.5 : 1 }}
+        >
+          {status === 'loading' ? 'Submitting...' : 'Submit Feedback'}
+        </button>
+        {status === 'error' && <span style={{ color: '#dc2626', fontSize: '0.8rem' }}>Failed to submit. Try again.</span>}
+      </div>
+    </div>
+  );
+}
 
 function OrderCard({ order }) {
   const [open, setOpen] = useState(false);
@@ -60,6 +143,10 @@ function OrderCard({ order }) {
             </div>
           ))}
           <p style={{ fontSize: '0.8rem', color: '#888', marginTop: '0.5rem' }}>📍 {order.shipping_address} &nbsp;·&nbsp; 📞 {order.phone_number}</p>
+          
+          {order.status === 'delivered' && (
+            <FeedbackForm orderId={order.id} />
+          )}
         </div>
       )}
     </div>

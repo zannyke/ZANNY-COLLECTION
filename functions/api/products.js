@@ -36,3 +36,16 @@ export async function onRequestPost(context) {
     return Response.json({ success: false, error: err.message }, { status: 500 });
   }
 }
+
+export async function onRequestPatch(context) {
+  try {
+    const { id, stock } = await context.request.json();
+    if (typeof stock !== 'number') {
+      return Response.json({ error: 'Invalid stock value' }, { status: 400 });
+    }
+    await context.env.DB.prepare("UPDATE products SET stock = ? WHERE id = ?").bind(stock, id).run();
+    return Response.json({ success: true });
+  } catch(err) {
+    return Response.json({ error: err.message }, { status: 500 });
+  }
+}

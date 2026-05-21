@@ -7,7 +7,7 @@ import {
 } from 'recharts';
 import { useProducts, CATEGORIES } from '../../context/ProductContext';
 import { useTheme } from '../../context/ThemeContext';
-import { Sun, Moon, Monitor, TrendingUp, BarChart3, Activity, Package, ShoppingBag, LayoutDashboard, Menu, X } from 'lucide-react';
+import { Sun, Moon, Monitor, TrendingUp, BarChart3, Activity, Package, ShoppingBag, LayoutDashboard, Menu, X, MessageSquare } from 'lucide-react';
 
 // ── Simulated Analytics Data ─────────────────────────────────────────
 const daily   = Array.from({ length: 30 }, (_, i) => ({ date: `Day ${i + 1}`, Visitors: 0, PageViews: 0 }));
@@ -20,7 +20,7 @@ const STATUS_COLORS = {
   pending:   { bg: '#fff8e1', text: '#f59e0b', border: '#fde68a' },
   confirmed: { bg: '#e0f2fe', text: '#0284c7', border: '#bae6fd' },
   shipped:   { bg: '#ede9fe', text: '#7c3aed', border: '#ddd6fe' },
-  fulfilled: { bg: '#dcfce7', text: '#16a34a', border: '#bbf7d0' },
+  delivered: { bg: '#dcfce7', text: '#16a34a', border: '#bbf7d0' },
   cancelled: { bg: '#fee2e2', text: '#dc2626', border: '#fecaca' },
 };
 
@@ -74,11 +74,16 @@ function OrdersTab({ t, accentColor }) {
   useEffect(() => { fetchOrders(); }, []);
 
   const updateStatus = async (id, status) => {
+    let trackingNumber = null;
+    if (status === 'shipped') {
+      trackingNumber = window.prompt("Enter tracking number/link for the customer email (optional):");
+    }
+
     setUpdating(id);
     await fetch('/api/orders', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, status })
+      body: JSON.stringify({ id, status, trackingNumber })
     });
     setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
     setUpdating(null);
@@ -166,7 +171,7 @@ function OrdersTab({ t, accentColor }) {
                   {/* Status Updater */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
                     <p style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '1.5px', color: t.textMuted }}>Update Status:</p>
-                    {['pending','confirmed','shipped','fulfilled','cancelled'].map(s => {
+                    {['pending','confirmed','shipped','delivered','cancelled'].map(s => {
                       const c = STATUS_COLORS[s];
                       const isActive = order.status === s;
                       return (
@@ -198,6 +203,42 @@ function OrdersTab({ t, accentColor }) {
   );
 }
 
+// ── Feedback Tab ──────────────────────────────────────────────────────
+function FeedbackTab({ t }) {
+  const [feedbacks, setFeedbacks] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/feedback')
+      .then(r => r.json())
+      .then(data => { setFeedbacks(Array.isArray(data) ? data : []); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (loading) return <p style={{ color: t.textMuted, padding: '2rem' }}>Loading feedback…</p>;
+  if (!feedbacks.length) return (
+    <div style={{ textAlign: 'center', padding: '4rem', color: t.textMuted }}>
+      <p style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>💬</p>
+      <p style={{ fontFamily: 'var(--font-heading)', fontSize: '1.2rem', letterSpacing: '1px' }}>No Feedback Yet</p>
+    </div>
+  );
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      {feedbacks.map(f => (
+        <div key={f.id} style={{ background: t.surface, border: `1px solid ${t.border}`, padding: '1.5rem', borderRadius: '4px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Order: {f.order_id}</span>
+            <span style={{ color: '#f59e0b', fontWeight: 700 }}>{f.rating} / 5 ★</span>
+          </div>
+          <p style={{ color: t.textMuted, fontSize: '0.85rem', lineHeight: 1.5 }}>{f.comment}</p>
+          <p style={{ color: t.textMuted, fontSize: '0.7rem', marginTop: '1rem' }}>{new Date(f.created_at).toLocaleString()}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ── Main Dashboard ────────────────────────────────────────────────────
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -214,6 +255,23 @@ export default function AdminDashboard() {
 
   const chartColor  = resolvedTheme === 'dark' ? '#ffffff' : '#1a1a1a';
   const accentColor = resolvedTheme === 'dark' ? '#00ff9d' : '#00b894';
+
+  const handleRestock = async (id, currentStock) => {
+    const newStock = window.prompt("Enter new stock quantity:", currentStock);
+    if (newStock !== null && !isNaN(newStock) && newStock !== "") {
+      const parsed = parseInt(newStock, 10);
+      try {
+        await fetch('/api/products', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, stock: parsed })
+        });
+        window.location.reload();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
 
   const renderChart = () => {
     const data = DATA[period];
@@ -266,6 +324,7 @@ export default function AdminDashboard() {
   const navItems = [
     { id: 'dashboard', label: '▪ Dashboard',   icon: <LayoutDashboard size={14} />, path: null },
     { id: 'orders',    label: '▪ Orders',       icon: <ShoppingBag size={14} />,    path: null },
+    { id: 'feedback',  label: '▪ Feedback',     icon: <MessageSquare size={14} />,  path: null },
     { id: 'products',  label: '▪ Add Product',  icon: <Package size={14} />,        path: '/admin/add-product' },
     { id: 'store',     label: '▪ View Store',   icon: null,                          path: '/' },
   ];
@@ -510,13 +569,22 @@ export default function AdminDashboard() {
                           {p.badge && <span style={{ background: t.border, color: t.textMuted, padding: '0.2rem 0.5rem', fontSize: '0.65rem', letterSpacing: '1px' }}>{p.badge}</span>}
                         </td>
                         <td style={{ padding: '0.85rem 1rem' }}>
-                          <button onClick={() => deleteProduct(p.id)} style={{
-                            background: 'none', border: `1px solid ${t.border}`, color: t.textMuted,
-                            padding: '0.3rem 0.75rem', cursor: 'pointer', fontSize: '0.7rem', fontFamily: 'var(--font-body)',
-                          }}
-                            onMouseEnter={e => { e.currentTarget.style.borderColor = '#c0392b'; e.currentTarget.style.color = '#c0392b'; }}
-                            onMouseLeave={e => { e.currentTarget.style.borderColor = t.border; e.currentTarget.style.color = t.textMuted; }}
-                          >Remove</button>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button onClick={() => handleRestock(p.id, p.stock)} style={{
+                              background: 'none', border: `1px solid ${t.border}`, color: t.textMuted,
+                              padding: '0.3rem 0.75rem', cursor: 'pointer', fontSize: '0.7rem', fontFamily: 'var(--font-body)',
+                            }}
+                              onMouseEnter={e => { e.currentTarget.style.borderColor = accentColor; e.currentTarget.style.color = accentColor; }}
+                              onMouseLeave={e => { e.currentTarget.style.borderColor = t.border; e.currentTarget.style.color = t.textMuted; }}
+                            >Restock</button>
+                            <button onClick={() => deleteProduct(p.id)} style={{
+                              background: 'none', border: `1px solid ${t.border}`, color: t.textMuted,
+                              padding: '0.3rem 0.75rem', cursor: 'pointer', fontSize: '0.7rem', fontFamily: 'var(--font-body)',
+                            }}
+                              onMouseEnter={e => { e.currentTarget.style.borderColor = '#c0392b'; e.currentTarget.style.color = '#c0392b'; }}
+                              onMouseLeave={e => { e.currentTarget.style.borderColor = t.border; e.currentTarget.style.color = t.textMuted; }}
+                            >Remove</button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -535,6 +603,17 @@ export default function AdminDashboard() {
               <p style={{ color: t.textMuted, fontSize: '0.8rem' }}>Manage and fulfil customer orders from your D1 database.</p>
             </div>
             <OrdersTab t={t} accentColor={accentColor} />
+          </>
+        )}
+
+        {/* ── FEEDBACK TAB ── */}
+        {activeTab === 'feedback' && (
+          <>
+            <div style={{ marginBottom: '2.5rem' }}>
+              <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '2rem', letterSpacing: '2px', marginBottom: '0.3rem' }}>Customer Feedback</h1>
+              <p style={{ color: t.textMuted, fontSize: '0.8rem' }}>Read what your customers are saying about your products.</p>
+            </div>
+            <FeedbackTab t={t} />
           </>
         )}
       </div>

@@ -6,7 +6,7 @@ import PageHeader from '../components/PageHeader';
 const faqs = [
   {
     question: "Do you ship internationally?",
-    answer: "Yes, Zanny Collection ships worldwide. All international orders are shipped via express courier and usually arrive within 3-7 business days."
+    answer: "We currently ship exclusively within Kenya, ensuring fast and reliable local deliveries. We are actively working on expanding our logistics to offer international shipping soon!"
   },
   {
     question: "How can I track my order?",
@@ -18,7 +18,7 @@ const faqs = [
   },
   {
     question: "What payment methods do you accept?",
-    answer: "We accept all major credit cards (Visa, MasterCard, American Express), PayPal, and Apple Pay."
+    answer: "Currently, we exclusively accept payments via M-Pesa to ensure fast, secure, and convenient local transactions. Once you place an order, you will receive instructions for the M-Pesa paybill/till number."
   }
 ];
 
