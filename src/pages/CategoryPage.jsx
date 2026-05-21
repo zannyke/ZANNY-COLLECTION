@@ -100,7 +100,7 @@ function ProductCard({ product }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-40px' }}
       transition={{ duration: 0.55 }}
-      style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}
+      style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', height: '100%' }}
     >
       {/* Image */}
       <Link to={`/product/${product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
@@ -207,7 +207,7 @@ function ProductCard({ product }) {
         whileTap={maxStock > 0 ? { scale: 0.96 } : {}} 
         onClick={maxStock > 0 ? handleAdd : undefined} 
         style={{
-          padding: '0.75rem', marginTop: '0.5rem',
+          padding: '0.75rem', marginTop: 'auto',
           background: (isGlobalOutOfStock || maxStock <= 0) ? '#e0e0e0' : (added ? '#2d6a4f' : '#1a1a1a'),
           color: (isGlobalOutOfStock || maxStock <= 0) ? '#888' : '#fff', 
           border: 'none', 
