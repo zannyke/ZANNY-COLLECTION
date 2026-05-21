@@ -5,6 +5,7 @@ import { useProducts, CATEGORIES } from '../../context/ProductContext';
 import { useTheme } from '../../context/ThemeContext';
 
 const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+const COLORS = ['Black', 'White', 'Red', 'Blue', 'Grey', 'Green', 'Brown', 'Navy', 'Beige', 'Pink', 'Yellow', 'Purple', 'Orange'];
 const BADGES = ['', 'NEW', 'HOT', 'SALE'];
 
 export default function AddProduct() {
@@ -13,7 +14,7 @@ export default function AddProduct() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
     name: '', category: 'shirts-tees', price: '', original_price: '', discount_label: '', description: '',
-    stock: '', badge: 'NEW', sizes: ['S','M','L'],
+    stock: '', badge: 'NEW', sizes: ['S','M','L'], colors: ['Black', 'White']
   });
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -28,6 +29,13 @@ export default function AddProduct() {
     setForm(prev => ({
       ...prev,
       sizes: prev.sizes.includes(size) ? prev.sizes.filter(s => s !== size) : [...prev.sizes, size],
+    }));
+  };
+
+  const toggleColor = (color) => {
+    setForm(prev => ({
+      ...prev,
+      colors: prev.colors.includes(color) ? prev.colors.filter(c => c !== color) : [...prev.colors, color],
     }));
   };
 
@@ -52,6 +60,8 @@ export default function AddProduct() {
       price: Number(form.price),
       original_price: form.original_price ? Number(form.original_price) : null,
       stock: Number(form.stock),
+      sizes: form.sizes,
+      colors: form.colors
     }, file);
 
     setUploading(false);
@@ -163,19 +173,36 @@ export default function AddProduct() {
             </div>
           </div>
 
-          {/* Available Sizes */}
-          <div>
-            <label style={labelStyle}>Available Sizes</label>
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-              {SIZES.map(s => (
-                <button key={s} type="button" onClick={() => toggleSize(s)} style={{
-                  width: '44px', height: '44px', fontSize: '0.75rem', fontWeight: 600,
-                  border: form.sizes.includes(s) ? `1.5px solid ${t.text}` : `1px solid ${t.border}`,
-                  background: form.sizes.includes(s) ? t.text : 'transparent',
-                  color: form.sizes.includes(s) ? t.bg : t.textMuted,
-                  cursor: 'pointer', letterSpacing: '0.5px', transition: 'all 0.2s',
-                }}>{s}</button>
-              ))}
+          {/* Available Sizes & Colors */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem' }}>
+            <div>
+              <label style={labelStyle}>Available Sizes</label>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                {SIZES.map(s => (
+                  <button key={s} type="button" onClick={() => toggleSize(s)} style={{
+                    width: '44px', height: '44px', fontSize: '0.75rem', fontWeight: 600,
+                    border: form.sizes.includes(s) ? `1.5px solid ${t.text}` : `1px solid ${t.border}`,
+                    background: form.sizes.includes(s) ? t.text : 'transparent',
+                    color: form.sizes.includes(s) ? t.bg : t.textMuted,
+                    cursor: 'pointer', letterSpacing: '0.5px', transition: 'all 0.2s',
+                  }}>{s}</button>
+                ))}
+              </div>
+            </div>
+            
+            <div>
+              <label style={labelStyle}>Available Colors</label>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                {COLORS.map(c => (
+                  <button key={c} type="button" onClick={() => toggleColor(c)} style={{
+                    padding: '0.5rem 0.85rem', fontSize: '0.75rem', fontWeight: 600,
+                    border: form.colors.includes(c) ? `1.5px solid ${t.text}` : `1px solid ${t.border}`,
+                    background: form.colors.includes(c) ? t.text : 'transparent',
+                    color: form.colors.includes(c) ? t.bg : t.textMuted,
+                    cursor: 'pointer', letterSpacing: '0.5px', transition: 'all 0.2s',
+                  }}>{c}</button>
+                ))}
+              </div>
             </div>
           </div>
 

@@ -23,6 +23,7 @@ export default function ProductDetailPage() {
 
   const product = products.find(p => p.id.toString() === productId);
   const [selectedSize, setSelectedSize] = useState('M');
+  const [selectedColor, setSelectedColor] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
 
@@ -42,7 +43,7 @@ export default function ProductDetailPage() {
 
   const handleAddToCart = () => {
     for (let i = 0; i < quantity; i++) {
-      addToCart(product, selectedSize);
+      addToCart(product, selectedSize, selectedColor);
     }
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
@@ -126,33 +127,64 @@ export default function ProductDetailPage() {
                 <Link to="/care" style={{ fontSize: '0.75rem', color: '#888', textDecoration: 'underline' }}>Size Guide</Link>
               </div>
               <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                {SIZES.map(size => (
-                  <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    style={{
-                      width: '50px', height: '50px',
-                      border: selectedSize === size ? '2px solid #1a1a1a' : '1px solid #eee',
-                      background: selectedSize === size ? '#1a1a1a' : 'transparent',
-                      color: selectedSize === size ? '#fff' : '#1a1a1a',
-                      fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer',
-                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
-                    }}
-                  >
-                    {size}
-                  </button>
-                ))}
+                {SIZES.map(size => {
+                  const isAvailable = !product.parsedSizes || product.parsedSizes.length === 0 || product.parsedSizes.includes(size);
+                  return (
+                    <button
+                      key={size}
+                      disabled={!isAvailable}
+                      onClick={() => setSelectedSize(size)}
+                      style={{
+                        width: '50px', height: '50px',
+                        border: selectedSize === size && isAvailable ? '2px solid #1a1a1a' : '1px solid #eee',
+                        background: selectedSize === size && isAvailable ? '#1a1a1a' : 'transparent',
+                        color: selectedSize === size && isAvailable ? '#fff' : (!isAvailable ? '#ccc' : '#1a1a1a'),
+                        fontSize: '0.8rem', fontWeight: 600, cursor: isAvailable ? 'pointer' : 'not-allowed',
+                        textDecoration: !isAvailable ? 'line-through' : 'none',
+                        opacity: !isAvailable ? 0.5 : 1,
+                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                      }}
+                    >
+                      {size}
+                    </button>
+                  );
+                })}
               </div>
             </div>
+
+            {/* Color Selection (if colors exist) */}
+            {product.parsedColors && product.parsedColors.length > 0 && (
+              <div>
+                <span style={{ fontSize: '0.8rem', fontWeight: 600, letterSpacing: '1px', display: 'block', marginBottom: '1rem' }}>SELECT COLOR</span>
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                  {product.parsedColors.map(color => (
+                    <button
+                      key={color}
+                      onClick={() => setSelectedColor(color)}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        border: selectedColor === color ? '2px solid #1a1a1a' : '1px solid #eee',
+                        background: selectedColor === color ? '#1a1a1a' : 'transparent',
+                        color: selectedColor === color ? '#fff' : '#1a1a1a',
+                        fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer',
+                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                      }}
+                    >
+                      {color}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Quantity */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
               <span style={{ fontSize: '0.8rem', fontWeight: 600, letterSpacing: '1px' }}>QUANTITY</span>
               <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #eee', padding: '0.25rem', opacity: product.stock <= 0 ? 0.5 : 1 }}>
                 <button
-                  disabled={product.stock <= 0}
+                  disabled={product.stock <= 0 || quantity <= 1}
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  style={{ background: 'none', border: 'none', padding: '0.5rem', cursor: product.stock <= 0 ? 'not-allowed' : 'pointer' }}
+                  style={{ background: 'none', border: 'none', padding: '0.5rem', cursor: (product.stock <= 0 || quantity <= 1) ? 'not-allowed' : 'pointer', opacity: (product.stock <= 0 || quantity <= 1) ? 0.3 : 1 }}
                 >
                   <IconMinus size={16} />
                 </button>
@@ -160,7 +192,7 @@ export default function ProductDetailPage() {
                 <button
                   disabled={product.stock <= 0 || quantity >= product.stock}
                   onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                  style={{ background: 'none', border: 'none', padding: '0.5rem', cursor: (product.stock <= 0 || quantity >= product.stock) ? 'not-allowed' : 'pointer' }}
+                  style={{ background: 'none', border: 'none', padding: '0.5rem', cursor: (product.stock <= 0 || quantity >= product.stock) ? 'not-allowed' : 'pointer', opacity: (product.stock <= 0 || quantity >= product.stock) ? 0.3 : 1 }}
                 >
                   <IconPlus size={16} />
                 </button>
