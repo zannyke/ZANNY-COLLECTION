@@ -54,6 +54,15 @@ export default function ProductDetailPage() {
       <div className="container" style={{ padding: '2rem' }}>
         {/* Breadcrumb */}
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '3rem', fontSize: '0.75rem', color: '#aaa', textTransform: 'uppercase', letterSpacing: '1px' }}>
+          <button 
+            onClick={() => window.history.state && window.history.state.idx > 0 ? navigate(-1) : navigate('/')}
+            style={{ background: 'none', border: 'none', padding: 0, color: '#aaa', cursor: 'pointer', fontSize: 'inherit', textTransform: 'inherit', letterSpacing: 'inherit', display: 'flex', alignItems: 'center', gap: '0.25rem', fontFamily: 'inherit' }}
+            onMouseEnter={e => e.currentTarget.style.color = '#1a1a1a'}
+            onMouseLeave={e => e.currentTarget.style.color = '#aaa'}
+          >
+            <IconChevronLeft size={12} strokeWidth={2.5} /> Go Back
+          </button>
+          <span style={{ margin: '0 0.1rem' }}>|</span>
           <Link to="/" style={{ color: '#aaa', textDecoration: 'none' }}>Home</Link>
           <IconChevronRight size={10} />
           <Link to={`/collections/${product.category}`} style={{ color: '#aaa', textDecoration: 'none' }}>{product.category.replace('-', ' ')}</Link>
