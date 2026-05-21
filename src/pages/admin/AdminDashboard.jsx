@@ -405,9 +405,8 @@ export default function AdminDashboard() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
                   <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', letterSpacing: '1px' }}>Website Traffic</h2>
-                  <p style={{ fontSize: '0.75rem', color: '#c0392b', marginTop: '0.5rem' }}>* Log into your Cloudflare Dashboard and turn on "Web Analytics" to track this data.</p>
-                </div>
-                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                  <p style={{ fontSize: '0.75rem', color: '#c0392b', marginTop: '0.5rem', marginBottom: '0.5rem' }}>* Log into your Cloudflare Dashboard and turn on "Web Analytics" to track this data.</p>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
                     {[
                       { id: 'area', icon: <TrendingUp size={14} />, label: 'Area' },
                       { id: 'bar',  icon: <BarChart3 size={14} />,  label: 'Bar' },
