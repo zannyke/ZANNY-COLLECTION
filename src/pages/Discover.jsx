@@ -17,9 +17,12 @@ export default function Discover() {
 
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, delay: 0.2 }}
-          style={{ width: '100%', height: '60vh', background: '#f4f4f4', marginBottom: '4rem', overflow: 'hidden' }}
+          style={{ width: '100%', height: '60vh', background: '#f8f8f8', marginBottom: '4rem', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #eee' }}
         >
-          <img src="/discover_zanny_image.jpg" alt="Discover Zanny" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          <div style={{ textAlign: 'center' }}>
+            <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: '2rem', letterSpacing: '4px', color: '#ccc', marginBottom: '0.5rem' }}>ZANNY</span>
+            <span style={{ fontSize: '0.8rem', letterSpacing: '2px', textTransform: 'uppercase', color: '#aaa' }}>Visuals Coming Soon</span>
+          </div>
         </motion.div>
 
         {/* Text Section */}

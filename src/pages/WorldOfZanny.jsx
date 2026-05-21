@@ -27,43 +27,14 @@ export default function WorldOfZanny() {
           </p>
         </motion.div>
 
-        {/* Masonry-style Grid Placeholder */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
-          {features.map((feature, i) => (
-            <motion.div 
-              key={feature.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              style={{
-                background: '#1a1a1a', 
-                minHeight: feature.size === 'large' ? '500px' : '300px',
-                display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
-                padding: '2rem', border: '1px solid #333',
-                position: 'relative', overflow: 'hidden'
-              }}
-            >
-              {/* This is where the user will eventually map real images from the database */}
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.1 }}>
-                <span style={{ fontFamily: 'var(--font-heading)', fontSize: '5rem', letterSpacing: '10px' }}>ZANNY</span>
-              </div>
-              
-              <div style={{ position: 'relative', zIndex: 2 }}>
-                <p style={{ color: '#888', fontSize: '0.75rem', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
-                  {feature.subtitle}
-                </p>
-                <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.5rem', letterSpacing: '1px' }}>
-                  {feature.title}
-                </h3>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        <div style={{ textAlign: 'center', marginTop: '5rem' }}>
-          <p style={{ color: '#666', fontSize: '0.85rem', letterSpacing: '1px' }}>More editorials coming soon. Tag us on socials to be featured.</p>
-        </div>
+        {/* Coming Soon Message */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, delay: 0.2 }}
+          style={{ width: '100%', minHeight: '40vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '1px dashed #333', marginTop: '2rem' }}
+        >
+          <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: '2.5rem', letterSpacing: '4px', color: '#333', marginBottom: '0.5rem' }}>COMING SOON</span>
+          <span style={{ fontSize: '0.85rem', letterSpacing: '2px', textTransform: 'uppercase', color: '#666' }}>We are curating the latest looks.</span>
+        </motion.div>
 
       </div>
     </div>
