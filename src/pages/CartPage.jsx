@@ -73,28 +73,35 @@ export default function CartPage() {
                   </div>
 
                   {/* Product info */}
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontFamily: 'var(--font-heading)', fontSize: '1rem', marginBottom: '0.3rem' }}>{item.name}</p>
-                    <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '0.2rem' }}>Size: <strong>{item.size}</strong></p>
-                    <p style={{ fontSize: '0.85rem', color: '#444', marginBottom: '1rem' }}>KSh {item.price.toLocaleString()} each</p>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontFamily: 'var(--font-heading)', fontSize: '1rem', marginBottom: '0.3rem' }}>{item.name}</p>
+                      <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '0.2rem' }}>Size: <strong>{item.size}</strong></p>
+                      {item.color && <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '0.2rem' }}>Color: <strong>{item.color}</strong></p>}
+                      <p style={{ fontSize: '0.85rem', color: '#444', marginBottom: '1rem' }}>KSh {item.price.toLocaleString()} each</p>
 
-                    {/* Qty controls */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <button
-                        onClick={() => updateQty(item.key, item.qty - 1)}
-                        style={{ width: '28px', height: '28px', border: '1px solid #ddd', background: 'none', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                      >−</button>
-                      <span style={{ minWidth: '20px', textAlign: 'center', fontSize: '0.9rem', fontWeight: 600 }}>{item.qty}</span>
-                      <button
-                        onClick={() => updateQty(item.key, item.qty + 1)}
-                        style={{ width: '28px', height: '28px', border: '1px solid #ddd', background: 'none', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                      >+</button>
-                      <button
-                        onClick={() => removeFromCart(item.key)}
-                        style={{ marginLeft: '0.5rem', background: 'none', border: 'none', cursor: 'pointer', color: '#aaa', fontSize: '0.75rem', letterSpacing: '0.5px', textDecoration: 'underline' }}
-                      >Remove</button>
+                      {/* Qty controls */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <button
+                          onClick={() => updateQty(item.key, item.qty - 1)}
+                          style={{ width: '28px', height: '28px', border: '1px solid #ddd', background: 'none', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        >−</button>
+                        <span style={{ minWidth: '20px', textAlign: 'center', fontSize: '0.9rem', fontWeight: 600 }}>{item.qty}</span>
+                        <button
+                          disabled={item.qty >= item.stock}
+                          onClick={() => updateQty(item.key, item.qty + 1)}
+                          style={{ 
+                            width: '28px', height: '28px', border: '1px solid #ddd', background: 'none', 
+                            cursor: item.qty >= item.stock ? 'not-allowed' : 'pointer', 
+                            fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            opacity: item.qty >= item.stock ? 0.3 : 1
+                          }}
+                        >+</button>
+                        <button
+                          onClick={() => removeFromCart(item.key)}
+                          style={{ marginLeft: '0.5rem', background: 'none', border: 'none', cursor: 'pointer', color: '#aaa', fontSize: '0.75rem', letterSpacing: '0.5px', textDecoration: 'underline' }}
+                        >Remove</button>
+                      </div>
                     </div>
-                  </div>
 
                   {/* Line subtotal */}
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
