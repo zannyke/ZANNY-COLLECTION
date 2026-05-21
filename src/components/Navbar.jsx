@@ -51,7 +51,7 @@ export default function Navbar() {
   const navigate = useNavigate();
 
   const PAGES = [
-    { id: 'collections', title: 'Collections', path: '/#collections' },
+    { id: 'collections', title: 'Collections', path: '/collections' },
     { id: 'discover', title: 'Discover', path: '/discover' },
     { id: 'world-of-zanny', title: 'World of Zanny', path: '/world-of-zanny' },
     { id: 'contact', title: 'Contact Us', path: '/contact' },
@@ -483,7 +483,7 @@ export default function Navbar() {
                 <p style={{ fontSize: '0.7rem', letterSpacing: '2px', color: '#aaa', marginBottom: '1.2rem', textTransform: 'uppercase' }}>Discover</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
                   {[
-                    { label: 'Collections', to: '/#collections' },
+                    { label: 'Collections', to: '/collections' },
                     { label: 'Discover', to: '/discover' },
                     { label: 'World of Zanny', to: '/world-of-zanny' },
                   ].map((item) => (

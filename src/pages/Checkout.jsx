@@ -59,7 +59,8 @@ export default function Checkout() {
         clearCart();
         setTimeout(() => navigate('/account'), 3000);
       } else {
-        alert("There was an issue processing your order.");
+        const errData = await res.json();
+        alert(errData.error || "There was an issue processing your order.");
       }
     } catch (err) {
       console.error(err);

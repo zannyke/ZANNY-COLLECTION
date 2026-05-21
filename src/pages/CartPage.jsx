@@ -3,12 +3,19 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useProducts } from '../context/ProductContext';
 import PageHeader from '../components/PageHeader';
 
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQty, clearCart, cartTotal } = useCart();
   const { isAuthenticated } = useAuth();
+  const { products } = useProducts();
   const navigate = useNavigate();
+
+  const hasOutOfStockItems = cartItems.some(item => {
+    const liveProduct = products.find(p => p.id === item.id);
+    return !liveProduct || liveProduct.stock <= 0;
+  });
 
   const handleCheckout = () => {
     navigate('/checkout');
@@ -55,45 +62,57 @@ export default function CartPage() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
-              {cartItems.map((item, idx) => (
-                <motion.div
-                  key={item.key}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ delay: idx * 0.05 }}
-                  style={{
-                    display: 'flex', gap: '1.5rem', alignItems: 'flex-start',
-                    padding: '1.5rem 0', borderBottom: '1px solid #f0f0f0',
-                  }}
-                >
-                  {/* Product image */}
-                  <div style={{ width: '90px', height: '110px', flexShrink: 0, background: '#f8f8f8', overflow: 'hidden' }}>
-                    <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </div>
+              {cartItems.map((item, idx) => {
+                const liveProduct = products.find(p => p.id === item.id);
+                const liveStock = liveProduct ? liveProduct.stock : 0;
+                const isOutOfStock = liveStock <= 0;
 
-                  {/* Product info */}
+                return (
+                  <motion.div
+                    key={item.key}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ delay: idx * 0.05 }}
+                    style={{
+                      display: 'flex', gap: '1.5rem', alignItems: 'flex-start',
+                      padding: '1.5rem 0', borderBottom: '1px solid #f0f0f0',
+                      opacity: isOutOfStock ? 0.6 : 1,
+                    }}
+                  >
+                    {/* Product image */}
+                    <div style={{ width: '90px', height: '110px', flexShrink: 0, background: '#f8f8f8', overflow: 'hidden' }}>
+                      <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
+
+                    {/* Product info */}
                     <div style={{ flex: 1 }}>
-                      <p style={{ fontFamily: 'var(--font-heading)', fontSize: '1rem', marginBottom: '0.3rem' }}>{item.name}</p>
+                      <p style={{ fontFamily: 'var(--font-heading)', fontSize: '1rem', marginBottom: '0.3rem', textDecoration: isOutOfStock ? 'line-through' : 'none' }}>{item.name}</p>
                       <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '0.2rem' }}>Size: <strong>{item.size}</strong></p>
                       {item.color && <p style={{ fontSize: '0.8rem', color: '#888', marginBottom: '0.2rem' }}>Color: <strong>{item.color}</strong></p>}
-                      <p style={{ fontSize: '0.85rem', color: '#444', marginBottom: '1rem' }}>KSh {item.price.toLocaleString()} each</p>
+                      
+                      {isOutOfStock ? (
+                        <p style={{ fontSize: '0.85rem', color: '#c0392b', marginBottom: '1rem', fontWeight: 700 }}>Out of Stock - Please remove</p>
+                      ) : (
+                        <p style={{ fontSize: '0.85rem', color: '#444', marginBottom: '1rem' }}>KSh {item.price.toLocaleString()} each</p>
+                      )}
 
                       {/* Qty controls */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                         <button
+                          disabled={isOutOfStock}
                           onClick={() => updateQty(item.key, item.qty - 1)}
-                          style={{ width: '28px', height: '28px', border: '1px solid #ddd', background: 'none', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          style={{ width: '28px', height: '28px', border: '1px solid #ddd', background: 'none', cursor: isOutOfStock ? 'not-allowed' : 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: isOutOfStock ? 0.3 : 1 }}
                         >−</button>
                         <span style={{ minWidth: '20px', textAlign: 'center', fontSize: '0.9rem', fontWeight: 600 }}>{item.qty}</span>
                         <button
-                          disabled={item.qty >= item.stock}
+                          disabled={isOutOfStock || item.qty >= liveStock}
                           onClick={() => updateQty(item.key, item.qty + 1)}
                           style={{ 
                             width: '28px', height: '28px', border: '1px solid #ddd', background: 'none', 
-                            cursor: item.qty >= item.stock ? 'not-allowed' : 'pointer', 
+                            cursor: (isOutOfStock || item.qty >= liveStock) ? 'not-allowed' : 'pointer', 
                             fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            opacity: item.qty >= item.stock ? 0.3 : 1
+                            opacity: (isOutOfStock || item.qty >= liveStock) ? 0.3 : 1
                           }}
                         >+</button>
                         <button
@@ -105,10 +124,13 @@ export default function CartPage() {
 
                   {/* Line subtotal */}
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <p style={{ fontWeight: 600, fontSize: '0.95rem' }}>KSh {(item.price * item.qty).toLocaleString()}</p>
+                    <p style={{ fontWeight: 600, fontSize: '0.95rem' }}>
+                      {isOutOfStock ? 'N/A' : `KSh ${(item.price * item.qty).toLocaleString()}`}
+                    </p>
                   </div>
                 </motion.div>
-              ))}
+              );
+            })}
             </div>
 
             {/* Clear cart */}
@@ -153,18 +175,21 @@ export default function CartPage() {
             </div>
 
             <motion.button
-              whileTap={{ scale: 0.97 }}
+              whileTap={!hasOutOfStockItems ? { scale: 0.97 } : {}}
+              disabled={hasOutOfStockItems}
               onClick={handleCheckout}
               style={{
                 width: '100%', padding: '1rem',
-                background: '#1a1a1a', color: '#fff',
-                border: 'none', cursor: 'pointer',
+                background: hasOutOfStockItems ? '#e0e0e0' : '#1a1a1a', 
+                color: hasOutOfStockItems ? '#888' : '#fff',
+                border: 'none', 
+                cursor: hasOutOfStockItems ? 'not-allowed' : 'pointer',
                 fontSize: '0.85rem', fontWeight: 600, letterSpacing: '2px',
                 textTransform: 'uppercase', fontFamily: 'var(--font-body)',
                 marginBottom: '1rem',
               }}
             >
-              Proceed to Checkout
+              {hasOutOfStockItems ? 'Resolve Cart Errors' : 'Proceed to Checkout'}
             </motion.button>
 
             <Link

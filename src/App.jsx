@@ -26,6 +26,7 @@ import AccountPage from './pages/AccountPage'
 import Discover from './pages/Discover'
 import WorldOfZanny from './pages/WorldOfZanny'
 import Checkout from './pages/Checkout'
+import CollectionsPage from './pages/CollectionsPage'
 
 // Admin pages (no Navbar/Footer)
 import AdminLogin from './pages/admin/AdminLogin'
@@ -94,6 +95,7 @@ function App() {
               <Route path="/discover" element={<PublicLayout><Discover /></PublicLayout>} />
               <Route path="/world-of-zanny" element={<PublicLayout><WorldOfZanny /></PublicLayout>} />
               
+              <Route path="/collections" element={<PublicLayout><CollectionsPage /></PublicLayout>} />
               <Route path="/collections/:categoryId" element={<PublicLayout><CategoryPage /></PublicLayout>} />
               <Route path="/product/:productId" element={<PublicLayout><ProductDetailPage /></PublicLayout>} />
             </Routes>

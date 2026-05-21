@@ -26,6 +26,23 @@ export async function onRequestPost(context) {
   try {
     const data = await context.request.json();
     
+    // VERIFY LIVE STOCK FIRST TO PREVENT INVENTORY RACE CONDITIONS
+    for (const item of data.items) {
+      const product = await context.env.DB.prepare(
+        "SELECT stock, name FROM products WHERE id = ?"
+      ).bind(item.id).first();
+
+      if (!product) {
+        return Response.json({ error: `Product not found (ID: ${item.id}).` }, { status: 400 });
+      }
+
+      if (product.stock < item.qty) {
+        return Response.json({ 
+          error: `Out of stock: ${product.name}. Only ${product.stock} left. Please return to your cart and remove/adjust this item.` 
+        }, { status: 400 });
+      }
+    }
+
     // Generate order ID
     const orderId = 'ORD-' + Date.now().toString().slice(-6);
     
