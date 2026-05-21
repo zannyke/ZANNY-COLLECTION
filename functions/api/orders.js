@@ -54,6 +54,39 @@ export async function onRequestPost(context) {
       ).run();
     }
 
+    // Send email notification to Admin
+    if (context.env.RESEND_API_KEY) {
+      try {
+        const itemsHtml = data.items.map(item => `<li>${item.qty}x Item ID [${item.id}] (Size: ${item.size}) - KSh ${item.price.toLocaleString()}</li>`).join('');
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${context.env.RESEND_API_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            from: 'Zanny Collection <onboarding@resend.dev>', // Resend testing domain
+            to: 'stanleyngigi564@gmail.com', // Admin Email
+            subject: `New Order Received! [${orderId}]`,
+            html: `
+              <div style="font-family:sans-serif;">
+                <h2>🎉 New Order Placed!</h2>
+                <p><strong>Order ID:</strong> ${orderId}</p>
+                <p><strong>Total:</strong> KSh ${data.totalAmount.toLocaleString()}</p>
+                <p><strong>Phone Number:</strong> ${data.phoneNumber}</p>
+                <p><strong>Delivery Address:</strong> ${data.shippingAddress}</p>
+                <h3>Items Ordered:</h3>
+                <ul>${itemsHtml}</ul>
+                <p>Log into your <a href="https://zanny-collection.pages.dev/admin">Admin Dashboard</a> to manage this order.</p>
+              </div>
+            `
+          })
+        });
+      } catch (emailErr) {
+        console.error("Failed to send admin notification email", emailErr);
+      }
+    }
+
     return Response.json({ success: true, orderId });
   } catch (err) {
     return Response.json({ error: err.message }, { status: 500 });
