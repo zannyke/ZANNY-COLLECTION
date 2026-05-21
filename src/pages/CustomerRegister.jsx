@@ -202,7 +202,7 @@ export default function CustomerRegister() {
 
       {/* Left side: Visual */}
       <div style={{ 
-        flex: 1, background: '#111 url(/sign-in.jpg) center/cover no-repeat', 
+        flex: 1, background: '#111 url(/register-bg-v2.jpg) center/cover no-repeat', 
         position: 'relative' 
       }} className="hide-mobile">
         <div style={{ 
