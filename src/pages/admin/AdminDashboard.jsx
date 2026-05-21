@@ -256,9 +256,6 @@ export default function AdminDashboard() {
   const chartColor  = resolvedTheme === 'dark' ? '#ffffff' : '#1a1a1a';
   const accentColor = resolvedTheme === 'dark' ? '#00ff9d' : '#00b894';
 
-  const chartColor  = resolvedTheme === 'dark' ? '#ffffff' : '#1a1a1a';
-  const accentColor = resolvedTheme === 'dark' ? '#00ff9d' : '#00b894';
-
   const renderChart = () => {
     const data = DATA[period];
     const commonProps = { data, margin: { top: 5, right: 10, left: 0, bottom: 5 } };
