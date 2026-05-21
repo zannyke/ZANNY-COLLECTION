@@ -89,7 +89,7 @@ function App() {
               
               {/* Protected Order Flow */}
               <Route path="/cart" element={<PublicLayout><CartPage /></PublicLayout>} />
-              <Route path="/checkout" element={<PublicLayout><Checkout /></PublicLayout>} />
+              <Route path="/checkout" element={<UserRoute><PublicLayout><Checkout /></PublicLayout></UserRoute>} />
               
               <Route path="/discover" element={<PublicLayout><Discover /></PublicLayout>} />
               <Route path="/world-of-zanny" element={<PublicLayout><WorldOfZanny /></PublicLayout>} />

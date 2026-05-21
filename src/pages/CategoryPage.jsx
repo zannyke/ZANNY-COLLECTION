@@ -94,13 +94,22 @@ function ProductCard({ product }) {
               {product.badge}
             </span>
           )}
-          {product.stock < 10 && (
+          {product.stock > 0 && product.stock < 10 && (
             <span style={{
               position: 'absolute', bottom: '0.75rem', left: '0.75rem',
               background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: '0.6rem',
               padding: '0.2rem 0.55rem', letterSpacing: '1px',
             }}>
               Only {product.stock} left
+            </span>
+          )}
+          {product.stock <= 0 && (
+            <span style={{
+              position: 'absolute', bottom: '0.75rem', left: '0.75rem',
+              background: '#c0392b', color: '#fff', fontSize: '0.6rem',
+              padding: '0.2rem 0.55rem', letterSpacing: '1px', fontWeight: 700
+            }}>
+              Out of Stock
             </span>
           )}
         </div>
@@ -140,15 +149,21 @@ function ProductCard({ product }) {
       </div>
 
       {/* Add to cart */}
-      <motion.button whileTap={{ scale: 0.96 }} onClick={handleAdd} style={{
-        padding: '0.75rem',
-        background: added ? '#2d6a4f' : '#1a1a1a',
-        color: '#fff', border: 'none', cursor: 'pointer',
-        fontSize: '0.72rem', fontWeight: 600, letterSpacing: '1.5px',
-        textTransform: 'uppercase', transition: 'background 0.3s',
-        fontFamily: 'var(--font-body)',
-      }}>
-        {added ? '✓ Added to Cart' : 'Add to Cart'}
+      <motion.button 
+        disabled={product.stock <= 0}
+        whileTap={product.stock > 0 ? { scale: 0.96 } : {}} 
+        onClick={product.stock > 0 ? handleAdd : undefined} 
+        style={{
+          padding: '0.75rem',
+          background: product.stock <= 0 ? '#e0e0e0' : (added ? '#2d6a4f' : '#1a1a1a'),
+          color: product.stock <= 0 ? '#888' : '#fff', 
+          border: 'none', 
+          cursor: product.stock <= 0 ? 'not-allowed' : 'pointer',
+          fontSize: '0.72rem', fontWeight: 600, letterSpacing: '1.5px',
+          textTransform: 'uppercase', transition: 'background 0.3s',
+          fontFamily: 'var(--font-body)',
+        }}>
+        {product.stock <= 0 ? 'Out of Stock' : (added ? '✓ Added to Cart' : 'Add to Cart')}
       </motion.button>
     </motion.div>
   );
