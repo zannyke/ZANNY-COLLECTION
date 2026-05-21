@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, ArrowRight, UserPlus } from 'lucide-react';
+import { Mail, Lock, ArrowRight, UserPlus, Eye, EyeOff } from 'lucide-react';
 
 export default function CustomerLogin() {
   const [email, setEmail] = useState('');
@@ -11,6 +11,7 @@ export default function CustomerLogin() {
   const [loading, setLoading] = useState(false);
   const [needsVerification, setNeedsVerification] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   
   const { login, verify } = useAuth();
   const navigate = useNavigate();
@@ -127,6 +128,7 @@ export default function CustomerLogin() {
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     required
+                    autoComplete="email"
                     style={{ border: 'none', outline: 'none', flex: 1, fontSize: '1rem', background: 'transparent' }}
                   />
                 </div>
@@ -136,13 +138,21 @@ export default function CustomerLogin() {
                 <div style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>
                   <Lock size={18} style={{ color: '#aaa', marginRight: '0.75rem' }} />
                   <input 
-                    type="password" 
+                    type={showPassword ? "text" : "password"} 
                     placeholder="Password" 
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     required
+                    autoComplete="current-password"
                     style={{ border: 'none', outline: 'none', flex: 1, fontSize: '1rem', background: 'transparent' }}
                   />
+                  <button 
+                    type="button" 
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 0.5rem', color: '#888' }}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
                 {error && <p style={{ color: '#c0392b', fontSize: '0.75rem', marginTop: '0.5rem' }}>{error}</p>}
               </div>
