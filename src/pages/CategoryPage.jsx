@@ -143,7 +143,11 @@ function ProductCard({ product }) {
       {/* Info */}
       <Link to={`/product/${product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
         <div style={{ padding: '0.5rem 0' }}>
-          <p style={{ fontFamily: 'var(--font-heading)', fontSize: '1rem', marginBottom: '0.25rem', letterSpacing: '0.5px' }}>{product.name}</p>
+          <p style={{ 
+            fontFamily: 'var(--font-heading)', fontSize: '1rem', marginBottom: '0.25rem', letterSpacing: '0.5px',
+            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+            minHeight: '2.4rem'
+          }}>{product.name}</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <p style={{ fontSize: '0.9rem', fontWeight: 600 }}>KSh {product.price.toLocaleString()}</p>
             {product.original_price && (
@@ -156,8 +160,8 @@ function ProductCard({ product }) {
       </Link>
 
       {/* Color selector */}
-      {availableColors.length > 0 && (
-        <div>
+      <div style={{ minHeight: '28px', display: 'flex', alignItems: 'flex-start' }}>
+        {availableColors.length > 0 && (
           <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', alignItems: 'center' }}>
             {displayedColors.map(c => (
               <button key={c} onClick={() => setSelectedColor(c)} style={{
@@ -177,29 +181,31 @@ function ProductCard({ product }) {
               </span>
             )}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Size selector */}
-      {requiresSize && (
-        <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', marginTop: '0.25rem' }}>
-          {SIZES.map(s => {
-            const isAvailable = availableSizesForColor.includes(s);
-            const isSelected = selectedSize === s;
-            return (
-              <button key={s} disabled={!isAvailable} onClick={() => setSelectedSize(s)} style={{
-                width: '30px', height: '30px', fontSize: '0.62rem', fontWeight: 600,
-                border: isSelected && isAvailable ? '1.5px solid #1a1a1a' : '1px solid #ddd',
-                background: isSelected && isAvailable ? '#1a1a1a' : 'transparent',
-                color: isSelected && isAvailable ? '#fff' : (!isAvailable ? '#c0392b' : '#1a1a1a'),
-                cursor: isAvailable ? 'pointer' : 'not-allowed', transition: 'all 0.2s',
-                textDecoration: !isAvailable ? 'line-through' : 'none',
-                opacity: !isAvailable ? 0.6 : 1
-              }}>{s}</button>
-            );
-          })}
-        </div>
-      )}
+      <div style={{ minHeight: '32px', marginTop: '0.25rem' }}>
+        {requiresSize && (
+          <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+            {SIZES.map(s => {
+              const isAvailable = availableSizesForColor.includes(s);
+              const isSelected = selectedSize === s;
+              return (
+                <button key={s} disabled={!isAvailable} onClick={() => setSelectedSize(s)} style={{
+                  width: '30px', height: '30px', fontSize: '0.62rem', fontWeight: 600,
+                  border: isSelected && isAvailable ? '1.5px solid #1a1a1a' : '1px solid #ddd',
+                  background: isSelected && isAvailable ? '#1a1a1a' : 'transparent',
+                  color: isSelected && isAvailable ? '#fff' : (!isAvailable ? '#c0392b' : '#1a1a1a'),
+                  cursor: isAvailable ? 'pointer' : 'not-allowed', transition: 'all 0.2s',
+                  textDecoration: !isAvailable ? 'line-through' : 'none',
+                  opacity: !isAvailable ? 0.6 : 1
+                }}>{s}</button>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       {/* Add to cart */}
       <motion.button 
