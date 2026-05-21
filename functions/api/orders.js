@@ -66,7 +66,7 @@ export async function onRequestPost(context) {
           },
           body: JSON.stringify({
             from: 'Zanny Collection <onboarding@resend.dev>', // Resend testing domain
-            to: 'stanleyngigi564@gmail.com', // Admin Email
+            to: 'zannykenya254@gmail.com', // Admin Email
             subject: `New Order Received! [${orderId}]`,
             html: `
               <div style="font-family:sans-serif;">
