@@ -100,6 +100,51 @@ export function ProductProvider({ children }) {
     }
   };
 
+  const editProduct = async (id, updatedData, file) => {
+    let imageUrl = updatedData.image_url || updatedData.image; // Keep existing if no new file
+
+    if (file) {
+      const formData = new FormData();
+      formData.append('file', file);
+      try {
+        const uploadRes = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const uploadData = await uploadRes.json();
+        if (uploadData.success) {
+          imageUrl = uploadData.url;
+        }
+      } catch (err) {
+        console.error("Image upload failed", err);
+      }
+    }
+
+    try {
+      const res = await fetch(`/api/products/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...updatedData, image_url: imageUrl })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setProducts(prev => prev.map(p => {
+          if (p.id === id) {
+            let parsedVariations = [];
+            try { if (updatedData.variations) parsedVariations = JSON.parse(updatedData.variations); } catch(e) {}
+            return { ...p, ...updatedData, image: imageUrl, image_url: imageUrl, parsedVariations };
+          }
+          return p;
+        }));
+        return { success: true };
+      }
+      return { error: data.error || 'Update failed' };
+    } catch (err) {
+      console.error('Database update failed', err);
+      return { error: err.message };
+    }
+  };
+
   const deleteProduct = async (id) => {
     try {
       const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
@@ -116,7 +161,7 @@ export function ProductProvider({ children }) {
   const getBestSellers = () => [...products].sort((a, b) => (b.sold || 0) - (a.sold || 0)).slice(0, 6);
 
   return (
-    <ProductContext.Provider value={{ products, loading, addProduct, deleteProduct, getByCategory, getNewArrivals, getBestSellers }}>
+    <ProductContext.Provider value={{ products, loading, addProduct, editProduct, deleteProduct, getByCategory, getNewArrivals, getBestSellers }}>
       {children}
     </ProductContext.Provider>
   );

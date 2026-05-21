@@ -32,6 +32,7 @@ import CollectionsPage from './pages/CollectionsPage'
 import AdminLogin from './pages/admin/AdminLogin'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AddProduct from './pages/admin/AddProduct'
+import EditProduct from './pages/admin/EditProduct'
 
 import './index.css'
 
@@ -73,6 +74,7 @@ function App() {
               <Route path="/admin/login" element={<ThemeProvider><AdminLogin /></ThemeProvider>} />
               <Route path="/admin" element={<AdminRoute><ThemeProvider><AdminDashboard /></ThemeProvider></AdminRoute>} />
               <Route path="/admin/add-product" element={<AdminRoute><ThemeProvider><AddProduct /></ThemeProvider></AdminRoute>} />
+              <Route path="/admin/product/edit/:id" element={<AdminRoute><ThemeProvider><EditProduct /></ThemeProvider></AdminRoute>} />
 
               {/* ── Public pages ── */}
               <Route path="/" element={<PublicLayout><Home /></PublicLayout>} />

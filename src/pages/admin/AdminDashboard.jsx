@@ -256,22 +256,8 @@ export default function AdminDashboard() {
   const chartColor  = resolvedTheme === 'dark' ? '#ffffff' : '#1a1a1a';
   const accentColor = resolvedTheme === 'dark' ? '#00ff9d' : '#00b894';
 
-  const handleRestock = async (id, currentStock) => {
-    const newStock = window.prompt("Enter new stock quantity:", currentStock);
-    if (newStock !== null && !isNaN(newStock) && newStock !== "") {
-      const parsed = parseInt(newStock, 10);
-      try {
-        await fetch('/api/products', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, stock: parsed })
-        });
-        window.location.reload();
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  };
+  const chartColor  = resolvedTheme === 'dark' ? '#ffffff' : '#1a1a1a';
+  const accentColor = resolvedTheme === 'dark' ? '#00ff9d' : '#00b894';
 
   const renderChart = () => {
     const data = DATA[period];
@@ -570,14 +556,14 @@ export default function AdminDashboard() {
                         </td>
                         <td style={{ padding: '0.85rem 1rem' }}>
                           <div style={{ display: 'flex', gap: '0.5rem' }}>
-                            <button onClick={() => handleRestock(p.id, p.stock)} style={{
+                            <button onClick={() => navigate(`/admin/product/edit/${p.id}`)} style={{
                               background: 'none', border: `1px solid ${t.border}`, color: t.textMuted,
                               padding: '0.3rem 0.75rem', cursor: 'pointer', fontSize: '0.7rem', fontFamily: 'var(--font-body)',
                             }}
                               onMouseEnter={e => { e.currentTarget.style.borderColor = accentColor; e.currentTarget.style.color = accentColor; }}
                               onMouseLeave={e => { e.currentTarget.style.borderColor = t.border; e.currentTarget.style.color = t.textMuted; }}
-                            >Restock</button>
-                            <button onClick={() => deleteProduct(p.id)} style={{
+                            >Edit / Restock</button>
+                            <button onClick={() => { if(window.confirm('Are you sure you want to completely delete this product?')) deleteProduct(p.id); }} style={{
                               background: 'none', border: `1px solid ${t.border}`, color: t.textMuted,
                               padding: '0.3rem 0.75rem', cursor: 'pointer', fontSize: '0.7rem', fontFamily: 'var(--font-body)',
                             }}
