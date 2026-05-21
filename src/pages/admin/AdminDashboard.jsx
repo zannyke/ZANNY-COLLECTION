@@ -7,7 +7,7 @@ import {
 } from 'recharts';
 import { useProducts, CATEGORIES } from '../../context/ProductContext';
 import { useTheme } from '../../context/ThemeContext';
-import { Sun, Moon, Monitor, TrendingUp, BarChart3, Activity, Package, ShoppingBag, LayoutDashboard } from 'lucide-react';
+import { Sun, Moon, Monitor, TrendingUp, BarChart3, Activity, Package, ShoppingBag, LayoutDashboard, Menu, X } from 'lucide-react';
 
 // ── Simulated Analytics Data ─────────────────────────────────────────
 const daily   = Array.from({ length: 30 }, (_, i) => ({ date: `Day ${i + 1}`, Visitors: 0, PageViews: 0 }));
@@ -206,6 +206,7 @@ export default function AdminDashboard() {
   const [period, setPeriod] = useState('daily');
   const [chartType, setChartType] = useState('area');
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const bestSellers = getBestSellers();
 
   const totalRevenue = products.reduce((s, p) => s + p.price * p.sold, 0);
@@ -271,14 +272,34 @@ export default function AdminDashboard() {
 
   return (
     <div style={{ minHeight: '100vh', background: t.bg, color: t.text, fontFamily: 'var(--font-body)', transition: 'background 0.3s, color 0.3s' }}>
+      
+      {/* Mobile Header (Only visible on small screens) */}
+      <div className="mobile-admin-header" style={{
+        display: 'none', justifyContent: 'space-between', alignItems: 'center',
+        padding: '1rem 1.5rem', background: t.sidebar, borderBottom: `1px solid ${t.border}`,
+        position: 'sticky', top: 0, zIndex: 20
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{
+            width: '30px', height: '30px', borderRadius: '50%', border: `1.5px solid ${t.text}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '0.8rem', color: t.text
+          }}>Z</div>
+          <p style={{ fontSize: '0.85rem', fontWeight: 700, letterSpacing: '1px' }}>ZANNY ADMIN</p>
+        </div>
+        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{ background: 'none', border: 'none', color: t.text, cursor: 'pointer' }}>
+          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </div>
+
       {/* ── Sidebar ── */}
-      <div style={{
+      <div className={`admin-sidebar ${mobileMenuOpen ? 'open' : ''}`} style={{
         position: 'fixed', top: 0, left: 0, bottom: 0, width: '240px',
         background: t.sidebar, borderRight: `1px solid ${t.border}`,
-        display: 'flex', flexDirection: 'column', padding: '2rem 1.5rem', zIndex: 10,
-        transition: 'all 0.3s',
+        display: 'flex', flexDirection: 'column', padding: '2rem 1.5rem', zIndex: 15,
+        transition: 'transform 0.3s ease',
       }}>
-        <div style={{ marginBottom: '2.5rem' }}>
+        <div style={{ marginBottom: '2.5rem' }} className="sidebar-logo">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
             <div style={{
               width: '34px', height: '34px', borderRadius: '50%', border: `1.5px solid ${t.text}`,
@@ -314,7 +335,7 @@ export default function AdminDashboard() {
             }
 
             return (
-              <button key={item.id} onClick={() => setActiveTab(item.id)} style={baseStyle}
+              <button key={item.id} onClick={() => { setActiveTab(item.id); setMobileMenuOpen(false); }} style={baseStyle}
                 onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = t.surfaceHover; e.currentTarget.style.color = t.text; } }}
                 onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = t.textMuted; } }}
               >{item.label}</button>
@@ -354,7 +375,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* ── Main Content ── */}
-      <div style={{ marginLeft: '240px', padding: '2.5rem 3rem' }}>
+      <div className="admin-main-content" style={{ marginLeft: '240px', padding: '2.5rem 3rem', transition: 'all 0.3s' }}>
 
         {/* ── DASHBOARD TAB ── */}
         {activeTab === 'dashboard' && (
@@ -373,17 +394,19 @@ export default function AdminDashboard() {
 
             {/* KPI Cards */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '2.5rem' }}>
-              <StatCard label="Daily Hustlers" value="0" sub="Site visits" t={t} />
-              <StatCard label="Hype Factor"    value="0" sub="Page views"  t={t} />
+              <StatCard label="Daily Hustlers" value="—" sub="Requires CF Analytics" t={t} />
+              <StatCard label="Hype Factor"    value="—" sub="Requires CF Analytics"  t={t} />
               <StatCard label="Street Rep"     value={products.reduce((s, p) => s + p.sold, 0).toLocaleString()} sub="Total items sold" accent={accentColor} t={t} />
               <StatCard label="Zanny Drops"    value={products.length} sub={`${CATEGORIES.length} categories`} t={t} />
             </div>
 
             {/* Traffic Chart */}
             <div style={{ background: t.surface, border: `1px solid ${t.border}`, padding: '2rem', marginBottom: '2rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
                   <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', letterSpacing: '1px' }}>Website Traffic</h2>
+                  <p style={{ fontSize: '0.75rem', color: '#c0392b', marginTop: '0.5rem' }}>* Log into your Cloudflare Dashboard and turn on "Web Analytics" to track this data.</p>
+                </div>
                   <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
                     {[
                       { id: 'area', icon: <TrendingUp size={14} />, label: 'Area' },
@@ -417,7 +440,7 @@ export default function AdminDashboard() {
               <ResponsiveContainer width="100%" height={260}>{renderChart()}</ResponsiveContainer>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
               {/* Best Sellers */}
               <div style={{ background: t.surface, border: `1px solid ${t.border}`, padding: '2rem' }}>
                 <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', letterSpacing: '1px', marginBottom: '1.5rem' }}>Best Sellers</h2>
@@ -519,8 +542,11 @@ export default function AdminDashboard() {
 
       <style>{`
         @media (max-width: 900px) {
-          div[style*='margin-left: 240px'] { margin-left: 0 !important; padding: 1.5rem !important; }
-          div[style*='position: fixed'][style*='width: 240px'] { display: none !important; }
+          .admin-main-content { margin-left: 0 !important; padding: 1.5rem !important; }
+          .mobile-admin-header { display: flex !important; }
+          .admin-sidebar { transform: translateX(-100%); }
+          .admin-sidebar.open { transform: translateX(0); box-shadow: 4px 0 24px rgba(0,0,0,0.2); }
+          .sidebar-logo { display: none; }
         }
       `}</style>
     </div>

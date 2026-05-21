@@ -52,6 +52,11 @@ export async function onRequestPost(context) {
       ).bind(
         itemId, orderId, item.id, item.qty, item.size, item.price
       ).run();
+
+      // Increment sold count in products table
+      await context.env.DB.prepare(
+        "UPDATE products SET sold = sold + ? WHERE id = ?"
+      ).bind(item.qty, item.id).run();
     }
 
     // Send email notification to Admin
