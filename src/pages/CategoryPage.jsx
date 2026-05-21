@@ -51,14 +51,48 @@ function ExpandableDescription({ text }) {
 
 function ProductCard({ product }) {
   const { addToCart } = useCart();
-  const [selectedSize, setSelectedSize] = useState('M');
+  const requiresSize = product.category !== 'accessories';
+  const variations = product.parsedVariations || [];
+  
+  const availableColors = [...new Set(variations.map(v => v.color))].filter(Boolean);
+  const [selectedColor, setSelectedColor] = useState(availableColors[0] || '');
+  const [showAllColors, setShowAllColors] = useState(false);
+
+  const availableSizesForColor = variations
+    .filter(v => v.color === selectedColor && Number(v.quantity) > 0)
+    .map(v => v.size)
+    .filter(Boolean);
+
+  const [selectedSize, setSelectedSize] = useState(availableSizesForColor[0] || (requiresSize ? SIZES[2] : ''));
   const [added, setAdded] = useState(false);
 
-  const handleAdd = () => {
-    addToCart(product, selectedSize);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1800);
+  React.useEffect(() => {
+    if (requiresSize && selectedColor) {
+      if (availableSizesForColor.length > 0 && !availableSizesForColor.includes(selectedSize)) {
+        setSelectedSize(availableSizesForColor[0]);
+      } else if (availableSizesForColor.length === 0) {
+        setSelectedSize('');
+      }
+    }
+  }, [selectedColor, requiresSize]);
+
+  const currentVariation = variations.find(v => 
+    v.color === selectedColor && (requiresSize ? v.size === selectedSize : true)
+  );
+  const maxStock = currentVariation ? Number(currentVariation.quantity) : 0;
+  const isGlobalOutOfStock = product.stock <= 0;
+
+  const handleAdd = (e) => {
+    e.preventDefault();
+    if (maxStock > 0) {
+      addToCart(product, selectedSize, selectedColor);
+      setAdded(true);
+      setTimeout(() => setAdded(false), 1800);
+    }
   };
+
+  const displayedColors = showAllColors ? availableColors : availableColors.slice(0, 3);
+  const hasMoreColors = availableColors.length > 3;
 
   return (
     <motion.div
@@ -94,16 +128,7 @@ function ProductCard({ product }) {
               {product.badge}
             </span>
           )}
-          {product.stock > 0 && product.stock < 10 && (
-            <span style={{
-              position: 'absolute', bottom: '0.75rem', left: '0.75rem',
-              background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: '0.6rem',
-              padding: '0.2rem 0.55rem', letterSpacing: '1px',
-            }}>
-              Only {product.stock} left
-            </span>
-          )}
-          {product.stock <= 0 && (
+          {isGlobalOutOfStock && (
             <span style={{
               position: 'absolute', bottom: '0.75rem', left: '0.75rem',
               background: '#c0392b', color: '#fff', fontSize: '0.6rem',
@@ -117,7 +142,7 @@ function ProductCard({ product }) {
 
       {/* Info */}
       <Link to={`/product/${product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-        <div style={{ padding: '1.25rem 1rem' }}>
+        <div style={{ padding: '0.5rem 0' }}>
           <p style={{ fontFamily: 'var(--font-heading)', fontSize: '1rem', marginBottom: '0.25rem', letterSpacing: '0.5px' }}>{product.name}</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <p style={{ fontSize: '0.9rem', fontWeight: 600 }}>KSh {product.price.toLocaleString()}</p>
@@ -126,44 +151,72 @@ function ProductCard({ product }) {
                 KSh {Number(product.original_price).toLocaleString()}
               </p>
             )}
-            {product.discount_label && (
-              <span style={{ background: '#c0392b', color: '#fff', fontSize: '0.6rem', padding: '0.1rem 0.3rem', letterSpacing: '1px' }}>
-                {product.discount_label}
-              </span>
-            )}
           </div>
         </div>
       </Link>
 
+      {/* Color selector */}
+      {availableColors.length > 0 && (
+        <div>
+          <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            {displayedColors.map(c => (
+              <button key={c} onClick={() => setSelectedColor(c)} style={{
+                padding: '0.2rem 0.5rem', fontSize: '0.62rem', fontWeight: 600,
+                border: selectedColor === c ? '1.5px solid #1a1a1a' : '1px solid #ddd',
+                background: selectedColor === c ? '#1a1a1a' : 'transparent',
+                color: selectedColor === c ? '#fff' : '#1a1a1a',
+                cursor: 'pointer', transition: 'all 0.2s',
+              }}>{c}</button>
+            ))}
+            {hasMoreColors && (
+              <span 
+                onClick={() => setShowAllColors(!showAllColors)} 
+                style={{ fontSize: '0.65rem', color: '#888', cursor: 'pointer', textDecoration: 'underline', marginLeft: '0.25rem' }}
+              >
+                {showAllColors ? 'less' : `+${availableColors.length - 3} more`}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Size selector */}
-      <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
-        {SIZES.map(s => (
-          <button key={s} onClick={() => setSelectedSize(s)} style={{
-            width: '30px', height: '30px', fontSize: '0.62rem', fontWeight: 600,
-            border: selectedSize === s ? '1.5px solid #1a1a1a' : '1px solid #ddd',
-            background: selectedSize === s ? '#1a1a1a' : 'transparent',
-            color: selectedSize === s ? '#fff' : '#1a1a1a',
-            cursor: 'pointer', transition: 'all 0.2s',
-          }}>{s}</button>
-        ))}
-      </div>
+      {requiresSize && (
+        <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', marginTop: '0.25rem' }}>
+          {SIZES.map(s => {
+            const isAvailable = availableSizesForColor.includes(s);
+            const isSelected = selectedSize === s;
+            return (
+              <button key={s} disabled={!isAvailable} onClick={() => setSelectedSize(s)} style={{
+                width: '30px', height: '30px', fontSize: '0.62rem', fontWeight: 600,
+                border: isSelected && isAvailable ? '1.5px solid #1a1a1a' : '1px solid #ddd',
+                background: isSelected && isAvailable ? '#1a1a1a' : 'transparent',
+                color: isSelected && isAvailable ? '#fff' : (!isAvailable ? '#c0392b' : '#1a1a1a'),
+                cursor: isAvailable ? 'pointer' : 'not-allowed', transition: 'all 0.2s',
+                textDecoration: !isAvailable ? 'line-through' : 'none',
+                opacity: !isAvailable ? 0.6 : 1
+              }}>{s}</button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Add to cart */}
       <motion.button 
-        disabled={product.stock <= 0}
-        whileTap={product.stock > 0 ? { scale: 0.96 } : {}} 
-        onClick={product.stock > 0 ? handleAdd : undefined} 
+        disabled={isGlobalOutOfStock || maxStock <= 0}
+        whileTap={maxStock > 0 ? { scale: 0.96 } : {}} 
+        onClick={maxStock > 0 ? handleAdd : undefined} 
         style={{
-          padding: '0.75rem',
-          background: product.stock <= 0 ? '#e0e0e0' : (added ? '#2d6a4f' : '#1a1a1a'),
-          color: product.stock <= 0 ? '#888' : '#fff', 
+          padding: '0.75rem', marginTop: '0.5rem',
+          background: (isGlobalOutOfStock || maxStock <= 0) ? '#e0e0e0' : (added ? '#2d6a4f' : '#1a1a1a'),
+          color: (isGlobalOutOfStock || maxStock <= 0) ? '#888' : '#fff', 
           border: 'none', 
-          cursor: product.stock <= 0 ? 'not-allowed' : 'pointer',
+          cursor: (isGlobalOutOfStock || maxStock <= 0) ? 'not-allowed' : 'pointer',
           fontSize: '0.72rem', fontWeight: 600, letterSpacing: '1.5px',
           textTransform: 'uppercase', transition: 'background 0.3s',
           fontFamily: 'var(--font-body)',
         }}>
-        {product.stock <= 0 ? 'Out of Stock' : (added ? '✓ Added to Cart' : 'Add to Cart')}
+        {isGlobalOutOfStock ? 'Sold Out' : (maxStock <= 0 ? 'Color Out of Stock' : (added ? '✓ Added to Cart' : 'Add to Cart'))}
       </motion.button>
     </motion.div>
   );
