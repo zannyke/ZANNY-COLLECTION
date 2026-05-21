@@ -14,7 +14,7 @@ export default function AddProduct() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
     name: '', category: 'shirts-tees', price: '', original_price: '', discount_label: '', description: '',
-    stock: '', badge: 'NEW', sizes: ['S','M','L'], colors: ['Black', 'White']
+    badge: 'NEW', variations: [{ color: 'Black', size: 'M', quantity: 1 }]
   });
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -25,18 +25,15 @@ export default function AddProduct() {
 
   const set = (field, val) => setForm(prev => ({ ...prev, [field]: val }));
 
-  const toggleSize = (size) => {
-    setForm(prev => ({
-      ...prev,
-      sizes: prev.sizes.includes(size) ? prev.sizes.filter(s => s !== size) : [...prev.sizes, size],
-    }));
-  };
+  const requiresSize = form.category !== 'accessories';
+  const totalStock = form.variations.reduce((sum, v) => sum + Number(v.quantity || 0), 0);
 
-  const toggleColor = (color) => {
-    setForm(prev => ({
-      ...prev,
-      colors: prev.colors.includes(color) ? prev.colors.filter(c => c !== color) : [...prev.colors, color],
-    }));
+  const addVariation = () => setForm(prev => ({ ...prev, variations: [...prev.variations, { color: 'Black', size: requiresSize ? 'M' : '', quantity: 1 }] }));
+  const removeVariation = (index) => setForm(prev => ({ ...prev, variations: prev.variations.filter((_, i) => i !== index) }));
+  const updateVariation = (index, field, value) => {
+    const newVars = [...form.variations];
+    newVars[index][field] = value;
+    setForm(prev => ({ ...prev, variations: newVars }));
   };
 
   const validate = () => {
@@ -44,7 +41,8 @@ export default function AddProduct() {
     if (!form.name.trim())        e.name = 'Product name is required.';
     if (!form.price || isNaN(form.price) || Number(form.price) <= 0) e.price = 'Enter a valid price.';
     if (!form.description.trim()) e.description = 'Add a short description.';
-    if (!form.stock || isNaN(form.stock))  e.stock = 'Enter stock quantity.';
+    if (form.variations.length === 0) e.variations = 'Add at least one variation.';
+    if (form.variations.some(v => !v.color || isNaN(v.quantity) || Number(v.quantity) < 0 || (requiresSize && !v.size))) e.variations = 'Fill all variation fields correctly.';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -59,9 +57,7 @@ export default function AddProduct() {
       ...form,
       price: Number(form.price),
       original_price: form.original_price ? Number(form.original_price) : null,
-      stock: Number(form.stock),
-      sizes: form.sizes,
-      colors: form.colors
+      stock: totalStock
     }, file);
 
     setUploading(false);
@@ -141,17 +137,12 @@ export default function AddProduct() {
             {errors.description && <p style={{ color: '#c0392b', fontSize: '0.72rem', marginTop: '0.35rem' }}>{errors.description}</p>}
           </div>
 
-          {/* Row: Price + Stock + Badge */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.5rem' }}>
+          {/* Row: Price + Badge */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
             <div>
               <label style={labelStyle}>Price (KSh) *</label>
               <input type="number" style={inputStyle('price')} value={form.price} onChange={e => set('price', e.target.value)} placeholder="e.g. 3500" min="0" />
               {errors.price && <p style={{ color: '#c0392b', fontSize: '0.72rem', marginTop: '0.35rem' }}>{errors.price}</p>}
-            </div>
-            <div>
-              <label style={labelStyle}>Stock Quantity *</label>
-              <input type="number" style={inputStyle('stock')} value={form.stock} onChange={e => set('stock', e.target.value)} placeholder="e.g. 50" min="0" />
-              {errors.stock && <p style={{ color: '#c0392b', fontSize: '0.72rem', marginTop: '0.35rem' }}>{errors.stock}</p>}
             </div>
             <div>
               <label style={labelStyle}>Badge</label>
@@ -173,36 +164,40 @@ export default function AddProduct() {
             </div>
           </div>
 
-          {/* Available Sizes & Colors */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem' }}>
-            <div>
-              <label style={labelStyle}>Available Sizes</label>
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                {SIZES.map(s => (
-                  <button key={s} type="button" onClick={() => toggleSize(s)} style={{
-                    width: '44px', height: '44px', fontSize: '0.75rem', fontWeight: 600,
-                    border: form.sizes.includes(s) ? `1.5px solid ${t.text}` : `1px solid ${t.border}`,
-                    background: form.sizes.includes(s) ? t.text : 'transparent',
-                    color: form.sizes.includes(s) ? t.bg : t.textMuted,
-                    cursor: 'pointer', letterSpacing: '0.5px', transition: 'all 0.2s',
-                  }}>{s}</button>
-                ))}
-              </div>
+          {/* Variations Builder */}
+          <div style={{ background: resolvedTheme === 'dark' ? 'rgba(255,255,255,0.02)' : '#fdfdfd', padding: '1.5rem', border: `1px solid ${errors.variations ? '#c0392b' : t.border}` }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <label style={{ ...labelStyle, marginBottom: 0 }}>Product Variations (Stock: {totalStock})</label>
+              <button type="button" onClick={addVariation} style={{ background: t.text, color: t.bg, border: 'none', padding: '0.4rem 0.8rem', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}>+ Add Variation</button>
             </div>
+            {errors.variations && <p style={{ color: '#c0392b', fontSize: '0.75rem', marginBottom: '1rem' }}>{errors.variations}</p>}
             
-            <div>
-              <label style={labelStyle}>Available Colors</label>
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                {COLORS.map(c => (
-                  <button key={c} type="button" onClick={() => toggleColor(c)} style={{
-                    padding: '0.5rem 0.85rem', fontSize: '0.75rem', fontWeight: 600,
-                    border: form.colors.includes(c) ? `1.5px solid ${t.text}` : `1px solid ${t.border}`,
-                    background: form.colors.includes(c) ? t.text : 'transparent',
-                    color: form.colors.includes(c) ? t.bg : t.textMuted,
-                    cursor: 'pointer', letterSpacing: '0.5px', transition: 'all 0.2s',
-                  }}>{c}</button>
-                ))}
-              </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {form.variations.map((v, i) => (
+                <div key={i} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                  <div style={{ flex: 1 }}>
+                    <select value={v.color} onChange={e => updateVariation(i, 'color', e.target.value)} style={{ ...inputStyle(), appearance: 'none' }}>
+                      <option value="">Select Color</option>
+                      {COLORS.map(c => <option key={c} value={c} style={{ background: t.surface, color: t.text }}>{c}</option>)}
+                    </select>
+                  </div>
+                  {requiresSize && (
+                    <div style={{ flex: 1 }}>
+                      <select value={v.size} onChange={e => updateVariation(i, 'size', e.target.value)} style={{ ...inputStyle(), appearance: 'none' }}>
+                        <option value="">Select Size</option>
+                        {SIZES.map(s => <option key={s} value={s} style={{ background: t.surface, color: t.text }}>{s}</option>)}
+                      </select>
+                    </div>
+                  )}
+                  <div style={{ flex: 1 }}>
+                    <input type="number" value={v.quantity} onChange={e => updateVariation(i, 'quantity', e.target.value)} placeholder="Qty" min="0" style={inputStyle()} />
+                  </div>
+                  <button type="button" onClick={() => removeVariation(i)} style={{ background: '#c0392b', color: '#fff', border: 'none', padding: '0.85rem', cursor: 'pointer', fontWeight: 600 }}>X</button>
+                </div>
+              ))}
+              {form.variations.length === 0 && (
+                <p style={{ color: t.textMuted, fontSize: '0.8rem', textAlign: 'center', padding: '1rem' }}>No variations added. Product will be out of stock.</p>
+              )}
             </div>
           </div>
 

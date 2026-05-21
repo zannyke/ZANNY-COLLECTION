@@ -15,14 +15,14 @@ export function CartProvider({ children }) {
     localStorage.setItem('zanny_cart', JSON.stringify(cartItems));
   }, [cartItems]);
 
-  const addToCart = (product, size = 'M') => {
+  const addToCart = (product, size = '', color = '') => {
     setCartItems(prev => {
-      const key = `${product.id}-${size}`;
+      const key = `${product.id}-${color}-${size}`;
       const exists = prev.find(i => i.key === key);
       if (exists) {
         return prev.map(i => i.key === key ? { ...i, qty: i.qty + 1 } : i);
       }
-      return [...prev, { ...product, size, qty: 1, key }];
+      return [...prev, { ...product, size, color, qty: 1, key }];
     });
   };
 

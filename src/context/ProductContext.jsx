@@ -28,18 +28,15 @@ export function ProductProvider({ children }) {
         if (Array.isArray(data)) {
           // Normalize properties for frontend rendering to prevent undefined values crashing Recharts
           setProducts(data.map(p => {
-            let parsedSizes = [];
-            let parsedColors = [];
-            try { if (p.sizes) parsedSizes = JSON.parse(p.sizes); } catch(e) {}
-            try { if (p.colors) parsedColors = JSON.parse(p.colors); } catch(e) {}
+            let parsedVariations = [];
+            try { if (p.variations) parsedVariations = JSON.parse(p.variations); } catch(e) {}
             return { 
               ...p, 
               image: p.image_url || '',
               sold: p.sold || 0,
               price: Number(p.price) || 0,
               stock: Number(p.stock) || 0,
-              parsedSizes,
-              parsedColors
+              parsedVariations
             };
           }));
         } else {

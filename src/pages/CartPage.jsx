@@ -14,7 +14,11 @@ export default function CartPage() {
 
   const hasOutOfStockItems = cartItems.some(item => {
     const liveProduct = products.find(p => p.id === item.id);
-    return !liveProduct || liveProduct.stock <= 0;
+    if (!liveProduct) return true;
+    const variation = liveProduct.parsedVariations?.find(v => 
+      v.color === item.color && (!item.size || v.size === item.size)
+    );
+    return !variation || Number(variation.quantity) <= 0 || item.qty > Number(variation.quantity);
   });
 
   const handleCheckout = () => {
@@ -64,7 +68,13 @@ export default function CartPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
               {cartItems.map((item, idx) => {
                 const liveProduct = products.find(p => p.id === item.id);
-                const liveStock = liveProduct ? liveProduct.stock : 0;
+                let liveStock = 0;
+                if (liveProduct && liveProduct.parsedVariations) {
+                  const variation = liveProduct.parsedVariations.find(v => 
+                    v.color === item.color && (!item.size || v.size === item.size)
+                  );
+                  if (variation) liveStock = Number(variation.quantity);
+                }
                 const isOutOfStock = liveStock <= 0;
 
                 return (

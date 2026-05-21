@@ -22,10 +22,48 @@ export default function ProductDetailPage() {
   const navigate = useNavigate();
 
   const product = products.find(p => p.id.toString() === productId);
-  const [selectedSize, setSelectedSize] = useState('M');
-  const [selectedColor, setSelectedColor] = useState(null);
+  const requiresSize = product?.category !== 'accessories';
+  const variations = product?.parsedVariations || [];
+  const availableColors = [...new Set(variations.map(v => v.color))].filter(Boolean);
+
+  const [selectedColor, setSelectedColor] = useState('');
+  const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+
+  useEffect(() => {
+    if (availableColors.length > 0 && !selectedColor) {
+      setSelectedColor(availableColors[0]);
+    }
+  }, [availableColors, selectedColor]);
+
+  const availableSizesForColor = variations
+    .filter(v => v.color === selectedColor && Number(v.quantity) > 0)
+    .map(v => v.size)
+    .filter(Boolean);
+
+  useEffect(() => {
+    if (requiresSize && selectedColor) {
+      if (availableSizesForColor.length > 0) {
+        if (!availableSizesForColor.includes(selectedSize)) {
+          setSelectedSize(availableSizesForColor[0]);
+        }
+      } else {
+        setSelectedSize('');
+      }
+    }
+  }, [selectedColor, availableSizesForColor, requiresSize, selectedSize]);
+
+  const currentVariation = variations.find(v => 
+    v.color === selectedColor && (requiresSize ? v.size === selectedSize : true)
+  );
+  const maxStock = currentVariation ? Number(currentVariation.quantity) : 0;
+
+  useEffect(() => {
+    if (quantity > maxStock) {
+      setQuantity(Math.max(1, maxStock));
+    }
+  }, [maxStock, quantity]);
 
   // Suggested products from the same category
   const relatedProducts = products
@@ -129,44 +167,12 @@ export default function ProductDetailPage() {
               {product.description}
             </p>
 
-            {/* Size Selection */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 600, letterSpacing: '1px' }}>SELECT SIZE</span>
-                <Link to="/care" style={{ fontSize: '0.75rem', color: '#888', textDecoration: 'underline' }}>Size Guide</Link>
-              </div>
-              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                {SIZES.map(size => {
-                  const isAvailable = !product.parsedSizes || product.parsedSizes.length === 0 || product.parsedSizes.includes(size);
-                  return (
-                    <button
-                      key={size}
-                      disabled={!isAvailable}
-                      onClick={() => setSelectedSize(size)}
-                      style={{
-                        width: '50px', height: '50px',
-                        border: selectedSize === size && isAvailable ? '2px solid #1a1a1a' : '1px solid #eee',
-                        background: selectedSize === size && isAvailable ? '#1a1a1a' : 'transparent',
-                        color: selectedSize === size && isAvailable ? '#fff' : (!isAvailable ? '#ccc' : '#1a1a1a'),
-                        fontSize: '0.8rem', fontWeight: 600, cursor: isAvailable ? 'pointer' : 'not-allowed',
-                        textDecoration: !isAvailable ? 'line-through' : 'none',
-                        opacity: !isAvailable ? 0.5 : 1,
-                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
-                      }}
-                    >
-                      {size}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Color Selection (if colors exist) */}
-            {product.parsedColors && product.parsedColors.length > 0 && (
+            {/* Color Selection */}
+            {availableColors.length > 0 && (
               <div>
                 <span style={{ fontSize: '0.8rem', fontWeight: 600, letterSpacing: '1px', display: 'block', marginBottom: '1rem' }}>SELECT COLOR</span>
                 <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                  {product.parsedColors.map(color => (
+                  {availableColors.map(color => (
                     <button
                       key={color}
                       onClick={() => setSelectedColor(color)}
@@ -186,22 +192,63 @@ export default function ProductDetailPage() {
               </div>
             )}
 
+            {/* Size Selection */}
+            {requiresSize && (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 600, letterSpacing: '1px' }}>SELECT SIZE</span>
+                  <Link to="/care" style={{ fontSize: '0.75rem', color: '#888', textDecoration: 'underline' }}>Size Guide</Link>
+                </div>
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                  {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map(size => {
+                    // Check if this size exists for ANY color (just to show it disabled if it exists in the product but not for this color)
+                    const sizeExistsInProduct = variations.some(v => v.size === size);
+                    if (!sizeExistsInProduct && availableSizesForColor.length > 0) return null; // hide completely if product never uses this size
+
+                    const isAvailable = availableSizesForColor.includes(size);
+                    return (
+                      <button
+                        key={size}
+                        disabled={!isAvailable}
+                        onClick={() => setSelectedSize(size)}
+                        style={{
+                          width: '50px', height: '50px',
+                          border: selectedSize === size && isAvailable ? '2px solid #1a1a1a' : '1px solid #eee',
+                          background: selectedSize === size && isAvailable ? '#1a1a1a' : 'transparent',
+                          color: selectedSize === size && isAvailable ? '#fff' : (!isAvailable ? '#ccc' : '#1a1a1a'),
+                          fontSize: '0.8rem', fontWeight: 600, cursor: isAvailable ? 'pointer' : 'not-allowed',
+                          textDecoration: !isAvailable ? 'line-through' : 'none',
+                          opacity: !isAvailable ? 0.5 : 1,
+                          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                        }}
+                      >
+                        {size}
+                      </button>
+                    );
+                  })}
+                </div>
+                {availableSizesForColor.length === 0 && selectedColor && (
+                  <p style={{ color: '#c0392b', fontSize: '0.75rem', marginTop: '0.5rem' }}>This color is currently out of stock in all sizes.</p>
+                )}
+              </div>
+            )}
+
             {/* Quantity */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
               <span style={{ fontSize: '0.8rem', fontWeight: 600, letterSpacing: '1px' }}>QUANTITY</span>
-              <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #eee', padding: '0.25rem', opacity: product.stock <= 0 ? 0.5 : 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #eee', padding: '0.25rem', opacity: maxStock <= 0 ? 0.5 : 1 }}>
                 <button
-                  disabled={product.stock <= 0 || quantity <= 1}
+                  disabled={maxStock <= 0 || quantity <= 1}
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  style={{ background: 'none', border: 'none', padding: '0.5rem', cursor: (product.stock <= 0 || quantity <= 1) ? 'not-allowed' : 'pointer', opacity: (product.stock <= 0 || quantity <= 1) ? 0.3 : 1 }}
+                  style={{ background: 'none', border: 'none', padding: '0.5rem', cursor: (maxStock <= 0 || quantity <= 1) ? 'not-allowed' : 'pointer', opacity: (maxStock <= 0 || quantity <= 1) ? 0.3 : 1 }}
                 >
                   <IconMinus size={16} />
                 </button>
-                <span style={{ width: '40px', textAlign: 'center', fontSize: '0.9rem', fontWeight: 600 }}>{product.stock <= 0 ? 0 : quantity}</span>
+                <span style={{ width: '40px', textAlign: 'center', fontSize: '0.9rem', fontWeight: 600 }}>{maxStock <= 0 ? 0 : quantity}</span>
                 <button
-                  disabled={product.stock <= 0 || quantity >= product.stock}
-                  onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                  style={{ background: 'none', border: 'none', padding: '0.5rem', cursor: (product.stock <= 0 || quantity >= product.stock) ? 'not-allowed' : 'pointer', opacity: (product.stock <= 0 || quantity >= product.stock) ? 0.3 : 1 }}
+                  disabled={maxStock <= 0 || quantity >= maxStock}
+                  onClick={() => setQuantity(Math.min(maxStock, quantity + 1))}
+                  style={{ background: 'none', border: 'none', padding: '0.5rem', cursor: (maxStock <= 0 || quantity >= maxStock) ? 'not-allowed' : 'pointer', opacity: (maxStock <= 0 || quantity >= maxStock) ? 0.3 : 1 }}
                 >
                   <IconPlus size={16} />
                 </button>
@@ -210,7 +257,7 @@ export default function ProductDetailPage() {
 
             {/* CTA */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {product.stock <= 0 ? (
+              {maxStock <= 0 ? (
                 <button
                   disabled
                   style={{

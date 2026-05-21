@@ -54,8 +54,7 @@ CREATE TABLE products (
   sold INTEGER DEFAULT 0,
   badge TEXT,
   image_url TEXT,
-  sizes TEXT,
-  colors TEXT,
+  variations TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
