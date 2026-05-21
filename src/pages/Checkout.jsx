@@ -5,6 +5,12 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import PageHeader from '../components/PageHeader';
 
+const DELIVERY_ZONES = [
+  { id: 'kiambu', label: 'Kiambu Local (Kiambu Town, Kikuyu, Wangige, Ruaka)', fee: 0 },
+  { id: 'nairobi', label: 'Nairobi Metro (CBD, Westlands, Eastlands, etc)', fee: 150 },
+  { id: 'rest_of_kenya', label: 'Rest of Kenya (via G4S / Kentax Cargo)', fee: 350 },
+];
+
 export default function Checkout() {
   const { cartItems, cartTotal, clearCart } = useCart();
   const { user, isAuthenticated } = useAuth();
@@ -15,8 +21,12 @@ export default function Checkout() {
     email: isAuthenticated ? user.email : '',
     phone: '',
     address: '',
-    city: '',
+    zone: 'kiambu',
   });
+
+  const selectedZone = DELIVERY_ZONES.find(z => z.id === form.zone) || DELIVERY_ZONES[0];
+  const deliveryFee = selectedZone.fee;
+  const finalTotal = cartTotal + deliveryFee;
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -34,7 +44,7 @@ export default function Checkout() {
     e.preventDefault();
     setLoading(true);
 
-    const fullAddress = `${form.address}, ${form.city}`;
+    const fullAddress = `${form.address}, ${selectedZone.label}`;
     
     try {
       const res = await fetch('/api/orders', {
@@ -42,7 +52,7 @@ export default function Checkout() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: user?.id || 'guest',
-          totalAmount: cartTotal,
+          totalAmount: finalTotal,
           shippingAddress: fullAddress,
           phoneNumber: form.phone,
           items: cartItems.map(item => ({
@@ -98,8 +108,20 @@ export default function Checkout() {
             <input required type="text" placeholder="Full Name" value={form.fullName} onChange={e => setForm({...form, fullName: e.target.value})} style={{ padding: '0.85rem', border: '1px solid #ddd', outline: 'none' }} />
             <input required type="email" placeholder="Email Address" value={form.email} onChange={e => setForm({...form, email: e.target.value})} style={{ padding: '0.85rem', border: '1px solid #ddd', outline: 'none' }} />
             <input required type="tel" placeholder="Phone Number (for delivery rider)" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} style={{ padding: '0.85rem', border: '1px solid #ddd', outline: 'none' }} />
-            <input required type="text" placeholder="Delivery Address / Location" value={form.address} onChange={e => setForm({...form, address: e.target.value})} style={{ padding: '0.85rem', border: '1px solid #ddd', outline: 'none' }} />
-            <input required type="text" placeholder="City" value={form.city} onChange={e => setForm({...form, city: e.target.value})} style={{ padding: '0.85rem', border: '1px solid #ddd', outline: 'none' }} />
+            <input required type="text" placeholder="Delivery Address / Specific Location" value={form.address} onChange={e => setForm({...form, address: e.target.value})} style={{ padding: '0.85rem', border: '1px solid #ddd', outline: 'none' }} />
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#444' }}>Delivery Region</label>
+              <select 
+                value={form.zone} 
+                onChange={e => setForm({...form, zone: e.target.value})} 
+                style={{ padding: '0.85rem', border: '1px solid #ddd', outline: 'none', background: '#fff', fontFamily: 'var(--font-body)', cursor: 'pointer' }}
+              >
+                {DELIVERY_ZONES.map(z => (
+                  <option key={z.id} value={z.id}>{z.label}</option>
+                ))}
+              </select>
+            </div>
 
             <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.2rem', borderBottom: '1px solid #eee', paddingBottom: '1rem', marginTop: '1rem' }}>Payment Method</h3>
             <div style={{ border: '1px solid #ddd', padding: '1rem', background: '#f8f8f8' }}>
@@ -116,7 +138,7 @@ export default function Checkout() {
                 border: 'none', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', cursor: 'pointer'
               }}
             >
-              {loading ? 'Processing...' : `Confirm Order (KSh ${cartTotal.toLocaleString()})`}
+              {loading ? 'Processing...' : `Confirm Order (KSh ${finalTotal.toLocaleString()})`}
             </motion.button>
           </form>
 
@@ -137,9 +159,22 @@ export default function Checkout() {
               ))}
             </div>
 
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid #eee' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', color: '#555' }}>
+                <span>Subtotal</span>
+                <span>KSh {cartTotal.toLocaleString()}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', color: '#555' }}>
+                <span>Delivery Fee</span>
+                <span style={{ color: deliveryFee === 0 ? '#2d6a4f' : '#1a1a1a', fontWeight: deliveryFee === 0 ? 600 : 400 }}>
+                  {deliveryFee === 0 ? 'Free' : `KSh ${deliveryFee.toLocaleString()}`}
+                </span>
+              </div>
+            </div>
+
             <div style={{ borderTop: '1px solid #eee', paddingTop: '1rem', display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '1.1rem' }}>
               <span>Total to Pay</span>
-              <span>KSh {cartTotal.toLocaleString()}</span>
+              <span>KSh {finalTotal.toLocaleString()}</span>
             </div>
           </div>
 

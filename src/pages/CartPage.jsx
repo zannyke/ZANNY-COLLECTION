@@ -165,7 +165,7 @@ export default function CartPage() {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', color: '#555' }}>
                 <span>Shipping</span>
-                <span style={{ color: '#2d6a4f', fontWeight: 600 }}>Free</span>
+                <span style={{ color: '#888', fontStyle: 'italic' }}>Calculated at checkout</span>
               </div>
               <div style={{ height: '1px', background: '#eee', margin: '0.5rem 0' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '1rem' }}>
@@ -215,7 +215,7 @@ export default function CartPage() {
 
             {/* Trust badges */}
             <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #eee', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {['🔒 Secure Checkout', '🚚 Free Shipping Worldwide', '↩ 30-Day Returns'].map(badge => (
+              {['🔒 Secure Checkout', '🚚 Fast Nationwide Delivery', '↩ 30-Day Returns'].map(badge => (
                 <p key={badge} style={{ fontSize: '0.75rem', color: '#888', letterSpacing: '0.3px' }}>{badge}</p>
               ))}
             </div>
