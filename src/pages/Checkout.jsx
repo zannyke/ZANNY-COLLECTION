@@ -65,9 +65,8 @@ export default function Checkout() {
       });
 
       if (res.ok) {
-        setSuccess(true);
         clearCart();
-        setTimeout(() => navigate('/account'), 3000);
+        navigate('/order-success');
       } else {
         const errData = await res.json();
         alert(errData.error || "There was an issue processing your order.");
@@ -79,17 +78,7 @@ export default function Checkout() {
     setLoading(false);
   };
 
-  if (success) {
-    return (
-      <div style={{ minHeight: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
-        <div style={{ fontSize: '4rem', color: '#27ae60', marginBottom: '1rem' }}>✓</div>
-        <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '2rem', letterSpacing: '2px', marginBottom: '1rem' }}>Order Placed</h2>
-        <p style={{ color: '#888', maxWidth: '400px', textAlign: 'center' }}>
-          Your order has been successfully submitted. Our team will contact you shortly to confirm delivery!
-        </p>
-      </div>
-    );
-  }
+
 
   return (
     <div style={{ minHeight: '100vh', background: '#fafafa', paddingBottom: '5rem' }}>
