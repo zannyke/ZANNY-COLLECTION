@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import PageHeader from '../components/PageHeader';
 
 import { DELIVERY_ZONES } from '../utils/delivery';
+import CustomSelect from '../components/CustomSelect';
 
 export default function Checkout() {
   const { cartItems, cartTotal, clearCart } = useCart();
@@ -97,15 +98,14 @@ export default function Checkout() {
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#444' }}>Delivery Region</label>
-              <select 
-                value={form.zone} 
-                onChange={e => setForm({...form, zone: e.target.value})} 
-                style={{ padding: '0.85rem', border: '1px solid #ddd', outline: 'none', background: '#fff', fontFamily: 'var(--font-body)', cursor: 'pointer' }}
-              >
-                {DELIVERY_ZONES.map(z => (
-                  <option key={z.id} value={z.id}>{z.label}</option>
-                ))}
-              </select>
+              <div style={{ border: '1px solid #ddd', background: '#fff', borderRadius: '4px', padding: '0.2rem 0.85rem' }}>
+                <CustomSelect 
+                  options={DELIVERY_ZONES.map(z => ({ value: z.id, label: z.label }))}
+                  value={form.zone}
+                  onChange={(val) => setForm({ ...form, zone: val })}
+                  placeholder="Select Delivery Region"
+                />
+              </div>
             </div>
 
             <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.2rem', borderBottom: '1px solid #eee', paddingBottom: '1rem', marginTop: '1rem' }}>Payment Method</h3>

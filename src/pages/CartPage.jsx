@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useProducts } from '../context/ProductContext';
 import PageHeader from '../components/PageHeader';
 import { DELIVERY_ZONES, getDeliveryFee } from '../utils/delivery';
+import CustomSelect from '../components/CustomSelect';
 
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQty, clearCart, cartTotal } = useCart();
@@ -170,13 +171,14 @@ export default function CartPage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
                 <label style={{ fontSize: '0.75rem', color: '#888', textTransform: 'uppercase', letterSpacing: '1px' }}>Estimate Delivery To:</label>
-                <select 
-                  value={selectedZone}
-                  onChange={e => setSelectedZone(e.target.value)}
-                  style={{ padding: '0.5rem', border: '1px solid #ddd', outline: 'none', background: '#fff', fontSize: '0.8rem', fontFamily: 'var(--font-body)', cursor: 'pointer' }}
-                >
-                  {DELIVERY_ZONES.map(z => <option key={z.id} value={z.id}>{z.label}</option>)}
-                </select>
+                <div style={{ border: '1px solid #ddd', background: '#fff', borderRadius: '4px', padding: '0.1rem 0.6rem' }}>
+                  <CustomSelect 
+                    options={DELIVERY_ZONES.map(z => ({ value: z.id, label: z.label }))}
+                    value={selectedZone}
+                    onChange={(val) => setSelectedZone(val)}
+                    placeholder="Select Delivery Region"
+                  />
+                </div>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', color: '#555' }}>
                 <span>Shipping</span>

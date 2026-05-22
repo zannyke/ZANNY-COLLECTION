@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { Mail, Lock, User, ArrowRight, Eye, EyeOff, Phone, MapPin, ChevronDown } from 'lucide-react';
 import { DELIVERY_ZONES } from '../utils/delivery';
+import CustomSelect from '../components/CustomSelect';
 
 export default function CustomerRegister() {
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', password: '', phone: '', deliveryZone: 'kiambu' });
@@ -145,15 +146,12 @@ export default function CustomerRegister() {
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '0.5rem', position: 'relative' }}>
                   <MapPin size={18} style={{ color: '#aaa', marginRight: '0.75rem', flexShrink: 0 }} />
-                  <select 
-                    name="deliveryZone"
-                    onChange={handleChange}
+                  <CustomSelect 
+                    options={DELIVERY_ZONES.map(z => ({ value: z.id, label: z.label }))}
                     value={form.deliveryZone}
-                    style={{ border: 'none', outline: 'none', flex: 1, fontSize: '1rem', background: 'transparent', cursor: 'pointer', appearance: 'none', color: '#1a1a1a', paddingRight: '1.5rem' }}
-                  >
-                    {DELIVERY_ZONES.map(z => <option key={z.id} value={z.id}>{z.label}</option>)}
-                  </select>
-                  <ChevronDown size={16} style={{ position: 'absolute', right: '0.2rem', color: '#aaa', pointerEvents: 'none' }} />
+                    onChange={(val) => setForm({ ...form, deliveryZone: val })}
+                    placeholder="Select Delivery Region"
+                  />
                 </div>
               </div>
 
