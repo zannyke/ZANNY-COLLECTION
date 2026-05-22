@@ -22,6 +22,9 @@ export default function EditProduct() {
   });
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [galleryFiles, setGalleryFiles] = useState([]);
+  const [galleryPreviews, setGalleryPreviews] = useState([]);
+  const [existingGallery, setExistingGallery] = useState([]);
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -39,7 +42,8 @@ export default function EditProduct() {
         badge: product.badge || '',
         variations: product.parsedVariations || []
       });
-      setPreview(product.image || null);
+      setPreview(product.image_url || null);
+      setExistingGallery(product.parsedGallery || []);
     }
   }, [product]);
 
@@ -78,13 +82,14 @@ export default function EditProduct() {
 
     const variationsString = JSON.stringify(form.variations);
 
-    const result = await editProduct(id, {
+    const result = await editProduct(product.id, {
       ...form,
       price: Number(form.price),
       original_price: form.original_price ? Number(form.original_price) : null,
       stock: totalStock,
-      variations: variationsString
-    }, file);
+      image_url: product.image_url,
+      parsedGallery: existingGallery
+    }, file, galleryFiles);
 
     setUploading(false);
 
@@ -119,7 +124,6 @@ export default function EditProduct() {
 
   return (
     <div style={{ minHeight: '100vh', background: t.bg, color: t.text, fontFamily: 'var(--font-body)', transition: 'background 0.3s' }}>
-      {/* Header bar */}
       <div style={{ background: t.sidebar, borderBottom: `1px solid ${t.border}`, padding: '1rem 2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
           <Link to="/admin" style={{ color: t.textMuted, fontSize: '0.8rem', textDecoration: 'none', letterSpacing: '0.5px' }}>← Dashboard</Link>
@@ -131,7 +135,6 @@ export default function EditProduct() {
       <div style={{ maxWidth: '800px', margin: '0 auto', padding: '3rem 2rem' }}>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
-          {/* Row: Name + Category */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
             <div>
               <label style={labelStyle}>Product Name *</label>
@@ -150,7 +153,6 @@ export default function EditProduct() {
             </div>
           </div>
 
-          {/* Description */}
           <div>
             <label style={labelStyle}>Description *</label>
             <textarea
@@ -163,7 +165,6 @@ export default function EditProduct() {
             {errors.description && <p style={{ color: '#c0392b', fontSize: '0.72rem', marginTop: '0.35rem' }}>{errors.description}</p>}
           </div>
 
-          {/* Row: Price + Badge */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
             <div>
               <label style={labelStyle}>Price (KSh) *</label>
@@ -178,7 +179,6 @@ export default function EditProduct() {
             </div>
           </div>
 
-          {/* Row: Optional Pricing (Original Price + Discount Label) */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', background: resolvedTheme === 'dark' ? 'rgba(255,255,255,0.02)' : '#fdfdfd', padding: '1.5rem', border: `1px solid ${t.border}` }}>
             <div>
               <label style={labelStyle}>Previous Price (Optional)</label>
@@ -190,7 +190,6 @@ export default function EditProduct() {
             </div>
           </div>
 
-          {/* Variations Builder */}
           <div style={{ background: resolvedTheme === 'dark' ? 'rgba(255,255,255,0.02)' : '#fdfdfd', padding: '1.5rem', border: `1px solid ${errors.variations ? '#c0392b' : t.border}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <label style={{ ...labelStyle, marginBottom: 0 }}>Product Variations (Stock: {totalStock})</label>
@@ -227,9 +226,8 @@ export default function EditProduct() {
             </div>
           </div>
 
-          {/* Image Upload */}
           <div>
-            <label style={labelStyle}>Update Product Image (Optional)</label>
+            <label style={labelStyle}>Main Thumbnail Image</label>
             <input 
               type="file" 
               accept="image/*"
@@ -244,7 +242,56 @@ export default function EditProduct() {
             />
           </div>
 
-          {/* Preview strip */}
+          <div>
+            <label style={labelStyle}>Additional Gallery Images</label>
+            <input 
+              type="file" 
+              accept="image/*"
+              multiple
+              style={{ ...inputStyle('gallery'), padding: '0.65rem 1rem', cursor: 'pointer' }} 
+              onChange={(e) => {
+                const selectedFiles = Array.from(e.target.files);
+                if (selectedFiles.length > 0) {
+                  setGalleryFiles(prev => [...prev, ...selectedFiles]);
+                  const previews = selectedFiles.map(f => URL.createObjectURL(f));
+                  setGalleryPreviews(prev => [...prev, ...previews]);
+                }
+              }} 
+            />
+            {existingGallery.length > 0 && (
+              <div style={{ marginTop: '1rem' }}>
+                <p style={{ fontSize: '0.75rem', color: t.textMuted, marginBottom: '0.5rem' }}>Current Gallery Images</p>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  {existingGallery.map((url, i) => (
+                    <div key={i} style={{ position: 'relative', width: '60px', height: '75px' }}>
+                      <img src={url} alt="gallery" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px' }} />
+                      <button type="button" onClick={() => {
+                        setExistingGallery(prev => prev.filter((_, idx) => idx !== i));
+                      }} style={{ position: 'absolute', top: -5, right: -5, background: 'red', color: 'white', border: 'none', borderRadius: '50%', width: 20, height: 20, cursor: 'pointer' }}>x</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {galleryPreviews.length > 0 && (
+              <div style={{ marginTop: '1rem' }}>
+                <p style={{ fontSize: '0.75rem', color: t.textMuted, marginBottom: '0.5rem' }}>New Gallery Images (To be uploaded)</p>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  {galleryPreviews.map((url, i) => (
+                    <div key={i} style={{ position: 'relative', width: '60px', height: '75px' }}>
+                      <img src={url} alt="gallery" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px' }} />
+                      <button type="button" onClick={() => {
+                        setGalleryPreviews(prev => prev.filter((_, idx) => idx !== i));
+                        setGalleryFiles(prev => prev.filter((_, idx) => idx !== i));
+                      }} style={{ position: 'absolute', top: -5, right: -5, background: 'red', color: 'white', border: 'none', borderRadius: '50%', width: 20, height: 20, cursor: 'pointer' }}>x</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           <div style={{ background: t.input, border: `1px solid ${t.border}`, padding: '1.25rem', display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
             {preview ? (
               <img src={preview} alt="preview" style={{ width: '60px', height: '75px', objectFit: 'cover', background: t.surface }} />

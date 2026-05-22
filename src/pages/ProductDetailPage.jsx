@@ -30,6 +30,9 @@ export default function ProductDetailPage() {
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+  const [currentImageIdx, setCurrentImageIdx] = useState(0);
+
+  const allImages = product ? [product.image, ...(product.parsedGallery || [])].filter(Boolean) : [];
 
   useEffect(() => {
     if (availableColors.length > 0 && !selectedColor) {
@@ -116,11 +119,36 @@ export default function ProductDetailPage() {
             style={{ position: 'sticky', top: '100px' }}
           >
             <div style={{ position: 'relative', aspectRatio: '4/5', background: '#f8f8f8', overflow: 'hidden' }}>
-              <img
-                src={product.image}
-                alt={product.name}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={currentImageIdx}
+                  src={allImages[currentImageIdx]}
+                  alt={`${product.name} - ${currentImageIdx + 1}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </AnimatePresence>
+
+              {allImages.length > 1 && (
+                <>
+                  <button 
+                    onClick={() => setCurrentImageIdx((prev) => (prev === 0 ? allImages.length - 1 : prev - 1))}
+                    style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', background: '#fff', color: '#1a1a1a', border: 'none', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  >
+                    <IconChevronLeft size={20} />
+                  </button>
+                  <button 
+                    onClick={() => setCurrentImageIdx((prev) => (prev === allImages.length - 1 ? 0 : prev + 1))}
+                    style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', background: '#fff', color: '#1a1a1a', border: 'none', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  >
+                    <IconChevronRight size={20} />
+                  </button>
+                </>
+              )}
+
               {product.badge && (
                 <span style={{
                   position: 'absolute', top: '1.5rem', left: '1.5rem',
@@ -131,6 +159,24 @@ export default function ProductDetailPage() {
                 </span>
               )}
             </div>
+
+            {/* Thumbnails */}
+            {allImages.length > 1 && (
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+                {allImages.map((img, idx) => (
+                  <button 
+                    key={idx} 
+                    onClick={() => setCurrentImageIdx(idx)}
+                    style={{ 
+                      flexShrink: 0, width: '60px', height: '75px', border: currentImageIdx === idx ? '2px solid #1a1a1a' : '1px solid transparent', 
+                      padding: 0, background: 'none', cursor: 'pointer', transition: 'all 0.2s' 
+                    }}
+                  >
+                    <img src={img} alt={`Thumb ${idx}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </button>
+                ))}
+              </div>
+            )}
           </motion.div>
 
           {/* Product Details */}

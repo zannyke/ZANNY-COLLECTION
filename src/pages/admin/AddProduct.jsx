@@ -18,6 +18,8 @@ export default function AddProduct() {
   });
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [galleryFiles, setGalleryFiles] = useState([]);
+  const [galleryPreviews, setGalleryPreviews] = useState([]);
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -58,7 +60,7 @@ export default function AddProduct() {
       price: Number(form.price),
       original_price: form.original_price ? Number(form.original_price) : null,
       stock: totalStock
-    }, file);
+    }, file, galleryFiles);
 
     setUploading(false);
 
@@ -203,7 +205,7 @@ export default function AddProduct() {
 
           {/* Image Upload */}
           <div>
-            <label style={labelStyle}>Product Image</label>
+            <label style={labelStyle}>Main Thumbnail Image</label>
             <input 
               type="file" 
               accept="image/*"
@@ -216,6 +218,37 @@ export default function AddProduct() {
                 }
               }} 
             />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Additional Gallery Images (Slider)</label>
+            <input 
+              type="file" 
+              accept="image/*"
+              multiple
+              style={{ ...inputStyle('gallery'), padding: '0.65rem 1rem', cursor: 'pointer' }} 
+              onChange={(e) => {
+                const selectedFiles = Array.from(e.target.files);
+                if (selectedFiles.length > 0) {
+                  setGalleryFiles(prev => [...prev, ...selectedFiles]);
+                  const previews = selectedFiles.map(f => URL.createObjectURL(f));
+                  setGalleryPreviews(prev => [...prev, ...previews]);
+                }
+              }} 
+            />
+            {galleryPreviews.length > 0 && (
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', flexWrap: 'wrap' }}>
+                {galleryPreviews.map((url, i) => (
+                  <div key={i} style={{ position: 'relative', width: '60px', height: '75px' }}>
+                    <img src={url} alt="gallery" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px' }} />
+                    <button type="button" onClick={() => {
+                      setGalleryPreviews(prev => prev.filter((_, idx) => idx !== i));
+                      setGalleryFiles(prev => prev.filter((_, idx) => idx !== i));
+                    }} style={{ position: 'absolute', top: -5, right: -5, background: 'red', color: 'white', border: 'none', borderRadius: '50%', width: 20, height: 20, cursor: 'pointer' }}>x</button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Preview strip */}

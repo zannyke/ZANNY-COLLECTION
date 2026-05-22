@@ -29,14 +29,17 @@ export function ProductProvider({ children }) {
           // Normalize properties for frontend rendering to prevent undefined values crashing Recharts
           setProducts(data.map(p => {
             let parsedVariations = [];
+            let parsedGallery = [];
             try { if (p.variations) parsedVariations = JSON.parse(p.variations); } catch(e) {}
+            try { if (p.gallery_urls) parsedGallery = JSON.parse(p.gallery_urls); } catch(e) {}
             return { 
               ...p, 
               image: p.image_url || '',
               sold: p.sold || 0,
               price: Number(p.price) || 0,
               stock: Number(p.stock) || 0,
-              parsedVariations
+              parsedVariations,
+              parsedGallery
             };
           }));
         } else {
@@ -51,24 +54,31 @@ export function ProductProvider({ children }) {
       });
   }, []);
 
-  const addProduct = async (product, file) => {
+  const addProduct = async (product, file, galleryFiles = []) => {
     let imageUrl = '';
+    let galleryUrls = [];
 
     // Upload to R2 if file exists
     if (file) {
       const formData = new FormData();
       formData.append('file', file);
       try {
-        const uploadRes = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData
-        });
+        const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
         const uploadData = await uploadRes.json();
-        if (uploadData.success) {
-          imageUrl = uploadData.url;
-        }
-      } catch (err) {
-        console.error("Image upload failed", err);
+        if (uploadData.success) { imageUrl = uploadData.url; }
+      } catch (err) { console.error("Image upload failed", err); }
+    }
+
+    // Upload gallery files
+    if (galleryFiles && galleryFiles.length > 0) {
+      for (const gFile of galleryFiles) {
+        const formData = new FormData();
+        formData.append('file', gFile);
+        try {
+          const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
+          const uploadData = await uploadRes.json();
+          if (uploadData.success) { galleryUrls.push(uploadData.url); }
+        } catch (err) { console.error("Gallery upload failed", err); }
       }
     }
 
@@ -77,7 +87,7 @@ export function ProductProvider({ children }) {
       const res = await fetch('/api/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...product, image: imageUrl })
+        body: JSON.stringify({ ...product, image: imageUrl, gallery_urls: galleryUrls })
       });
       const data = await res.json();
       if (data.success && data.id) {
@@ -100,39 +110,49 @@ export function ProductProvider({ children }) {
     }
   };
 
-  const editProduct = async (id, updatedData, file) => {
+  const editProduct = async (id, updatedData, file, galleryFiles = []) => {
     let imageUrl = updatedData.image_url || updatedData.image; // Keep existing if no new file
+    let galleryUrls = updatedData.parsedGallery || [];
 
     if (file) {
       const formData = new FormData();
       formData.append('file', file);
       try {
-        const uploadRes = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData
-        });
+        const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
         const uploadData = await uploadRes.json();
-        if (uploadData.success) {
-          imageUrl = uploadData.url;
-        }
-      } catch (err) {
-        console.error("Image upload failed", err);
+        if (uploadData.success) { imageUrl = uploadData.url; }
+      } catch (err) { console.error("Image upload failed", err); }
+    }
+
+    // Upload new gallery files
+    if (galleryFiles && galleryFiles.length > 0) {
+      const newUrls = [];
+      for (const gFile of galleryFiles) {
+        const formData = new FormData();
+        formData.append('file', gFile);
+        try {
+          const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
+          const uploadData = await uploadRes.json();
+          if (uploadData.success) { newUrls.push(uploadData.url); }
+        } catch (err) { console.error("Gallery upload failed", err); }
       }
+      galleryUrls = [...galleryUrls, ...newUrls];
     }
 
     try {
       const res = await fetch(`/api/products/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...updatedData, image_url: imageUrl })
+        body: JSON.stringify({ ...updatedData, image_url: imageUrl, gallery_urls: galleryUrls })
       });
       const data = await res.json();
       if (data.success) {
         setProducts(prev => prev.map(p => {
           if (p.id === id) {
             let parsedVariations = [];
+            let parsedGallery = galleryUrls;
             try { if (updatedData.variations) parsedVariations = JSON.parse(updatedData.variations); } catch(e) {}
-            return { ...p, ...updatedData, image: imageUrl, image_url: imageUrl, parsedVariations };
+            return { ...p, ...updatedData, image: imageUrl, image_url: imageUrl, parsedVariations, parsedGallery };
           }
           return p;
         }));

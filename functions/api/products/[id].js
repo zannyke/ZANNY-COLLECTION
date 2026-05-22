@@ -34,11 +34,11 @@ export async function onRequestPut(context) {
     const id = context.params.id;
     const data = await context.request.json();
 
-    const { name, category, description, price, original_price, discount_label, stock, badge, image_url, variations } = data;
+    const { name, category, description, price, original_price, discount_label, stock, badge, image_url, variations, gallery_urls } = data;
 
     await context.env.DB.prepare(`
       UPDATE products 
-      SET name = ?, category = ?, description = ?, price = ?, original_price = ?, discount_label = ?, stock = ?, badge = ?, image_url = ?, variations = ?
+      SET name = ?, category = ?, description = ?, price = ?, original_price = ?, discount_label = ?, stock = ?, badge = ?, image_url = ?, variations = ?, gallery_urls = ?
       WHERE id = ?
     `).bind(
       name, category, description, 
@@ -49,6 +49,7 @@ export async function onRequestPut(context) {
       badge || null, 
       image_url || null, 
       variations || null, 
+      gallery_urls ? JSON.stringify(gallery_urls) : null,
       id
     ).run();
 
