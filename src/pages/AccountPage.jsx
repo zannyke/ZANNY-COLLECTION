@@ -98,7 +98,33 @@ function FeedbackForm({ orderId }) {
 
 function OrderCard({ order }) {
   const [open, setOpen] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const sc = STATUS_BADGE[order.status] || STATUS_BADGE.pending;
+
+  const orderTime = new Date(order.created_at).getTime();
+  const now = new Date().getTime();
+  const diffHours = (now - orderTime) / (1000 * 60 * 60);
+  const canCancel = order.status === 'pending' && diffHours < 24;
+
+  const handleCancel = async () => {
+    if (!window.confirm('Are you sure you want to cancel this order?')) return;
+    setCancelling(true);
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: order.id, status: 'cancelled', cancelledByCustomer: true })
+      });
+      if (res.ok) {
+        window.location.reload();
+      } else {
+        alert('Failed to cancel order.');
+      }
+    } catch(err) {
+      alert('Error cancelling order.');
+    }
+    setCancelling(false);
+  };
 
   return (
     <div style={{ border: '1px solid #eee', borderRadius: '4px', overflow: 'hidden' }}>
@@ -146,6 +172,37 @@ function OrderCard({ order }) {
           
           {order.status === 'delivered' && (
             <FeedbackForm orderId={order.id} />
+          )}
+
+          {order.status === 'pending' && !canCancel && (
+            <p style={{ fontSize: '0.8rem', color: '#888', marginTop: '1rem', fontStyle: 'italic' }}>
+              Order is locked for delivery (past 24 hours).
+            </p>
+          )}
+
+          {canCancel && (
+            <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #eee' }}>
+              <button 
+                onClick={handleCancel}
+                disabled={cancelling}
+                style={{
+                  padding: '0.6rem 1.25rem',
+                  background: '#dc2626',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: cancelling ? 'not-allowed' : 'pointer',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  opacity: cancelling ? 0.7 : 1
+                }}
+              >
+                {cancelling ? 'Cancelling...' : 'Cancel Order'}
+              </button>
+              <p style={{ fontSize: '0.75rem', color: '#888', marginTop: '0.5rem' }}>
+                You can cancel this order within 24 hours of placing it.
+              </p>
+            </div>
           )}
         </div>
       )}

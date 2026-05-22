@@ -148,7 +148,7 @@ export async function onRequestPost(context) {
 // PATCH /api/orders  — update order status
 export async function onRequestPatch(context) {
   try {
-    const { id, status, trackingNumber } = await context.request.json();
+    const { id, status, trackingNumber, cancelledByCustomer } = await context.request.json();
     const allowed = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
     if (!allowed.includes(status)) {
       return Response.json({ error: 'Invalid status' }, { status: 400 });
@@ -157,6 +157,36 @@ export async function onRequestPatch(context) {
     await context.env.DB.prepare(
       "UPDATE orders SET status = ? WHERE id = ?"
     ).bind(status, id).run();
+
+    if (status === 'cancelled') {
+      // Restore stock
+      const { results: items } = await context.env.DB.prepare(
+        "SELECT product_id, quantity FROM order_items WHERE order_id = ?"
+      ).bind(id).all();
+      
+      for (const item of items) {
+        await context.env.DB.prepare(
+          "UPDATE products SET sold = MAX(0, sold - ?), stock = stock + ? WHERE id = ?"
+        ).bind(item.quantity, item.quantity, item.product_id).run();
+      }
+
+      // Notify admin if cancelled by customer
+      if (cancelledByCustomer && context.env.RESEND_API_KEY) {
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${context.env.RESEND_API_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            from: 'Zanny Collection <onboarding@resend.dev>',
+            to: 'zannykenya254@gmail.com',
+            subject: `Order Cancelled by Customer [${id}]`,
+            html: `<div style="font-family:sans-serif;"><h2>Order Cancelled</h2><p>The customer has cancelled order <strong>#${id}</strong>.</p><p>The stock for the items in this order has been automatically restored.</p></div>`
+          })
+        });
+      }
+    }
 
     // Send Customer Email if shipped or delivered
     if (context.env.RESEND_API_KEY && (status === 'shipped' || status === 'delivered')) {
