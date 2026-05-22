@@ -23,6 +23,9 @@ CREATE TABLE users (
   auth_provider TEXT DEFAULT 'local', -- 'local' or 'google'
   login_count INTEGER DEFAULT 0,
   last_login DATETIME,
+  phone_number TEXT,
+  default_delivery_zone TEXT,
+  default_address TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

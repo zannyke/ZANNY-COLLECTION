@@ -5,11 +5,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import PageHeader from '../components/PageHeader';
 
-const DELIVERY_ZONES = [
-  { id: 'kiambu', label: 'Kiambu Local (Kiambu Town, Kikuyu, Wangige, Ruaka)', fee: 0 },
-  { id: 'nairobi', label: 'Nairobi Metro (CBD, Westlands, Eastlands, etc)', fee: 150 },
-  { id: 'rest_of_kenya', label: 'Rest of Kenya (via G4S / Kentax Cargo)', fee: 350 },
-];
+import { DELIVERY_ZONES } from '../utils/delivery';
 
 export default function Checkout() {
   const { cartItems, cartTotal, clearCart } = useCart();
@@ -19,9 +15,9 @@ export default function Checkout() {
   const [form, setForm] = useState({
     fullName: isAuthenticated ? `${user.firstName} ${user.lastName}` : '',
     email: isAuthenticated ? user.email : '',
-    phone: '',
+    phone: isAuthenticated && user.phone ? user.phone : '',
     address: '',
-    zone: 'kiambu',
+    zone: isAuthenticated && user.deliveryZone ? user.deliveryZone : 'kiambu',
   });
 
   const selectedZone = DELIVERY_ZONES.find(z => z.id === form.zone) || DELIVERY_ZONES[0];

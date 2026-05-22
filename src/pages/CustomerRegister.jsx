@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, User, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Eye, EyeOff, Phone, MapPin } from 'lucide-react';
+import { DELIVERY_ZONES } from '../utils/delivery';
 
 export default function CustomerRegister() {
-  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', password: '' });
+  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', password: '', phone: '', deliveryZone: 'kiambu' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [needsVerification, setNeedsVerification] = useState(false);
@@ -123,6 +124,35 @@ export default function CustomerRegister() {
                     autoComplete="off"
                     style={{ border: 'none', outline: 'none', width: '100%', fontSize: '1rem', background: 'transparent' }}
                   />
+                </div>
+              </div>
+
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>
+                  <Phone size={18} style={{ color: '#aaa', marginRight: '0.75rem' }} />
+                  <input 
+                    name="phone"
+                    type="tel" 
+                    placeholder="Phone Number" 
+                    onChange={handleChange}
+                    required
+                    autoComplete="off"
+                    style={{ border: 'none', outline: 'none', flex: 1, fontSize: '1rem', background: 'transparent' }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>
+                  <MapPin size={18} style={{ color: '#aaa', marginRight: '0.75rem' }} />
+                  <select 
+                    name="deliveryZone"
+                    onChange={handleChange}
+                    value={form.deliveryZone}
+                    style={{ border: 'none', outline: 'none', flex: 1, fontSize: '1rem', background: 'transparent', cursor: 'pointer', appearance: 'none' }}
+                  >
+                    {DELIVERY_ZONES.map(z => <option key={z.id} value={z.id}>{z.label}</option>)}
+                  </select>
                 </div>
               </div>
 

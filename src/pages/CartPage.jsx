@@ -5,12 +5,17 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useProducts } from '../context/ProductContext';
 import PageHeader from '../components/PageHeader';
+import { DELIVERY_ZONES, getDeliveryFee } from '../utils/delivery';
 
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQty, clearCart, cartTotal } = useCart();
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { products } = useProducts();
   const navigate = useNavigate();
+
+  const [selectedZone, setSelectedZone] = React.useState(user?.deliveryZone || 'kiambu');
+  const deliveryFee = getDeliveryFee(selectedZone);
+  const finalTotal = cartTotal + deliveryFee;
 
   const hasOutOfStockItems = cartItems.some(item => {
     const liveProduct = products.find(p => p.id === item.id);
@@ -163,14 +168,24 @@ export default function CartPage() {
                 <span>Subtotal</span>
                 <span>KSh {cartTotal.toLocaleString()}</span>
               </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <label style={{ fontSize: '0.75rem', color: '#888', textTransform: 'uppercase', letterSpacing: '1px' }}>Estimate Delivery To:</label>
+                <select 
+                  value={selectedZone}
+                  onChange={e => setSelectedZone(e.target.value)}
+                  style={{ padding: '0.5rem', border: '1px solid #ddd', outline: 'none', background: '#fff', fontSize: '0.8rem', fontFamily: 'var(--font-body)', cursor: 'pointer' }}
+                >
+                  {DELIVERY_ZONES.map(z => <option key={z.id} value={z.id}>{z.label}</option>)}
+                </select>
+              </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', color: '#555' }}>
                 <span>Shipping</span>
-                <span style={{ color: '#888', fontStyle: 'italic' }}>Calculated at checkout</span>
+                <span>{deliveryFee === 0 ? 'Free' : `KSh ${deliveryFee.toLocaleString()}`}</span>
               </div>
               <div style={{ height: '1px', background: '#eee', margin: '0.5rem 0' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '1rem' }}>
                 <span>Total</span>
-                <span>KSh {cartTotal.toLocaleString()}</span>
+                <span>KSh {finalTotal.toLocaleString()}</span>
               </div>
             </div>
 

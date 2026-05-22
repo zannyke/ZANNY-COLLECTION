@@ -19,8 +19,8 @@ export async function onRequestPost(context) {
 
     // 2. Insert user into DB (is_verified = 0)
     await context.env.DB.prepare(
-      "INSERT INTO users (id, email, password_hash, salt, first_name, last_name, role, is_verified, auth_provider) VALUES (?, ?, ?, ?, ?, ?, ?, 0, 'local')"
-    ).bind(userId, data.email, passwordHash, salt, data.firstName, data.lastName, 'customer').run();
+      "INSERT INTO users (id, email, password_hash, salt, first_name, last_name, role, is_verified, auth_provider, phone_number, default_delivery_zone) VALUES (?, ?, ?, ?, ?, ?, ?, 0, 'local', ?, ?)"
+    ).bind(userId, data.email, passwordHash, salt, data.firstName, data.lastName, 'customer', data.phone || null, data.deliveryZone || null).run();
 
     // 3. Generate 6-digit verification code
     const code = Math.floor(100000 + Math.random() * 900000).toString();

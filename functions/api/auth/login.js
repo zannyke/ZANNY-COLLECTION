@@ -3,7 +3,7 @@ export async function onRequestPost(context) {
     const data = await context.request.json();
 
     const user = await context.env.DB.prepare(
-      "SELECT id, email, password_hash, salt, first_name, last_name, role, is_verified, auth_provider FROM users WHERE email = ?"
+      "SELECT id, email, password_hash, salt, first_name, last_name, role, is_verified, auth_provider, phone_number, default_delivery_zone FROM users WHERE email = ?"
     ).bind(data.email).first();
 
     if (!user) {
@@ -51,7 +51,7 @@ export async function onRequestPost(context) {
 
     return new Response(JSON.stringify({ 
       success: true, 
-      user: { id: user.id, email: user.email, firstName: user.first_name, lastName: user.last_name, role: user.role } 
+      user: { id: user.id, email: user.email, firstName: user.first_name, lastName: user.last_name, role: user.role, phone: user.phone_number, deliveryZone: user.default_delivery_zone } 
     }), {
       headers: {
         'Content-Type': 'application/json',

@@ -22,13 +22,18 @@ export async function onRequestPost(context) {
     ).bind(email).run();
 
     // 4. Create Session
-    const user = await context.env.DB.prepare("SELECT id, email, first_name, last_name, role FROM users WHERE email = ?").bind(email).first();
+    const user = await context.env.DB.prepare("SELECT id, email, first_name, last_name, role, phone_number, default_delivery_zone FROM users WHERE email = ?").bind(email).first();
+    if (!user) {
+      return Response.json({ success: false, message: 'User not found' }, { status: 404 });
+    }
+
+    // 5. Issue session
     const sessionId = crypto.randomUUID();
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-    
+    const sessionExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
     await context.env.DB.prepare(
       "INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)"
-    ).bind(sessionId, user.id, expiresAt.toISOString()).run();
+    ).bind(sessionId, user.id, sessionExpiresAt.toISOString()).run();
 
     // 5. Update login count
     await context.env.DB.prepare(
@@ -36,9 +41,9 @@ export async function onRequestPost(context) {
     ).bind(user.id).run();
 
     // 6. Set HttpOnly Cookie
-    const cookieString = `zanny_session=${sessionId}; HttpOnly; Secure; Path=/; SameSite=Strict; Expires=${expiresAt.toUTCString()}`;
+    const cookieString = `zanny_session=${sessionId}; HttpOnly; Secure; Path=/; SameSite=Strict; Expires=${sessionExpiresAt.toUTCString()}`;
     
-    return new Response(JSON.stringify({ success: true, user: { id: user.id, email: user.email, firstName: user.first_name, lastName: user.last_name, role: user.role } }), {
+    return new Response(JSON.stringify({ success: true, user: { id: user.id, email: user.email, firstName: user.first_name, lastName: user.last_name, role: user.role, phone: user.phone_number, deliveryZone: user.default_delivery_zone } }), {
       headers: {
         'Content-Type': 'application/json',
         'Set-Cookie': cookieString
