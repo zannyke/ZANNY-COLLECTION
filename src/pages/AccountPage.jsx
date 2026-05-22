@@ -99,6 +99,7 @@ function FeedbackForm({ orderId }) {
 function OrderCard({ order }) {
   const [open, setOpen] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const sc = STATUS_BADGE[order.status] || STATUS_BADGE.pending;
 
   const orderTime = new Date(order.created_at).getTime();
@@ -107,7 +108,6 @@ function OrderCard({ order }) {
   const canCancel = order.status === 'pending' && diffHours < 24;
 
   const handleCancel = async () => {
-    if (!window.confirm('Are you sure you want to cancel this order?')) return;
     setCancelling(true);
     try {
       const res = await fetch('/api/orders', {
@@ -182,26 +182,59 @@ function OrderCard({ order }) {
 
           {canCancel && (
             <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #eee' }}>
-              <button 
-                onClick={handleCancel}
-                disabled={cancelling}
-                style={{
-                  padding: '0.6rem 1.25rem',
-                  background: '#dc2626',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: cancelling ? 'not-allowed' : 'pointer',
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  opacity: cancelling ? 0.7 : 1
-                }}
-              >
-                {cancelling ? 'Cancelling...' : 'Cancel Order'}
-              </button>
-              <p style={{ fontSize: '0.75rem', color: '#888', marginTop: '0.5rem' }}>
-                You can cancel this order within 24 hours of placing it.
-              </p>
+              {!showConfirm ? (
+                <>
+                  <button 
+                    onClick={() => setShowConfirm(true)}
+                    disabled={cancelling}
+                    style={{
+                      padding: '0.6rem 1.25rem',
+                      background: '#fff',
+                      color: '#dc2626',
+                      border: '1px solid #dc2626',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Cancel Order
+                  </button>
+                  <p style={{ fontSize: '0.75rem', color: '#888', marginTop: '0.5rem' }}>
+                    You can cancel this order within 24 hours of placing it.
+                  </p>
+                </>
+              ) : (
+                <div style={{ background: '#fef2f2', padding: '1rem', borderRadius: '6px', border: '1px solid #fecaca' }}>
+                  <p style={{ color: '#991b1b', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.75rem' }}>
+                    Are you sure you want to cancel this order?
+                  </p>
+                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <button 
+                      onClick={handleCancel}
+                      disabled={cancelling}
+                      style={{
+                        padding: '0.5rem 1rem', background: '#dc2626', color: '#fff',
+                        border: 'none', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600,
+                        cursor: cancelling ? 'not-allowed' : 'pointer', opacity: cancelling ? 0.7 : 1
+                      }}
+                    >
+                      {cancelling ? 'Cancelling...' : 'Yes, Cancel Order'}
+                    </button>
+                    <button 
+                      onClick={() => setShowConfirm(false)}
+                      disabled={cancelling}
+                      style={{
+                        padding: '0.5rem 1rem', background: '#fff', color: '#444',
+                        border: '1px solid #ddd', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600,
+                        cursor: cancelling ? 'not-allowed' : 'pointer'
+                      }}
+                    >
+                      No, keep it
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
