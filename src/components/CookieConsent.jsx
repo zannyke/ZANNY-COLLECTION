@@ -18,21 +18,49 @@ export default function CookieConsent() {
       // Small delay so page loads first
       const timer = setTimeout(() => setVisible(true), 1200);
       return () => clearTimeout(timer);
+    } else {
+      try {
+        const savedData = JSON.parse(consent);
+        if (savedData.all) {
+          updateConsent({ essential: true, analytics: true, marketing: true, functional: true });
+        } else if (savedData.prefs) {
+          updateConsent(savedData.prefs);
+        }
+      } catch (e) {
+        console.error('Error parsing consent data', e);
+      }
     }
   }, []);
 
+  const updateConsent = (prefsToApply) => {
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){window.dataLayer.push(arguments);}
+    gtag('consent', 'update', {
+      'analytics_storage': prefsToApply.analytics ? 'granted' : 'denied',
+      'ad_storage': prefsToApply.marketing ? 'granted' : 'denied',
+      'ad_user_data': prefsToApply.marketing ? 'granted' : 'denied',
+      'ad_personalization': prefsToApply.marketing ? 'granted' : 'denied',
+      'personalization_storage': prefsToApply.functional ? 'granted' : 'denied',
+      'functionality_storage': prefsToApply.functional ? 'granted' : 'denied',
+    });
+  };
+
   const acceptAll = () => {
     localStorage.setItem('zanny_consent', JSON.stringify({ all: true, timestamp: Date.now() }));
+    updateConsent({ essential: true, analytics: true, marketing: true, functional: true });
     setVisible(false);
   };
 
   const savePrefs = () => {
     localStorage.setItem('zanny_consent', JSON.stringify({ prefs, timestamp: Date.now() }));
+    updateConsent(prefs);
     setVisible(false);
   };
 
   const rejectNonEssential = () => {
-    localStorage.setItem('zanny_consent', JSON.stringify({ prefs: { essential: true, analytics: false, marketing: false, functional: false }, timestamp: Date.now() }));
+    const rejectedPrefs = { essential: true, analytics: false, marketing: false, functional: false };
+    localStorage.setItem('zanny_consent', JSON.stringify({ prefs: rejectedPrefs, timestamp: Date.now() }));
+    updateConsent(rejectedPrefs);
     setVisible(false);
   };
 
