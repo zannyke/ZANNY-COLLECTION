@@ -42,6 +42,8 @@ function FeedbackForm({ orderId }) {
         body: JSON.stringify({ orderId, rating, comment })
       });
       if (!res.ok) throw new Error('Failed to submit feedback');
+      
+      window.dispatchEvent(new CustomEvent('feedbackSubmitted', { detail: { orderId } }));
       setStatus('success');
     } catch (err) {
       setStatus('error');
@@ -267,6 +269,17 @@ export default function AccountPage() {
       })
       .catch(() => setLoadingOrders(false));
   }, [user]);
+
+  // Listen for feedback submissions from the global ReviewPopup
+  useEffect(() => {
+    const handleFeedback = (e) => {
+      setOrders(prev => prev.map(o => 
+        o.id === e.detail.orderId ? { ...o, has_feedback: 1 } : o
+      ));
+    };
+    window.addEventListener('feedbackSubmitted', handleFeedback);
+    return () => window.removeEventListener('feedbackSubmitted', handleFeedback);
+  }, []);
 
   const handleSignOut = () => { logout(); navigate('/'); };
   const handleDelete  = () => {

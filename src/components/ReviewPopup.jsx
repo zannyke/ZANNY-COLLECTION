@@ -35,6 +35,16 @@ export default function ReviewPopup() {
     }
   }, [isAuthenticated, user]);
 
+  useEffect(() => {
+    const handleFeedback = (e) => {
+      if (pendingOrder && pendingOrder.id === e.detail.orderId) {
+        setPendingOrder(null);
+      }
+    };
+    window.addEventListener('feedbackSubmitted', handleFeedback);
+    return () => window.removeEventListener('feedbackSubmitted', handleFeedback);
+  }, [pendingOrder]);
+
   const handleStarClick = (value) => {
     setRating(value);
     setComment(FEEDBACK_SUGGESTIONS[value]);
@@ -63,6 +73,9 @@ export default function ReviewPopup() {
         body: JSON.stringify({ orderId: pendingOrder.id, rating, comment })
       });
       if (!res.ok) throw new Error('Failed to submit');
+      
+      // Notify other components (like AccountPage) that feedback was submitted
+      window.dispatchEvent(new CustomEvent('feedbackSubmitted', { detail: { orderId: pendingOrder.id } }));
       
       setStatus('success');
       setTimeout(() => {
