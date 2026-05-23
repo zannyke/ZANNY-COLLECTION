@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useProducts, CATEGORIES } from '../context/ProductContext';
 import { useCart } from '../context/CartContext';
 import PageHeader from '../components/PageHeader';
+import CustomSelect from '../components/CustomSelect';
 
 const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 const SORT_OPTIONS = [
@@ -299,17 +300,14 @@ export default function CategoryPage() {
 
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <p style={{ fontSize: '0.8rem', color: '#aaa' }}>{sorted.length} {sorted.length === 1 ? 'product' : 'products'}</p>
-            <select
-              value={sortBy}
-              onChange={e => setSortBy(e.target.value)}
-              style={{
-                border: '1px solid #ddd', padding: '0.5rem 0.85rem',
-                fontSize: '0.8rem', outline: 'none', fontFamily: 'var(--font-body)',
-                background: '#fff', cursor: 'pointer',
-              }}
-            >
-              {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
+            <div style={{ width: '170px', border: '1px solid #ddd', background: '#fff', borderRadius: '4px', padding: '0.1rem 0.6rem' }}>
+              <CustomSelect
+                options={SORT_OPTIONS}
+                value={sortBy}
+                onChange={(val) => setSortBy(val)}
+                placeholder="Sort By"
+              />
+            </div>
           </div>
         </div>
 
