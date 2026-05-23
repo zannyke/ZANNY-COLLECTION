@@ -114,9 +114,9 @@ export default function ProductDetailPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '4rem', alignItems: 'start' }}>
           {/* Image Gallery */}
           <motion.div
+            className="product-gallery-container"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            style={{ position: 'sticky', top: '100px' }}
           >
             <div style={{ position: 'relative', aspectRatio: '4/5', background: '#f8f8f8', overflow: 'hidden' }}>
               <AnimatePresence mode="wait">
@@ -373,6 +373,13 @@ export default function ProductDetailPage() {
           </div>
         )}
       </div>
+
+      <style>{`
+        .product-gallery-container { position: sticky; top: 100px; }
+        @media (max-width: 768px) {
+          .product-gallery-container { position: static !important; }
+        }
+      `}</style>
     </div>
   );
 }

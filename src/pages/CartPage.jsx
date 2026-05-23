@@ -84,18 +84,14 @@ export default function CartPage() {
                 const isOutOfStock = liveStock <= 0;
 
                 return (
-                  <motion.div
-                    key={item.key}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ delay: idx * 0.05 }}
-                    style={{
-                      display: 'flex', gap: '1.5rem', alignItems: 'flex-start',
-                      padding: '1.5rem 0', borderBottom: '1px solid #f0f0f0',
-                      opacity: isOutOfStock ? 0.6 : 1,
-                    }}
-                  >
+                    <div
+                      className="cart-item-container"
+                      style={{
+                        display: 'flex', gap: '1.5rem', alignItems: 'flex-start',
+                        padding: '1.5rem 0', borderBottom: '1px solid #f0f0f0',
+                        opacity: isOutOfStock ? 0.6 : 1,
+                      }}
+                    >
                     {/* Product image */}
                     <div style={{ width: '90px', height: '110px', flexShrink: 0, background: '#f8f8f8', overflow: 'hidden' }}>
                       <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -139,12 +135,12 @@ export default function CartPage() {
                     </div>
 
                   {/* Line subtotal */}
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div className="cart-item-subtotal" style={{ textAlign: 'right', flexShrink: 0 }}>
                     <p style={{ fontWeight: 600, fontSize: '0.95rem' }}>
                       {isOutOfStock ? 'N/A' : `KSh ${(item.price * item.qty).toLocaleString()}`}
                     </p>
                   </div>
-                </motion.div>
+                </div>
               );
             })}
             </div>
@@ -161,7 +157,7 @@ export default function CartPage() {
           </div>
 
           {/* ── Order Summary ── */}
-          <div style={{ position: 'sticky', top: '100px', background: '#fafafa', padding: '2rem', border: '1px solid #eee' }}>
+          <div className="order-summary-container" style={{ background: '#fafafa', border: '1px solid #eee' }}>
             <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.2rem', marginBottom: '1.5rem', letterSpacing: '1px' }}>Order Summary</h3>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
@@ -241,8 +237,12 @@ export default function CartPage() {
       </div>
 
       <style>{`
+        .order-summary-container { position: sticky; top: 100px; padding: 2rem; }
         @media (max-width: 768px) {
           .cart-layout { grid-template-columns: 1fr !important; }
+          .cart-item-container { flex-direction: column !important; }
+          .cart-item-subtotal { text-align: left !important; margin-top: 0.5rem; }
+          .order-summary-container { position: static !important; padding: 1.5rem !important; margin-top: 2rem; }
         }
       `}</style>
     </div>

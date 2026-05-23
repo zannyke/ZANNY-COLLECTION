@@ -70,7 +70,7 @@ export default function CustomerLogin() {
       </div>
 
       {/* Right side: Form */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+      <div className="login-form-container" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <motion.div 
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -206,8 +206,12 @@ export default function CustomerLogin() {
         </motion.div>
       </div>
       <style>{`
+        .login-form-container { padding: 2rem; }
         @media (max-width: 900px) {
           .hide-mobile { display: none !important; }
+        }
+        @media (max-width: 480px) {
+          .login-form-container { padding: 1rem; }
         }
       `}</style>
     </div>
