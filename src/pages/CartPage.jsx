@@ -40,7 +40,7 @@ export default function CartPage() {
             Discover our latest collections and find something you love.
           </p>
           <Link
-            to="/#collections"
+            to="/collections"
             style={{
               display: 'inline-block',
               padding: '0.9rem 2.5rem',
@@ -216,7 +216,7 @@ export default function CartPage() {
             </motion.button>
 
             <Link
-              to="/#collections"
+              to="/collections"
               style={{
                 display: 'block', textAlign: 'center',
                 fontSize: '0.75rem', color: '#888',
