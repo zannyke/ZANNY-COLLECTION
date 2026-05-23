@@ -158,6 +158,13 @@ export async function onRequestPatch(context) {
       "UPDATE orders SET status = ? WHERE id = ?"
     ).bind(status, id).run();
 
+    // Fetch the order to get the user_id
+    const order = await context.env.DB.prepare(`
+      SELECT o.*, u.email, u.first_name, u.consecutive_cancellations, u.restricted_from_cod, u.consecutive_successful_orders 
+      FROM orders o LEFT JOIN users u ON o.user_id = u.id 
+      WHERE o.id = ?
+    `).bind(id).first();
+
     if (status === 'cancelled') {
       // Restore stock
       const { results: items } = await context.env.DB.prepare(
@@ -186,17 +193,49 @@ export async function onRequestPatch(context) {
           })
         });
       }
+
+      // Trust System Logic: Cancellations
+      if (order && order.user_id && order.user_id !== 'guest') {
+        const newCancellations = (order.consecutive_cancellations || 0) + 1;
+        if (newCancellations >= 3) {
+          await context.env.DB.prepare(
+            "UPDATE users SET consecutive_cancellations = ?, restricted_from_cod = 1, consecutive_successful_orders = 0 WHERE id = ?"
+          ).bind(newCancellations, order.user_id).run();
+        } else {
+          await context.env.DB.prepare(
+            "UPDATE users SET consecutive_cancellations = ? WHERE id = ?"
+          ).bind(newCancellations, order.user_id).run();
+        }
+      }
+    }
+
+    if (status === 'delivered') {
+      // Trust System Logic: Successful Deliveries
+      if (order && order.user_id && order.user_id !== 'guest') {
+        if (order.restricted_from_cod === 1) {
+          const newSuccesses = (order.consecutive_successful_orders || 0) + 1;
+          if (newSuccesses >= 3) {
+            // Restore privileges
+            await context.env.DB.prepare(
+              "UPDATE users SET restricted_from_cod = 0, consecutive_cancellations = 0, consecutive_successful_orders = 0 WHERE id = ?"
+            ).bind(order.user_id).run();
+          } else {
+            await context.env.DB.prepare(
+              "UPDATE users SET consecutive_successful_orders = ? WHERE id = ?"
+            ).bind(newSuccesses, order.user_id).run();
+          }
+        } else {
+          // Reset cancellations because they had a successful delivery
+          await context.env.DB.prepare(
+            "UPDATE users SET consecutive_cancellations = 0 WHERE id = ?"
+          ).bind(order.user_id).run();
+        }
+      }
     }
 
     // Send Customer Email if shipped or delivered
     if (context.env.RESEND_API_KEY && (status === 'shipped' || status === 'delivered')) {
       try {
-        const order = await context.env.DB.prepare(`
-          SELECT o.*, u.email, u.first_name 
-          FROM orders o JOIN users u ON o.user_id = u.id 
-          WHERE o.id = ?
-        `).bind(id).first();
-
         if (order && order.email) {
           let subject = '';
           let html = '';

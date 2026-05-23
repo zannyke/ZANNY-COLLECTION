@@ -24,6 +24,9 @@ CREATE TABLE users (
   login_count INTEGER DEFAULT 0,
   last_login DATETIME,
   phone_number TEXT,
+  consecutive_cancellations INTEGER DEFAULT 0,
+  restricted_from_cod INTEGER DEFAULT 0,
+  consecutive_successful_orders INTEGER DEFAULT 0,
   default_delivery_zone TEXT,
   default_address TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -68,6 +71,9 @@ CREATE TABLE orders (
   status TEXT DEFAULT 'pending',
   shipping_address TEXT,
   phone_number TEXT,
+  mpesa_checkout_id TEXT,
+  mpesa_receipt TEXT,
+  mpesa_phone TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
