@@ -171,7 +171,13 @@ function OrderCard({ order }) {
           <p style={{ fontSize: '0.8rem', color: '#888', marginTop: '0.5rem' }}>📍 {order.shipping_address} &nbsp;·&nbsp; 📞 {order.phone_number}</p>
           
           {order.status === 'delivered' && (
-            <FeedbackForm orderId={order.id} />
+            order.has_feedback ? (
+              <div style={{ marginTop: '1rem', padding: '1rem', background: '#e8f5e9', color: '#2e7d32', border: '1px solid #c8e6c9', borderRadius: '4px', fontSize: '0.85rem' }}>
+                Thank you for your feedback! It helps us improve.
+              </div>
+            ) : (
+              <FeedbackForm orderId={order.id} />
+            )
           )}
 
           {order.status === 'pending' && !canCancel && (

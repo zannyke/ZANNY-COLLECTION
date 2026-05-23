@@ -1,8 +1,11 @@
 export async function onRequestGet(context) {
   try {
-    // Fetch all orders newest first
+    // Fetch all orders newest first, and check if feedback exists
     const { results: orders } = await context.env.DB.prepare(
-      "SELECT * FROM orders ORDER BY created_at DESC"
+      `SELECT o.*, CASE WHEN f.id IS NOT NULL THEN 1 ELSE 0 END as has_feedback 
+       FROM orders o 
+       LEFT JOIN feedback f ON o.id = f.order_id 
+       ORDER BY o.created_at DESC`
     ).all();
 
     // For each order, fetch its items
@@ -252,12 +255,58 @@ export async function onRequestPatch(context) {
             `;
           } else if (status === 'delivered') {
             subject = `Your Order #${id} has been Delivered!`;
+            
+            // Build Receipt HTML
+            const { results: items } = await context.env.DB.prepare(
+              "SELECT oi.*, p.name FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ?"
+            ).bind(id).all();
+
+            const itemsHtml = items.map(item => `
+              <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.name} <br><small style="color: #888;">Size: ${item.size}</small></td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">KSh ${(item.price_at_purchase * item.quantity).toLocaleString()}</td>
+              </tr>
+            `).join('');
+
+            const paymentText = order.mpesa_receipt 
+              ? `<p><strong>Payment Method:</strong> M-Pesa (Receipt: ${order.mpesa_receipt})</p>`
+              : `<p><strong>Payment Method:</strong> Cash on Delivery</p>`;
+
             html = `
-              <div style="font-family:sans-serif; padding: 20px;">
-                <h2>Hi ${order.first_name},</h2>
-                <p>Your order <strong>#${id}</strong> has been marked as delivered.</p>
-                <p>We'd love to hear your thoughts! Please log into your account at <a href="https://zannycollection.com/account">Zanny Collection</a> to leave feedback on your purchase.</p>
-                <p>Enjoy your gear!</p>
+              <div style="font-family:sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 8px;">
+                <h2 style="text-align: center; color: #1a1a1a;">ZANNY</h2>
+                <h3 style="text-align: center; color: #444;">Hi ${order.first_name}, your order is here!</h3>
+                <p style="text-align: center; color: #666; margin-bottom: 30px;">Your order <strong>#${id}</strong> has been successfully delivered. Thank you for shopping with us!</p>
+                
+                <h4 style="border-bottom: 2px solid #1a1a1a; padding-bottom: 5px;">Delivery Receipt</h4>
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                  <thead>
+                    <tr style="background: #f8f8f8;">
+                      <th style="padding: 10px; text-align: left;">Item</th>
+                      <th style="padding: 10px; text-align: center;">Qty</th>
+                      <th style="padding: 10px; text-align: right;">Price</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${itemsHtml}
+                  </tbody>
+                </table>
+                
+                <div style="text-align: right; margin-bottom: 20px;">
+                  <h3 style="margin: 0;">Total Paid: KSh ${Number(order.total_amount).toLocaleString()}</h3>
+                </div>
+
+                <div style="background: #f9f9f9; padding: 15px; border-radius: 4px; font-size: 0.9em; color: #555;">
+                  ${paymentText}
+                  <p><strong>Delivered To:</strong> ${order.shipping_address}</p>
+                </div>
+
+                <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee;">
+                  <p style="font-weight: bold;">How did we do?</p>
+                  <p style="color: #666;">Log back into your account to leave a review and let us know what you think of your new gear!</p>
+                  <a href="https://zannycollection.com/account" style="display: inline-block; margin-top: 10px; padding: 12px 24px; background: #1a1a1a; color: #fff; text-decoration: none; border-radius: 4px; font-weight: bold;">Leave a Review</a>
+                </div>
               </div>
             `;
           }

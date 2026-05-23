@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import Navbar from './components/Navbar'
 import ScrollToTop from './components/ScrollToTop'
 import CookieConsent from './components/CookieConsent'
+import ReviewPopup from './components/ReviewPopup'
 import { ThemeProvider } from './context/ThemeContext'
 
 // Public pages
@@ -70,6 +71,7 @@ function App() {
         <CartProvider>
           <Router>
             <ScrollToTop />
+            <ReviewPopup />
             <Routes>
               {/* ── Admin (no navbar/footer) ── */}
               <Route path="/admin/login" element={<ThemeProvider><AdminLogin /></ThemeProvider>} />

@@ -74,6 +74,7 @@ CREATE TABLE orders (
   mpesa_checkout_id TEXT,
   mpesa_receipt TEXT,
   mpesa_phone TEXT,
+  review_prompt_dismissed INTEGER DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
