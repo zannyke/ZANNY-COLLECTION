@@ -118,22 +118,23 @@ function OrdersTab({ t, accentColor }) {
             >
               {/* Order Header Row */}
               <div
-                style={{ padding: '1.1rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', flexWrap: 'wrap' }}
+                className="admin-order-row"
+                style={{ padding: '1.1rem 1.5rem', cursor: 'pointer' }}
                 onClick={() => setExpanded(isExpanded ? null : order.id)}
               >
-                <div style={{ flex: '0 0 auto' }}>
+                <div className="order-col-left">
                   <p style={{ fontWeight: 700, fontSize: '0.88rem', letterSpacing: '0.5px' }}>{order.id}</p>
                   <p style={{ color: t.textMuted, fontSize: '0.72rem', marginTop: '0.15rem' }}>
                     {order.created_at ? new Date(order.created_at).toLocaleString('en-KE', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}
                   </p>
                 </div>
 
-                <div style={{ flex: 1, minWidth: '180px' }}>
-                  <p style={{ fontSize: '0.82rem', color: t.textMuted }}>📍 {order.shipping_address || '—'}</p>
-                  <p style={{ fontSize: '0.82rem', color: t.textMuted, marginTop: '0.15rem' }}>📞 {order.phone_number || '—'}</p>
+                <div className="order-col-mid" style={{ color: t.textMuted }}>
+                  <p style={{ fontSize: '0.82rem' }}>📍 {order.shipping_address || '—'}</p>
+                  <p style={{ fontSize: '0.82rem', marginTop: '0.15rem' }}>📞 {order.phone_number || '—'}</p>
                 </div>
 
-                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div className="order-col-right">
                   <p style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem' }}>
                     KSh {Number(order.total_amount).toLocaleString()}
                   </p>
@@ -602,12 +603,24 @@ export default function AdminDashboard() {
       </div>
 
       <style>{`
+        .admin-order-row { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+        .order-col-left { flex: 0 0 auto; }
+        .order-col-mid { flex: 1; min-width: 180px; }
+        .order-col-right { margin-left: auto; display: flex; align-items: center; gap: 1rem; }
+
         @media (max-width: 900px) {
-          .admin-main-content { margin-left: 0 !important; padding: 1.5rem !important; }
+          .admin-main-content { margin-left: 0 !important; padding: 1.5rem 1rem !important; }
           .mobile-admin-header { display: flex !important; }
           .admin-sidebar { transform: translateX(-100%); }
           .admin-sidebar.open { transform: translateX(0); box-shadow: 4px 0 24px rgba(0,0,0,0.2); }
           .sidebar-logo { display: none; }
+        }
+        
+        @media (max-width: 600px) {
+          .admin-order-row { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+          .order-col-left { width: 100%; display: flex; justify-content: space-between; border-bottom: 1px solid ${t.border}; padding-bottom: 0.5rem; }
+          .order-col-mid { width: 100%; min-width: 0; }
+          .order-col-right { margin-left: 0; width: 100%; justify-content: space-between; margin-top: 0.5rem; }
         }
       `}</style>
     </div>
