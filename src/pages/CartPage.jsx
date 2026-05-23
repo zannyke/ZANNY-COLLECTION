@@ -66,7 +66,7 @@ export default function CartPage() {
 
           {/* ── Cart Items ── */}
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid #eee' }}>
+            <div className="cart-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid #eee' }}>
               <p style={{ fontSize: '0.75rem', letterSpacing: '2px', textTransform: 'uppercase', color: '#888' }}>Item</p>
               <p style={{ fontSize: '0.75rem', letterSpacing: '2px', textTransform: 'uppercase', color: '#888' }}>Subtotal</p>
             </div>
@@ -157,7 +157,7 @@ export default function CartPage() {
           </div>
 
           {/* ── Order Summary ── */}
-          <div className="order-summary-container" style={{ background: '#fafafa', border: '1px solid #eee' }}>
+          <div className="order-summary-container">
             <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.2rem', marginBottom: '1.5rem', letterSpacing: '1px' }}>Order Summary</h3>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
@@ -237,14 +237,15 @@ export default function CartPage() {
       </div>
 
       <style>{`
-        .order-summary-container { position: sticky; top: 100px; padding: 2rem; }
+        .order-summary-container { position: sticky; top: 100px; padding: 2rem; background: #fafafa; border: 1px solid #eee; border-radius: 8px; }
         .cart-page-container { padding: 3rem 2rem; }
         @media (max-width: 768px) {
           .cart-page-container { padding: 1.5rem 1rem !important; }
           .cart-layout { grid-template-columns: 1fr !important; }
-          .cart-item-container { flex-direction: column !important; }
-          .cart-item-subtotal { text-align: left !important; margin-top: 0.5rem; }
-          .order-summary-container { position: static !important; padding: 1.5rem !important; margin-top: 2rem; }
+          .cart-header { display: none !important; }
+          .cart-item-container { flex-direction: row !important; flex-wrap: wrap; gap: 1rem !important; }
+          .cart-item-subtotal { width: 100%; text-align: left !important; margin-top: 0.25rem; font-size: 1.1rem; }
+          .order-summary-container { position: static !important; padding: 1.5rem !important; margin-top: 1.5rem; border-radius: 8px; }
         }
       `}</style>
     </div>
