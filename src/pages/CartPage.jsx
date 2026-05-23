@@ -61,7 +61,7 @@ export default function CartPage() {
     <div style={{ minHeight: '80vh', backgroundColor: '#fff' }}>
       <PageHeader title="My Cart" subtitle={`${cartItems.reduce((s, i) => s + i.qty, 0)} item(s) in your bag`} />
 
-      <div className="container" style={{ padding: '3rem 2rem', maxWidth: '1100px' }}>
+      <div className="cart-page-container container" style={{ maxWidth: '1100px' }}>
         <div className="cart-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '3rem', alignItems: 'start' }}>
 
           {/* ── Cart Items ── */}
@@ -238,7 +238,9 @@ export default function CartPage() {
 
       <style>{`
         .order-summary-container { position: sticky; top: 100px; padding: 2rem; }
+        .cart-page-container { padding: 3rem 2rem; }
         @media (max-width: 768px) {
+          .cart-page-container { padding: 1.5rem 1rem !important; }
           .cart-layout { grid-template-columns: 1fr !important; }
           .cart-item-container { flex-direction: column !important; }
           .cart-item-subtotal { text-align: left !important; margin-top: 0.5rem; }
