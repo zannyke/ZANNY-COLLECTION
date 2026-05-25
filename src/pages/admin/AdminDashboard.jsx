@@ -80,12 +80,18 @@ function OrdersTab({ t, accentColor }) {
     }
 
     setUpdating(id);
-    await fetch('/api/orders', {
+    const res = await fetch('/api/orders', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, status, trackingNumber })
     });
-    setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+    
+    if (res.ok) {
+      setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+    } else {
+      const err = await res.json();
+      alert(`Failed to update status: ${err.error || 'Unknown error'}`);
+    }
     setUpdating(null);
   };
 
