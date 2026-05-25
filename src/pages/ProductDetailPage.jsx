@@ -357,7 +357,7 @@ export default function ProductDetailPage() {
             <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.8rem', marginBottom: '3rem', textAlign: 'center' }}>
               You May Also Like
             </h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '2rem' }}>
               {relatedProducts.map(p => (
                 <Link key={p.id} to={`/product/${p.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                   <motion.div whileHover={{ y: -5 }} transition={{ duration: 0.3 }}>
