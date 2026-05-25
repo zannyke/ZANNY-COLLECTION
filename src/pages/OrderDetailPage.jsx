@@ -4,11 +4,11 @@ import { motion } from 'framer-motion';
 import { ChevronLeft, Package, Star, AlertCircle, RefreshCw, Navigation, CheckCircle2, Circle } from 'lucide-react';
 
 const STATUS_BADGE = {
-  pending:   { bg: '#fff8e1', color: '#f59e0b', label: 'Pending', msg: 'Waiting to be processed' },
-  confirmed: { bg: '#e0f2fe', color: '#0284c7', label: 'Confirmed', msg: 'Preparing your order' },
-  shipped:   { bg: '#ede9fe', color: '#7c3aed', label: 'Shipped', msg: 'On the way to you' },
-  delivered: { bg: '#dcfce7', color: '#16a34a', label: 'Delivered ✓', msg: 'Successfully delivered' },
-  cancelled: { bg: '#fee2e2', color: '#dc2626', label: 'Cancelled', msg: 'Order was cancelled' },
+  pending:   { bg: '#f5f5f5', color: '#1a1a1a', label: 'Pending', msg: 'Waiting to be processed' },
+  confirmed: { bg: '#e5e5e5', color: '#1a1a1a', label: 'Confirmed', msg: 'Preparing your order' },
+  shipped:   { bg: '#d5d5d5', color: '#1a1a1a', label: 'Shipped', msg: 'On the way to you' },
+  delivered: { bg: '#1a1a1a', color: '#ffffff', label: 'Delivered ✓', msg: 'Successfully delivered' },
+  cancelled: { bg: '#ffeeee', color: '#dc2626', label: 'Cancelled', msg: 'Order was cancelled' },
 };
 
 const FEEDBACK_SUGGESTIONS = {
@@ -118,9 +118,9 @@ function PackageHistory({ order }) {
       <h3 style={{ fontSize: '1.1rem', fontWeight: 700, fontFamily: 'var(--font-heading)', marginBottom: '1.5rem' }}>Package History</h3>
       
       {order.tracking_number && (
-        <div style={{ background: '#e0f2fe', border: '1px solid #bae6fd', padding: '1rem', borderRadius: '6px', marginBottom: '1.5rem' }}>
-          <p style={{ color: '#0369a1', fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.25rem' }}>Tracking Code / Link Provided:</p>
-          <p style={{ color: '#0c4a6e', fontSize: '0.95rem' }}>{order.tracking_number}</p>
+        <div style={{ background: '#fcfcfc', border: '1px solid #eee', padding: '1.25rem', borderRadius: '4px', marginBottom: '1.5rem', borderLeft: '3px solid #1a1a1a' }}>
+          <p style={{ color: '#555', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.4rem' }}>Tracking Code / Link Provided:</p>
+          <p style={{ color: '#1a1a1a', fontSize: '1.1rem', fontWeight: 700, fontFamily: 'var(--font-heading)' }}>{order.tracking_number}</p>
         </div>
       )}
 
@@ -133,15 +133,15 @@ function PackageHistory({ order }) {
             <div key={step.id} style={{ display: 'flex', gap: '1rem', position: 'relative' }}>
               {/* Timeline line */}
               {idx !== steps.length - 1 && (
-                <div style={{ position: 'absolute', left: '11px', top: '24px', bottom: '-8px', width: '2px', background: isCompleted ? '#3498db' : '#eee', zIndex: 1 }} />
+                <div style={{ position: 'absolute', left: '11px', top: '24px', bottom: '-8px', width: '2px', background: isCompleted ? '#1a1a1a' : '#eee', zIndex: 1 }} />
               )}
               
               {/* Dot */}
               <div style={{ position: 'relative', zIndex: 2, marginTop: '2px' }}>
                 {isCompleted && !isCurrent ? (
-                  <CheckCircle2 size={24} fill="#3498db" color="#fff" />
+                  <CheckCircle2 size={24} fill="#1a1a1a" color="#fff" />
                 ) : isCurrent ? (
-                   <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: '4px solid #3498db', background: '#fff' }} />
+                   <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: '4px solid #1a1a1a', background: '#fff' }} />
                 ) : (
                   <Circle size={24} color="#ddd" />
                 )}
@@ -151,9 +151,10 @@ function PackageHistory({ order }) {
               <div style={{ paddingBottom: '2rem', flex: 1, opacity: isCompleted ? 1 : 0.5 }}>
                 <span style={{ 
                   display: 'inline-block', 
-                  background: isCurrent || isCompleted ? '#3498db' : '#eee', 
+                  background: isCurrent || isCompleted ? '#1a1a1a' : '#f5f5f5', 
                   color: isCurrent || isCompleted ? '#fff' : '#888',
-                  padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.5px'
+                  border: isCurrent || isCompleted ? '1px solid #1a1a1a' : '1px solid #eee',
+                  padding: '0.25rem 0.6rem', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase'
                 }}>
                   {step.label}
                 </span>
@@ -320,7 +321,7 @@ export default function OrderDetailPage() {
                       <button 
                         disabled={cancelling}
                         onClick={handleCancel}
-                        style={{ width: '100%', padding: '0.75rem', background: '#e67e22', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 600, cursor: cancelling ? 'not-allowed' : 'pointer', fontSize: '0.9rem', opacity: cancelling ? 0.7 : 1 }}
+                        style={{ width: '100%', padding: '0.75rem', background: '#1a1a1a', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 600, cursor: cancelling ? 'not-allowed' : 'pointer', fontSize: '0.9rem', opacity: cancelling ? 0.7 : 1 }}
                       >
                         {cancelling ? 'Cancelling...' : 'Cancel Item'}
                       </button>
