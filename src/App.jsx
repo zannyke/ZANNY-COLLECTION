@@ -41,8 +41,8 @@ import './index.css'
 
 // Route guard for admin
 function AdminRoute({ children }) {
-  const isAuth = sessionStorage.getItem('zanny_admin') === 'true'
-  return isAuth ? children : <Navigate to="/admin/login" replace />
+  const isAuth = sessionStorage.getItem('zanny_admin') === 'true' && sessionStorage.getItem('zanny_admin_token');
+  return isAuth ? children : <Navigate to="/admin/login" replace />;
 }
 
 // Route guard for customers (Checkout protection)
