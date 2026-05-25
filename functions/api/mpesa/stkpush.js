@@ -24,7 +24,8 @@ export async function onRequestPost(context) {
     const consumerSecret = env.MPESA_CONSUMER_SECRET;
     const passkey = env.MPESA_PASSKEY;
     const shortcode = env.MPESA_SHORTCODE;
-    const callbackUrl = env.MPESA_CALLBACK_URL || `https://${new URL(request.url).hostname}/api/mpesa/callback`;
+    const webhookSecret = env.MPESA_WEBHOOK_SECRET || 'fallback-secret-for-dev';
+    const callbackUrl = env.MPESA_CALLBACK_URL || `https://${new URL(request.url).hostname}/api/mpesa/callback?secret=${webhookSecret}`;
 
     if (!consumerKey || !consumerSecret || !passkey || !shortcode) {
       // For sandbox testing, we allow fallback to Safaricom Sandbox default shortcode/passkey

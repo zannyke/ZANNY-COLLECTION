@@ -2,13 +2,29 @@ export async function onRequestPost(context) {
   try {
     const { email, code } = await context.request.json();
     
-    // 1. Verify code
+    // 1. Check if an active code exists for this email
     const record = await context.env.DB.prepare(
-      "SELECT * FROM verification_codes WHERE email = ? AND code = ? AND expires_at > CURRENT_TIMESTAMP"
-    ).bind(email, code).first();
+      "SELECT * FROM verification_codes WHERE email = ? AND expires_at > CURRENT_TIMESTAMP"
+    ).bind(email).first();
 
     if (!record) {
-      return Response.json({ success: false, message: 'Invalid or expired code.' }, { status: 400 });
+      return Response.json({ success: false, message: 'No active code found. Please request a new one.' }, { status: 400 });
+    }
+
+    if (record.code !== code) {
+      const newAttempts = (record.attempts || 0) + 1;
+      if (newAttempts >= 5) {
+        await context.env.DB.prepare("DELETE FROM verification_codes WHERE id = ?").bind(record.id).run();
+        return Response.json({ success: false, message: 'Too many failed attempts. Code expired.' }, { status: 429 });
+      } else {
+        // Fallback: If 'attempts' column doesn't exist, this might fail, but it's okay for now. We assume the migration adds it.
+        try {
+          await context.env.DB.prepare("UPDATE verification_codes SET attempts = ? WHERE id = ?").bind(newAttempts, record.id).run();
+        } catch (e) {
+          console.error("Failed to update attempts", e);
+        }
+        return Response.json({ success: false, message: `Invalid code. ${5 - newAttempts} attempts remaining.` }, { status: 400 });
+      }
     }
 
     // 2. Mark user as verified

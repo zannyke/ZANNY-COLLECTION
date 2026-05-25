@@ -1,12 +1,25 @@
+import { getCurrentUser } from '../utils/auth.js';
+
 export async function onRequestGet(context) {
   try {
-    // Fetch all orders newest first, and check if feedback exists
-    const { results: orders } = await context.env.DB.prepare(
-      `SELECT o.*, CASE WHEN f.id IS NOT NULL THEN 1 ELSE 0 END as has_feedback 
+    const user = await getCurrentUser(context);
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    let query = `SELECT o.*, CASE WHEN f.id IS NOT NULL THEN 1 ELSE 0 END as has_feedback 
        FROM orders o 
-       LEFT JOIN feedback f ON o.id = f.order_id 
-       ORDER BY o.created_at DESC`
-    ).all();
+       LEFT JOIN feedback f ON o.id = f.order_id`;
+    let bindArgs = [];
+
+    if (user.role !== 'admin') {
+      query += ` WHERE o.user_id = ?`;
+      bindArgs.push(user.id);
+    }
+    
+    query += ` ORDER BY o.created_at DESC`;
+
+    const { results: orders } = await context.env.DB.prepare(query).bind(...bindArgs).all();
 
     // For each order, fetch its items
     const enriched = await Promise.all(orders.map(async (order) => {
@@ -151,15 +164,16 @@ export async function onRequestPost(context) {
 // PATCH /api/orders  — update order status
 export async function onRequestPatch(context) {
   try {
+    const user = await getCurrentUser(context);
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id, status, trackingNumber, cancelledByCustomer } = await context.request.json();
     const allowed = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
     if (!allowed.includes(status)) {
       return Response.json({ error: 'Invalid status' }, { status: 400 });
     }
-    
-    await context.env.DB.prepare(
-      "UPDATE orders SET status = ? WHERE id = ?"
-    ).bind(status, id).run();
 
     // Fetch the order to get the user_id
     const order = await context.env.DB.prepare(`
@@ -167,6 +181,24 @@ export async function onRequestPatch(context) {
       FROM orders o LEFT JOIN users u ON o.user_id = u.id 
       WHERE o.id = ?
     `).bind(id).first();
+
+    if (!order) {
+      return Response.json({ error: 'Order not found' }, { status: 404 });
+    }
+
+    // Authorization checks
+    if (user.role !== 'admin') {
+      if (order.user_id !== user.id) {
+        return Response.json({ error: 'Forbidden: You do not own this order' }, { status: 403 });
+      }
+      if (status !== 'cancelled' || !cancelledByCustomer) {
+        return Response.json({ error: 'Forbidden: Customers can only cancel orders' }, { status: 403 });
+      }
+    }
+    
+    await context.env.DB.prepare(
+      "UPDATE orders SET status = ? WHERE id = ?"
+    ).bind(status, id).run();
 
     if (status === 'cancelled') {
       // Restore stock

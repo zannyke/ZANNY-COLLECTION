@@ -16,7 +16,7 @@ export async function onRequestPost(context) {
         <h2>New Contact Form Submission</h2>
         <p><strong>From:</strong> ${firstName} ${lastName} (${email})</p>
         <div style="margin-top: 20px; padding: 15px; border-left: 4px solid #1a1a1a; background: #f9f9f9;">
-          ${message.replace(/\n/g, '<br>')}
+          ${(message || '').replace(/<[^>]*>?/gm, '').replace(/\n/g, '<br>')}
         </div>
       </div>
     `;

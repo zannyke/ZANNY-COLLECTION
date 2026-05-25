@@ -20,13 +20,25 @@ export async function onRequestGet(context) {
         grant_type: 'authorization_code'
       })
     });
+    
+    if (!tokenRes.ok) {
+      throw new Error('Failed to exchange token with Google');
+    }
     const tokens = await tokenRes.json();
     
     // 2. Fetch user info
     const userRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
       headers: { 'Authorization': `Bearer ${tokens.access_token}` }
     });
+    
+    if (!userRes.ok) {
+      throw new Error('Failed to fetch user info from Google');
+    }
     const googleUser = await userRes.json();
+
+    if (!googleUser.email) {
+      throw new Error('Google did not provide an email address');
+    }
 
     // 3. Upsert user in DB
     let user = await context.env.DB.prepare("SELECT * FROM users WHERE email = ?").bind(googleUser.email).first();

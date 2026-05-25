@@ -1,5 +1,10 @@
+import { requireAdmin } from '../../utils/auth.js';
+
 export async function onRequestDelete(context) {
   try {
+    const auth = await requireAdmin(context);
+    if (auth.error) return auth;
+
     const id = context.params.id;
 
     // 1. Get the product to find the image_url
@@ -31,6 +36,8 @@ export async function onRequestDelete(context) {
 
 export async function onRequestPut(context) {
   try {
+    const auth = await requireAdmin(context);
+    if (auth.error) return auth;
     const id = context.params.id;
     const data = await context.request.json();
 

@@ -1,6 +1,14 @@
 export async function onRequestPost(context) {
   try {
     const { request, env } = context;
+    const url = new URL(request.url);
+    const secret = url.searchParams.get('secret');
+    const expectedSecret = env.MPESA_WEBHOOK_SECRET || 'fallback-secret-for-dev';
+
+    if (secret !== expectedSecret) {
+      return new Response('Unauthorized', { status: 401 });
+    }
+
     const body = await request.json();
 
     // Safaricom sends the payload inside Body.stkCallback

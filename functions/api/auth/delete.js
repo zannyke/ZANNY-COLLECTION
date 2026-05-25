@@ -1,5 +1,10 @@
+import { requireAdmin } from '../../utils/auth.js';
+
 export async function onRequestDelete(context) {
   try {
+    const auth = await requireAdmin(context);
+    if (auth.error) return auth;
+
     const url = new URL(context.request.url);
     const id = url.searchParams.get('id');
 
