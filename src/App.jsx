@@ -29,6 +29,7 @@ import WorldOfZanny from './pages/WorldOfZanny'
 import Checkout from './pages/Checkout'
 import CollectionsPage from './pages/CollectionsPage'
 import OrderSuccess from './pages/OrderSuccess'
+import OrderDetailPage from './pages/OrderDetailPage'
 
 // Admin pages (no Navbar/Footer)
 import AdminLogin from './pages/admin/AdminLogin'
@@ -97,6 +98,7 @@ function App() {
               <Route path="/cart" element={<PublicLayout><CartPage /></PublicLayout>} />
               <Route path="/checkout" element={<UserRoute><PublicLayout><Checkout /></PublicLayout></UserRoute>} />
               <Route path="/order-success" element={<UserRoute><PublicLayout><OrderSuccess /></PublicLayout></UserRoute>} />
+              <Route path="/order/:orderId" element={<UserRoute><PublicLayout><OrderDetailPage /></PublicLayout></UserRoute>} />
               
               <Route path="/discover" element={<PublicLayout><Discover /></PublicLayout>} />
               <Route path="/world-of-zanny" element={<PublicLayout><WorldOfZanny /></PublicLayout>} />
