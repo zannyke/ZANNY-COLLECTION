@@ -41,6 +41,15 @@ export async function onRequestPost(context) {
       return Response.json({ error: 'Forbidden: You do not own this order' }, { status: 403 });
     }
 
+    // Verify if feedback already exists
+    const existing = await context.env.DB.prepare(
+      "SELECT id FROM feedback WHERE order_id = ?"
+    ).bind(orderId).first();
+    
+    if (existing) {
+      return Response.json({ error: 'Feedback already submitted for this order' }, { status: 400 });
+    }
+
     // Input Validation: Strip HTML tags to prevent Stored XSS
     const sanitizedComment = (comment || '').replace(/<[^>]*>?/gm, '').substring(0, 1000);
 

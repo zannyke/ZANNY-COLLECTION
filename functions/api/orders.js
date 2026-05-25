@@ -29,7 +29,12 @@ export async function onRequestGet(context) {
          LEFT JOIN products p ON oi.product_id = p.id
          WHERE oi.order_id = ?`
       ).bind(order.id).all();
-      return { ...order, items };
+      
+      const feedback = await context.env.DB.prepare(
+        `SELECT id FROM feedback WHERE order_id = ?`
+      ).bind(order.id).first();
+
+      return { ...order, items, has_feedback: feedback ? 1 : 0 };
     }));
 
     return Response.json(enriched);
