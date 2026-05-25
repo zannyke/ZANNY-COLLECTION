@@ -133,28 +133,33 @@ function PackageHistory({ order }) {
             <div key={step.id} style={{ display: 'flex', gap: '1rem', position: 'relative' }}>
               {/* Timeline line */}
               {idx !== steps.length - 1 && (
-                <div style={{ position: 'absolute', left: '11px', top: '24px', bottom: '-8px', width: '2px', background: isCompleted ? '#1a1a1a' : '#eee', zIndex: 1 }} />
+                <div style={{ position: 'absolute', left: '11px', top: '28px', bottom: '-8px', width: '2px', background: isCompleted ? '#1a1a1a' : 'transparent', borderLeft: isCompleted ? 'none' : '2px dashed #ddd', zIndex: 1 }} />
               )}
               
               {/* Dot */}
-              <div style={{ position: 'relative', zIndex: 2, marginTop: '2px' }}>
+              <div style={{ position: 'relative', zIndex: 2, marginTop: '4px' }}>
                 {isCompleted && !isCurrent ? (
                   <CheckCircle2 size={24} fill="#1a1a1a" color="#fff" />
                 ) : isCurrent ? (
-                   <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: '4px solid #1a1a1a', background: '#fff' }} />
+                   <motion.div 
+                     animate={{ boxShadow: ['0 0 0px rgba(26,26,26,0)', '0 0 12px rgba(26,26,26,0.4)', '0 0 0px rgba(26,26,26,0)'] }}
+                     transition={{ duration: 2, repeat: Infinity }}
+                     style={{ width: '24px', height: '24px', borderRadius: '50%', border: '5px solid #1a1a1a', background: '#fff' }} 
+                   />
                 ) : (
-                  <Circle size={24} color="#ddd" />
+                  <Circle size={24} color="#ccc" strokeWidth={1.5} />
                 )}
               </div>
 
               {/* Content */}
-              <div style={{ paddingBottom: '2rem', flex: 1, opacity: isCompleted ? 1 : 0.5 }}>
+              <div style={{ paddingBottom: '2.5rem', flex: 1, opacity: isCompleted ? 1 : 0.6 }}>
                 <span style={{ 
                   display: 'inline-block', 
-                  background: isCurrent || isCompleted ? '#1a1a1a' : '#f5f5f5', 
-                  color: isCurrent || isCompleted ? '#fff' : '#888',
-                  border: isCurrent || isCompleted ? '1px solid #1a1a1a' : '1px solid #eee',
-                  padding: '0.25rem 0.6rem', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase'
+                  background: isCurrent ? '#1a1a1a' : isCompleted ? '#fff' : 'transparent', 
+                  color: isCurrent ? '#fff' : isCompleted ? '#1a1a1a' : '#999',
+                  border: isCurrent ? '1px solid #1a1a1a' : isCompleted ? '1px solid #ddd' : '1px dashed #ddd',
+                  padding: '0.35rem 0.75rem', borderRadius: '2px', fontSize: '0.7rem', fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase',
+                  boxShadow: isCurrent ? '0 4px 10px rgba(0,0,0,0.1)' : 'none'
                 }}>
                   {step.label}
                 </span>
