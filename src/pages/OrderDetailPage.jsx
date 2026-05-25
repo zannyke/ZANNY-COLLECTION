@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronLeft, Package, Star, AlertCircle, RefreshCw, Navigation } from 'lucide-react';
+import { ChevronLeft, Package, Star, AlertCircle, RefreshCw, Navigation, CheckCircle2, Circle } from 'lucide-react';
 
 const STATUS_BADGE = {
   pending:   { bg: '#fff8e1', color: '#f59e0b', label: 'Pending', msg: 'Waiting to be processed' },
@@ -96,6 +96,86 @@ function FeedbackForm({ orderId, onComplete }) {
   );
 }
 
+function PackageHistory({ order }) {
+  const steps = [
+    { id: 'pending', label: 'ORDER PLACED', date: order.created_at, activeStatus: ['pending', 'confirmed', 'shipped', 'delivered'], msg: 'Your order has been placed successfully.' },
+    { id: 'confirmed', label: 'PENDING CONFIRMATION', date: order.confirmed_at, activeStatus: ['confirmed', 'shipped', 'delivered'], msg: 'Your order has been confirmed.' },
+    { id: 'shipped', label: 'SHIPPED', date: order.shipped_at, activeStatus: ['shipped', 'delivered'], msg: 'Your order is on its way.' },
+    { id: 'delivered', label: 'DELIVERED', date: order.delivered_at, activeStatus: ['delivered'], msg: 'Your order has been delivered.' }
+  ];
+
+  if (order.status === 'cancelled') {
+    return (
+       <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', marginBottom: '1.5rem' }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem' }}>Package History</h3>
+          <p style={{ color: '#dc2626', fontWeight: 600 }}>This order was cancelled.</p>
+       </div>
+    );
+  }
+
+  return (
+    <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', marginBottom: '1.5rem' }}>
+      <h3 style={{ fontSize: '1.1rem', fontWeight: 700, fontFamily: 'var(--font-heading)', marginBottom: '1.5rem' }}>Package History</h3>
+      
+      {order.tracking_number && (
+        <div style={{ background: '#e0f2fe', border: '1px solid #bae6fd', padding: '1rem', borderRadius: '6px', marginBottom: '1.5rem' }}>
+          <p style={{ color: '#0369a1', fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.25rem' }}>Tracking Code / Link Provided:</p>
+          <p style={{ color: '#0c4a6e', fontSize: '0.95rem' }}>{order.tracking_number}</p>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+        {steps.map((step, idx) => {
+          const isCompleted = step.activeStatus.includes(order.status);
+          const isCurrent = order.status === step.id;
+          
+          return (
+            <div key={step.id} style={{ display: 'flex', gap: '1rem', position: 'relative' }}>
+              {/* Timeline line */}
+              {idx !== steps.length - 1 && (
+                <div style={{ position: 'absolute', left: '11px', top: '24px', bottom: '-8px', width: '2px', background: isCompleted ? '#3498db' : '#eee', zIndex: 1 }} />
+              )}
+              
+              {/* Dot */}
+              <div style={{ position: 'relative', zIndex: 2, marginTop: '2px' }}>
+                {isCompleted && !isCurrent ? (
+                  <CheckCircle2 size={24} fill="#3498db" color="#fff" />
+                ) : isCurrent ? (
+                   <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: '4px solid #3498db', background: '#fff' }} />
+                ) : (
+                  <Circle size={24} color="#ddd" />
+                )}
+              </div>
+
+              {/* Content */}
+              <div style={{ paddingBottom: '2rem', flex: 1, opacity: isCompleted ? 1 : 0.5 }}>
+                <span style={{ 
+                  display: 'inline-block', 
+                  background: isCurrent || isCompleted ? '#3498db' : '#eee', 
+                  color: isCurrent || isCompleted ? '#fff' : '#888',
+                  padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.5px'
+                }}>
+                  {step.label}
+                </span>
+                {step.date && (
+                  <p style={{ color: '#666', fontSize: '0.85rem', marginTop: '0.5rem' }}>
+                    {new Date(step.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}
+                  </p>
+                )}
+                {isCurrent && (
+                  <p style={{ color: '#555', fontSize: '0.85rem', marginTop: '0.5rem', lineHeight: 1.5 }}>
+                    {step.msg}
+                  </p>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function OrderDetailPage() {
   const { orderId } = useParams();
   const navigate = useNavigate();
@@ -173,10 +253,6 @@ export default function OrderDetailPage() {
     setCancelling(false);
   };
 
-  const handleTrack = () => {
-    alert("Tracking functionality is currently not integrated with the logistics provider.");
-  };
-
   return (
     <div style={{ minHeight: '100vh', background: '#f5f5f5', color: '#1a1a1a', paddingTop: '100px', paddingBottom: '4rem' }}>
       <div className="container" style={{ maxWidth: '900px', padding: '0 1rem' }}>
@@ -249,14 +325,6 @@ export default function OrderDetailPage() {
                         {cancelling ? 'Cancelling...' : 'Cancel Item'}
                       </button>
                     )}
-                    {order.status !== 'cancelled' && (
-                       <button 
-                         onClick={handleTrack}
-                         style={{ width: '100%', padding: '0.75rem', background: '#f39c12', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 600, cursor: 'pointer', fontSize: '0.9rem' }}
-                       >
-                         Track My Item
-                       </button>
-                    )}
                   </div>
                 </div>
               </div>
@@ -269,6 +337,9 @@ export default function OrderDetailPage() {
             )}
           </div>
         </div>
+
+        {/* Tracking Timeline Section */}
+        <PackageHistory order={order} />
 
         {/* Info Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>

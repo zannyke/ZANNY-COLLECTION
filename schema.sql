@@ -75,6 +75,10 @@ CREATE TABLE orders (
   mpesa_receipt TEXT,
   mpesa_phone TEXT,
   review_prompt_dismissed INTEGER DEFAULT 0,
+  tracking_number TEXT,
+  confirmed_at DATETIME,
+  shipped_at DATETIME,
+  delivered_at DATETIME,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

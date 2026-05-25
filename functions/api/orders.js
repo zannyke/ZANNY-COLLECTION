@@ -196,9 +196,25 @@ export async function onRequestPatch(context) {
       }
     }
     
-    await context.env.DB.prepare(
-      "UPDATE orders SET status = ? WHERE id = ?"
-    ).bind(status, id).run();
+    let updateQuery = "UPDATE orders SET status = ?";
+    let bindParams = [status];
+
+    if (status === 'confirmed') {
+      updateQuery += ", confirmed_at = CURRENT_TIMESTAMP";
+    } else if (status === 'shipped') {
+      updateQuery += ", shipped_at = CURRENT_TIMESTAMP";
+      if (trackingNumber) {
+        updateQuery += ", tracking_number = ?";
+        bindParams.push(trackingNumber);
+      }
+    } else if (status === 'delivered') {
+      updateQuery += ", delivered_at = CURRENT_TIMESTAMP";
+    }
+
+    updateQuery += " WHERE id = ?";
+    bindParams.push(id);
+
+    await context.env.DB.prepare(updateQuery).bind(...bindParams).run();
 
     if (status === 'cancelled') {
       // Restore stock
