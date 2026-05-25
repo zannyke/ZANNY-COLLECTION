@@ -26,6 +26,7 @@ export default function AdminLogin() {
       setTimeout(() => {
         if (hashedInput === ADMIN_HASH) {
           sessionStorage.setItem('zanny_admin', 'true');
+          sessionStorage.setItem('zanny_admin_token', hashedInput);
           navigate('/admin');
         } else {
           setError('Incorrect password. Please try again.');

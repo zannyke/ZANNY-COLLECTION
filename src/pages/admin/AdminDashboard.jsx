@@ -80,9 +80,13 @@ function OrdersTab({ t, accentColor }) {
     }
 
     setUpdating(id);
+    const adminToken = sessionStorage.getItem('zanny_admin_token') || '';
     const res = await fetch('/api/orders', {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-Admin-Token': adminToken
+      },
       body: JSON.stringify({ id, status, trackingNumber })
     });
     
