@@ -22,11 +22,11 @@ export async function onRequestDelete(context) {
       }
     }
 
-    // 3. Delete referencing order items to prevent foreign key constraint violations
-    await context.env.DB.prepare("DELETE FROM order_items WHERE product_id = ?").bind(id).run();
-
-    // 4. Delete the product from the D1 Database
-    await context.env.DB.prepare("DELETE FROM products WHERE id = ?").bind(id).run();
+    // 3. Perform a soft-delete on the product in the D1 Database
+    // (This retains the row for historical orders, but sets is_deleted = 1, sets stock to 0, and clears the image reference)
+    await context.env.DB.prepare(
+      "UPDATE products SET is_deleted = 1, image_url = NULL, stock = 0 WHERE id = ?"
+    ).bind(id).run();
 
     return Response.json({ success: true });
   } catch (err) {

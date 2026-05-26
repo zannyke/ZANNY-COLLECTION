@@ -2,8 +2,15 @@ import { requireAdmin } from '../utils/auth.js';
 
 export async function onRequestGet(context) {
   try {
+    // Self-healing migration to add is_deleted column if it does not exist
+    try {
+      await context.env.DB.prepare("ALTER TABLE products ADD COLUMN is_deleted INTEGER DEFAULT 0").run();
+    } catch (e) {
+      // Column already exists, ignore
+    }
+
     const { results } = await context.env.DB.prepare(
-      "SELECT * FROM products ORDER BY created_at DESC"
+      "SELECT * FROM products WHERE is_deleted = 0 ORDER BY created_at DESC"
     ).all();
     return Response.json(results);
   } catch (err) {
