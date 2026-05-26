@@ -170,8 +170,7 @@ export async function onRequestPost(context) {
 export async function onRequestPatch(context) {
   try {
     const user = await getCurrentUser(context);
-    const adminToken = context.request.headers.get('X-Admin-Token');
-    const isAdmin = (user && user.role === 'admin') || (adminToken === '8bef858d3755303abebcbb3b9aacc446dd90e5c5aa268731388a4c5a4b14a8cb');
+    const isAdmin = user && user.role === 'admin';
 
     if (!user && !isAdmin) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });

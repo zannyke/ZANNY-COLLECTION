@@ -18,24 +18,23 @@ export default function AdminLogin() {
     setLoading(true);
 
     try {
-      const msgBuffer = new TextEncoder().encode(pw);
-      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const hashedInput = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw })
+      });
 
-      setTimeout(() => {
-        if (hashedInput === ADMIN_HASH) {
-          sessionStorage.setItem('zanny_admin', 'true');
-          sessionStorage.setItem('zanny_admin_token', hashedInput);
-          navigate('/admin');
-        } else {
-          setError('Incorrect password. Please try again.');
-          setPw('');
-        }
-        setLoading(false);
-      }, 600);
+      if (res.ok) {
+        sessionStorage.setItem('zanny_admin', 'true');
+        navigate('/admin');
+      } else {
+        const err = await res.json();
+        setError(err.message || 'Incorrect password. Please try again.');
+        setPw('');
+      }
     } catch (err) {
-      setError('Security verification failed.');
+      setError('Network error. Please try again.');
+    } finally {
       setLoading(false);
     }
   };

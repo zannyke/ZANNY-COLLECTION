@@ -7,7 +7,7 @@ import {
 } from 'recharts';
 import { useProducts, CATEGORIES } from '../../context/ProductContext';
 import { useTheme } from '../../context/ThemeContext';
-import { Sun, Moon, Monitor, TrendingUp, BarChart3, Activity, Package, ShoppingBag, LayoutDashboard, Menu, X, MessageSquare } from 'lucide-react';
+import { Sun, Moon, Monitor, TrendingUp, BarChart3, Activity, Package, ShoppingBag, LayoutDashboard, Menu, X, MessageSquare, Lock } from 'lucide-react';
 
 // ── Simulated Analytics Data ─────────────────────────────────────────
 const daily   = Array.from({ length: 30 }, (_, i) => ({ date: `Day ${i + 1}`, Visitors: 0, PageViews: 0 }));
@@ -80,12 +80,10 @@ function OrdersTab({ t, accentColor }) {
     }
 
     setUpdating(id);
-    const adminToken = sessionStorage.getItem('zanny_admin_token') || '';
     const res = await fetch('/api/orders', {
       method: 'PATCH',
       headers: { 
-        'Content-Type': 'application/json',
-        'X-Admin-Token': adminToken
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({ id, status, trackingNumber })
     });
@@ -209,6 +207,123 @@ function OrdersTab({ t, accentColor }) {
             </motion.div>
           );
         })}
+        {/* ── SECURITY TAB ── */}
+        {activeTab === 'security' && (
+          <SecurityTab t={t} accentColor={accentColor} logout={logout} />
+        )}
+
+      </div>
+    </div>
+  );
+}
+
+// ── Security Tab ────────────────────────────────────────────────────────
+function SecurityTab({ t, accentColor, logout }) {
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      setError("New passwords do not match");
+      return;
+    }
+    if (newPassword.length < 8) {
+      setError("New password must be at least 8 characters");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setSuccess(false);
+
+    try {
+      const res = await fetch('/api/admin/password', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ oldPassword, newPassword })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSuccess(true);
+        setOldPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+        // Automatically logout after 2 seconds to force re-login with new password
+        setTimeout(() => logout(), 2500);
+      } else {
+        setError(data.error || 'Failed to update password');
+      }
+    } catch (err) {
+      setError('Network error');
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div style={{ maxWidth: '500px' }}>
+      <div style={{ marginBottom: '2.5rem' }}>
+        <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '2rem', letterSpacing: '2px', marginBottom: '0.3rem' }}>Security</h1>
+        <p style={{ color: t.textMuted, fontSize: '0.8rem' }}>Update your admin dashboard password.</p>
+      </div>
+
+      <div style={{ background: t.surface, border: `1px solid ${t.border}`, padding: '2rem' }}>
+        <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', letterSpacing: '1px', marginBottom: '1.5rem' }}>Change Password</h2>
+        
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.75rem', color: t.textMuted, marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Current Password</label>
+            <input 
+              type="password" 
+              required
+              value={oldPassword}
+              onChange={e => setOldPassword(e.target.value)}
+              style={{ width: '100%', padding: '0.75rem', background: t.bg, border: `1px solid ${t.border}`, color: t.text, fontFamily: 'var(--font-body)', fontSize: '0.9rem' }} 
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.75rem', color: t.textMuted, marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '1px' }}>New Password</label>
+            <input 
+              type="password" 
+              required
+              value={newPassword}
+              onChange={e => setNewPassword(e.target.value)}
+              style={{ width: '100%', padding: '0.75rem', background: t.bg, border: `1px solid ${t.border}`, color: t.text, fontFamily: 'var(--font-body)', fontSize: '0.9rem' }} 
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.75rem', color: t.textMuted, marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Confirm New Password</label>
+            <input 
+              type="password" 
+              required
+              value={confirmPassword}
+              onChange={e => setConfirmPassword(e.target.value)}
+              style={{ width: '100%', padding: '0.75rem', background: t.bg, border: `1px solid ${t.border}`, color: t.text, fontFamily: 'var(--font-body)', fontSize: '0.9rem' }} 
+            />
+          </div>
+
+          {error && <p style={{ color: '#c0392b', fontSize: '0.85rem', marginTop: '0.5rem' }}>{error}</p>}
+          {success && <p style={{ color: accentColor, fontSize: '0.85rem', marginTop: '0.5rem' }}>Password updated securely! Logging you out...</p>}
+
+          <button 
+            type="submit" 
+            disabled={loading}
+            style={{ 
+              marginTop: '1rem', width: '100%', padding: '0.85rem', 
+              background: loading ? t.surfaceHover : t.text, 
+              color: loading ? t.textMuted : t.bg, 
+              border: 'none', cursor: loading ? 'default' : 'pointer', 
+              fontFamily: 'var(--font-body)', fontSize: '0.85rem', fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase',
+              transition: 'all 0.2s'
+            }}
+          >
+            {loading ? 'Updating...' : 'Update Password'}
+          </button>
+        </form>
       </div>
     </div>
   );
@@ -319,6 +434,7 @@ export default function AdminDashboard() {
     { id: 'dashboard', label: '▪ Dashboard',   icon: <LayoutDashboard size={14} />, path: null },
     { id: 'orders',    label: '▪ Orders',       icon: <ShoppingBag size={14} />,    path: null },
     { id: 'feedback',  label: '▪ Feedback',     icon: <MessageSquare size={14} />,  path: null },
+    { id: 'security',  label: '▪ Security',     icon: <Lock size={14} />,           path: null },
     { id: 'products',  label: '▪ Add Product',  icon: <Package size={14} />,        path: '/admin/add-product' },
     { id: 'store',     label: '▪ View Store',   icon: null,                          path: '/' },
   ];

@@ -41,7 +41,7 @@ import './index.css'
 
 // Route guard for admin
 function AdminRoute({ children }) {
-  const isAuth = sessionStorage.getItem('zanny_admin') === 'true' && sessionStorage.getItem('zanny_admin_token');
+  const isAuth = sessionStorage.getItem('zanny_admin') === 'true';
   return isAuth ? children : <Navigate to="/admin/login" replace />;
 }
 
