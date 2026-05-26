@@ -5,14 +5,28 @@ import { CATEGORIES } from '../context/ProductContext';
 import { useProducts } from '../context/ProductContext';
 
 function CategoryCard({ cat, products, index }) {
-  const catProducts = cat.id === 'new-arrivals'
-    ? products.filter(p => p.badge === 'NEW')
-    : cat.id === 'sale'
-    ? products.filter(p => p.badge === 'SALE' || p.discount)
-    : products.filter(p => p.category === cat.id);
+  let images = [];
+  let count = 0;
 
-  // Extract unique product images and limit to top 5
-  const images = [...new Set(catProducts.map(p => p.image_url || p.image).filter(Boolean))].slice(0, 5);
+  if (cat.id === 'new-arrivals') {
+    // Get the latest uploaded product from each active category
+    const activeCats = [...new Set(products.map(p => p.category).filter(Boolean))];
+    const latestItems = activeCats.map(catId => {
+      const catProds = products.filter(p => p.category === catId);
+      return [...catProds].sort((a, b) => (b.created_at || '').localeCompare(a.created_at || '') || b.id.localeCompare(a.id))[0];
+    }).filter(Boolean);
+
+    images = latestItems.map(p => p.image_url || p.image).filter(Boolean);
+    count = products.filter(p => p.badge === 'NEW').length || products.length; // Count of new items or total
+  } else if (cat.id === 'sale') {
+    const saleProds = products.filter(p => p.badge === 'SALE' || p.discount);
+    images = [...new Set(saleProds.map(p => p.image_url || p.image).filter(Boolean))].slice(0, 5);
+    count = saleProds.length;
+  } else {
+    const catProds = products.filter(p => p.category === cat.id);
+    images = [...new Set(catProds.map(p => p.image_url || p.image).filter(Boolean))].slice(0, 5);
+    count = catProds.length;
+  }
   
   if (images.length === 0 && cat.fallbackImage) {
     images.push(cat.fallbackImage);
@@ -24,11 +38,9 @@ function CategoryCard({ cat, products, index }) {
     if (images.length <= 1) return;
     const interval = setInterval(() => {
       setCurrentImgIdx(prev => (prev + 1) % images.length);
-    }, 3500 + (index * 600)); // Stagger slide changes so they don't all flip at the same time
+    }, 2800 + (index * 400)); // Dynamic, faster rotation (2.8s) staggered by index
     return () => clearInterval(interval);
   }, [images.length, index]);
-
-  const count = catProducts.length;
 
   return (
     <motion.div
@@ -61,7 +73,7 @@ function CategoryCard({ cat, products, index }) {
                     objectFit: 'cover',
                     display: 'block',
                     opacity: imgIdx === currentImgIdx ? 1 : 0,
-                    transition: 'opacity 1.2s ease-in-out, transform 0.6s ease-in-out',
+                    transition: 'opacity 0.8s ease-in-out, transform 0.6s ease-in-out',
                     zIndex: imgIdx === currentImgIdx ? 2 : 1,
                   }}
                 />
@@ -114,6 +126,17 @@ function CategoryCard({ cat, products, index }) {
 export default function CollectionShowcase() {
   const { products } = useProducts();
 
+  // Filter categories to only display those with products
+  const activeCategories = CATEGORIES.filter(cat => {
+    if (cat.id === 'new-arrivals') {
+      return products.length > 0;
+    }
+    if (cat.id === 'sale') {
+      return products.some(p => p.badge === 'SALE' || p.discount);
+    }
+    return products.some(p => p.category === cat.id);
+  });
+
   return (
     <section id="collections" style={{ backgroundColor: '#fff', paddingBottom: '6rem' }}>
       {/* Section header */}
@@ -146,7 +169,7 @@ export default function CollectionShowcase() {
           gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
           gap: '1.5rem',
         }}>
-          {CATEGORIES.map((cat, i) => (
+          {activeCategories.map((cat, i) => (
             <CategoryCard 
               key={cat.id} 
               cat={cat} 
