@@ -5,6 +5,32 @@ export async function onRequestPost(context) {
       return Response.json({ success: false, message: 'Password required' }, { status: 400 });
     }
 
+    const ipAddress = context.request.headers.get('CF-Connecting-IP') || context.request.headers.get('x-real-ip') || 'Unknown IP';
+    const userAgent = context.request.headers.get('User-Agent') || 'Unknown Device';
+
+    // Parse a simple device name from User-Agent
+    let deviceName = 'Unknown Device';
+    if (userAgent.includes('Windows')) deviceName = 'Windows PC';
+    else if (userAgent.includes('Macintosh')) deviceName = 'Mac';
+    else if (userAgent.includes('iPhone')) deviceName = 'iPhone';
+    else if (userAgent.includes('iPad')) deviceName = 'iPad';
+    else if (userAgent.includes('Android')) deviceName = 'Android Device';
+    else if (userAgent.includes('Linux')) deviceName = 'Linux PC';
+
+    if (userAgent.includes('Chrome')) deviceName = 'Chrome on ' + deviceName;
+    else if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) deviceName = 'Safari on ' + deviceName;
+    else if (userAgent.includes('Firefox')) deviceName = 'Firefox on ' + deviceName;
+    else if (userAgent.includes('Edge')) deviceName = 'Edge on ' + deviceName;
+
+    // Check Blacklist
+    const isBlacklisted = await context.env.DB.prepare(
+      "SELECT id FROM blacklisted_ips WHERE ip_address = ? LIMIT 1"
+    ).bind(ipAddress).first();
+
+    if (isBlacklisted) {
+      return Response.json({ success: false, message: 'Access denied. Your IP has been blocked by the administrator.' }, { status: 403 });
+    }
+
     // Look for the admin user
     let admin = await context.env.DB.prepare(
       "SELECT id, password_hash, salt FROM users WHERE role = 'admin' LIMIT 1"
@@ -46,8 +72,8 @@ export async function onRequestPost(context) {
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
     await context.env.DB.prepare(
-      "INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)"
-    ).bind(sessionId, admin.id, expiresAt.toISOString()).run();
+      "INSERT INTO sessions (id, user_id, ip_address, user_agent, device_name, expires_at) VALUES (?, ?, ?, ?, ?, ?)"
+    ).bind(sessionId, admin.id, ipAddress, userAgent, deviceName, expiresAt.toISOString()).run();
 
     const cookieString = `zanny_session=${sessionId}; HttpOnly; Secure; Path=/; SameSite=Strict; Expires=${expiresAt.toUTCString()}`;
 

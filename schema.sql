@@ -35,9 +35,19 @@ CREATE TABLE users (
 CREATE TABLE sessions (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
+  ip_address TEXT,
+  user_agent TEXT,
+  device_name TEXT,
   expires_at DATETIME NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE blacklisted_ips (
+  id TEXT PRIMARY KEY,
+  ip_address TEXT NOT NULL UNIQUE,
+  reason TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE verification_codes (

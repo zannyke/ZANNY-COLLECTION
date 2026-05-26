@@ -7,7 +7,7 @@ import {
 } from 'recharts';
 import { useProducts, CATEGORIES } from '../../context/ProductContext';
 import { useTheme } from '../../context/ThemeContext';
-import { Sun, Moon, Monitor, TrendingUp, BarChart3, Activity, Package, ShoppingBag, LayoutDashboard, Menu, X, MessageSquare, Lock, Eye, EyeOff } from 'lucide-react';
+import { Sun, Moon, Monitor, TrendingUp, BarChart3, Activity, Package, ShoppingBag, LayoutDashboard, Menu, X, MessageSquare, Lock, Eye, EyeOff, Laptop, Trash2, Ban } from 'lucide-react';
 
 // ── Simulated Analytics Data ─────────────────────────────────────────
 const daily   = Array.from({ length: 30 }, (_, i) => ({ date: `Day ${i + 1}`, Visitors: 0, PageViews: 0 }));
@@ -222,8 +222,79 @@ function SecurityTab({ t, accentColor, logout }) {
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  const [sessions, setSessions] = useState([]);
+  const [blacklists, setBlacklists] = useState([]);
+
+  const fetchData = async () => {
+    try {
+      const [sessRes, blRes] = await Promise.all([
+        fetch('/api/admin/sessions'),
+        fetch('/api/admin/blacklist')
+      ]);
+      if (sessRes.ok) setSessions(await sessRes.json());
+      if (blRes.ok) setBlacklists(await blRes.json());
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const revokeSession = async (id) => {
+    if (!window.confirm("Log out this device immediately?")) return;
+    try {
+      const res = await fetch('/api/admin/sessions', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
+      if (res.ok) fetchData();
+      else alert("Failed to revoke session");
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const blockIp = async (ip_address) => {
+    if (!window.confirm(`Are you sure you want to completely block IP: ${ip_address}? They will be immediately denied access.`)) return;
+    try {
+      const res = await fetch('/api/admin/blacklist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ip_address })
+      });
+      if (res.ok) fetchData();
+      else {
+        const err = await res.json();
+        alert(err.error || "Failed to block IP");
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const unblockIp = async (id) => {
+    if (!window.confirm("Remove this IP from the blacklist?")) return;
+    try {
+      const res = await fetch('/api/admin/blacklist', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      });
+      if (res.ok) fetchData();
+      else alert("Failed to unblock IP");
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!window.confirm("Are you sure? Changing your password will instantly log out ALL other devices currently signed in.")) {
+      return;
+    }
     if (newPassword !== confirmPassword) {
       setError("New passwords do not match");
       return;
@@ -329,6 +400,62 @@ function SecurityTab({ t, accentColor, logout }) {
             {loading ? 'Updating...' : 'Update Password'}
           </button>
         </form>
+      </div>
+
+      <div style={{ background: t.surface, border: `1px solid ${t.border}`, padding: '2rem', marginTop: '2.5rem' }}>
+        <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', letterSpacing: '1px', marginBottom: '1.5rem' }}>Active Devices</h2>
+        <p style={{ fontSize: '0.8rem', color: t.textMuted, marginBottom: '1.5rem' }}>These devices are currently signed into your admin account. If you don't recognize a device, log it out immediately or block its IP.</p>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {sessions.map(s => (
+            <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', border: `1px solid ${s.is_current ? accentColor : t.border}`, background: t.bg, gap: '1rem', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <Laptop size={24} color={s.is_current ? accentColor : t.textMuted} />
+                <div>
+                  <p style={{ fontWeight: 600, fontSize: '0.9rem', color: s.is_current ? accentColor : t.text }}>
+                    {s.device_name || 'Unknown Device'} 
+                    {s.is_current && <span style={{ fontSize: '0.65rem', background: accentColor, color: '#000', padding: '0.1rem 0.4rem', borderRadius: '4px', marginLeft: '0.5rem', textTransform: 'uppercase', fontWeight: 800 }}>This Device</span>}
+                  </p>
+                  <p style={{ fontSize: '0.75rem', color: t.textMuted, marginTop: '0.2rem' }}>IP: {s.ip_address || 'Unknown'} · Logged in: {new Date(s.created_at).toLocaleString()}</p>
+                </div>
+              </div>
+              
+              {!s.is_current && (
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button onClick={() => blockIp(s.ip_address)} style={{ background: 'none', border: `1px solid ${t.border}`, color: t.textMuted, padding: '0.4rem 0.6rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem' }} title="Block this IP address permanently">
+                    <Ban size={14} /> Block IP
+                  </button>
+                  <button onClick={() => revokeSession(s.id)} style={{ background: 'none', border: `1px solid #c0392b`, color: '#c0392b', padding: '0.4rem 0.6rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem' }} title="Log out this device">
+                    <Trash2 size={14} /> Log Out
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ background: t.surface, border: `1px solid ${t.border}`, padding: '2rem', marginTop: '2.5rem' }}>
+        <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', letterSpacing: '1px', marginBottom: '1.5rem', color: '#c0392b' }}>Blacklisted IPs</h2>
+        <p style={{ fontSize: '0.8rem', color: t.textMuted, marginBottom: '1.5rem' }}>These IP addresses are permanently blocked from logging into the admin dashboard.</p>
+        
+        {blacklists.length === 0 ? (
+          <p style={{ fontSize: '0.85rem', color: t.textMuted }}>No IPs are currently blocked.</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {blacklists.map(b => (
+              <div key={b.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', border: `1px solid ${t.border}`, background: t.bg }}>
+                <div>
+                  <p style={{ fontWeight: 600, fontSize: '0.9rem', color: '#c0392b' }}>{b.ip_address}</p>
+                  <p style={{ fontSize: '0.75rem', color: t.textMuted, marginTop: '0.2rem' }}>Blocked on: {new Date(b.created_at).toLocaleString()}</p>
+                </div>
+                <button onClick={() => unblockIp(b.id)} style={{ background: 'none', border: `1px solid ${t.border}`, color: t.text, padding: '0.4rem 0.6rem', cursor: 'pointer', fontSize: '0.75rem' }}>
+                  Unblock
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
