@@ -207,11 +207,6 @@ function OrdersTab({ t, accentColor }) {
             </motion.div>
           );
         })}
-        {/* ── SECURITY TAB ── */}
-        {activeTab === 'security' && (
-          <SecurityTab t={t} accentColor={accentColor} logout={logout} />
-        )}
-
       </div>
     </div>
   );
@@ -725,6 +720,11 @@ export default function AdminDashboard() {
             </div>
             <FeedbackTab t={t} />
           </>
+        )}
+
+        {/* ── SECURITY TAB ── */}
+        {activeTab === 'security' && (
+          <SecurityTab t={t} accentColor={accentColor} logout={logout} />
         )}
       </div>
 
