@@ -14,7 +14,7 @@ export async function onRequestGet(context) {
 export async function onRequestPost(context) {
   try {
     const auth = await requireAdmin(context);
-    if (auth.error) return auth;
+    if (auth instanceof Response) return auth;
 
     const data = await context.request.json();
     const id = crypto.randomUUID();
@@ -47,7 +47,7 @@ export async function onRequestPost(context) {
 export async function onRequestPatch(context) {
   try {
     const auth = await requireAdmin(context);
-    if (auth.error) return auth;
+    if (auth instanceof Response) return auth;
     const { id, stock } = await context.request.json();
     if (typeof stock !== 'number') {
       return Response.json({ error: 'Invalid stock value' }, { status: 400 });

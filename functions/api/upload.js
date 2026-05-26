@@ -3,7 +3,7 @@ import { requireAdmin } from '../utils/auth.js';
 export async function onRequestPost(context) {
   try {
     const auth = await requireAdmin(context);
-    if (auth.error) return auth;
+    if (auth instanceof Response) return auth;
 
     const formData = await context.request.formData();
     const file = formData.get('file');
