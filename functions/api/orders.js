@@ -45,6 +45,11 @@ export async function onRequestGet(context) {
 
 export async function onRequestPost(context) {
   try {
+    const user = await getCurrentUser(context);
+    if (!user) {
+      return Response.json({ error: 'Unauthorized: You must have an account and be logged in to place an order.' }, { status: 401 });
+    }
+
     const data = await context.request.json();
     
     // VERIFY LIVE STOCK FIRST TO PREVENT INVENTORY RACE CONDITIONS
@@ -72,7 +77,7 @@ export async function onRequestPost(context) {
       "INSERT INTO orders (id, user_id, total_amount, shipping_address, phone_number, status) VALUES (?, ?, ?, ?, ?, ?)"
     ).bind(
       orderId, 
-      data.userId, 
+      user.id, // SECURE: Bind session user ID
       data.totalAmount, 
       data.shippingAddress, 
       data.phoneNumber,
@@ -98,7 +103,7 @@ export async function onRequestPost(context) {
     }
 
     // Fetch user details for customer email
-    const user = await context.env.DB.prepare("SELECT email, first_name FROM users WHERE id = ?").bind(data.userId).first();
+    const dbUser = await context.env.DB.prepare("SELECT email, first_name FROM users WHERE id = ?").bind(user.id).first();
 
     // Send email notification to Admin and Customer
     if (context.env.RESEND_API_KEY) {
@@ -130,7 +135,7 @@ export async function onRequestPost(context) {
         });
 
         // Send Email to Customer
-        if (user && user.email) {
+        if (dbUser && dbUser.email) {
           await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: {
@@ -139,11 +144,11 @@ export async function onRequestPost(context) {
             },
             body: JSON.stringify({
               from: 'Zanny Collection <onboarding@resend.dev>',
-              to: user.email,
+              to: dbUser.email,
               subject: `Order Confirmation - #${orderId}`,
               html: `
                 <div style="font-family:sans-serif; padding: 20px;">
-                  <h2>Hi ${user.first_name},</h2>
+                  <h2>Hi ${dbUser.first_name || 'Customer'},</h2>
                   <p>Thank you for shopping with Zanny Collection! Your order <strong>#${orderId}</strong> has been received successfully.</p>
                   <p><strong>Total:</strong> KSh ${data.totalAmount.toLocaleString()}</p>
                   <p><strong>Delivery Address:</strong> ${data.shippingAddress}</p>

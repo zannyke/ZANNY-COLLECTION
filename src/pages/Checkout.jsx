@@ -10,16 +10,28 @@ import CustomSelect from '../components/CustomSelect';
 
 export default function Checkout() {
   const { cartItems, cartTotal, clearCart } = useCart();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
-    fullName: isAuthenticated ? `${user?.firstName || ''} ${user?.lastName || ''}`.trim() : '',
-    email: isAuthenticated ? user?.email || '' : '',
-    phone: isAuthenticated && user?.phone_number ? user.phone_number : '',
+    fullName: '',
+    email: '',
+    phone: '',
     address: '',
-    zone: isAuthenticated && user?.default_delivery_zone ? user.default_delivery_zone : 'kiambu',
+    zone: 'kiambu',
   });
+
+  useEffect(() => {
+    if (user) {
+      setForm(prev => ({
+        ...prev,
+        fullName: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+        email: user.email || '',
+        phone: user.phone_number || prev.phone,
+        zone: user.default_delivery_zone || prev.zone
+      }));
+    }
+  }, [user]);
 
   const selectedZone = DELIVERY_ZONES.find(z => z.id === form.zone) || DELIVERY_ZONES[0];
   const deliveryFee = selectedZone.fee;
@@ -30,9 +42,16 @@ export default function Checkout() {
   
   // Payment Options
   const [paymentMethod, setPaymentMethod] = useState('cod'); // 'cod' or 'mpesa'
-  const [mpesaPhone, setMpesaPhone] = useState(form.phone);
+  const [mpesaPhone, setMpesaPhone] = useState('');
   const [polling, setPolling] = useState(false);
   const [pollError, setPollError] = useState('');
+
+  // Update mpesaPhone when form phone changes initially
+  useEffect(() => {
+    if (form.phone && !mpesaPhone) {
+      setMpesaPhone(form.phone);
+    }
+  }, [form.phone]);
 
   // Trust System Logic
   const isRestricted = user?.restricted_from_cod === 1;
@@ -42,6 +61,32 @@ export default function Checkout() {
       setPaymentMethod('mpesa');
     }
   }, [isRestricted]);
+
+  if (authLoading) {
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-body)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+          <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} style={{ width: '30px', height: '30px', border: '2px solid #ddd', borderTopColor: '#1a1a1a', borderRadius: '50%' }} />
+          <p style={{ color: '#666', fontSize: '0.9rem' }}>Securing checkout portal...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '2rem', fontFamily: 'var(--font-body)' }}>
+        <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.8rem', marginBottom: '1rem', letterSpacing: '1px' }}>ACCOUNT REQUIRED FOR CHECKOUT</h2>
+        <p style={{ color: '#555', fontSize: '0.95rem', maxWidth: '440px', lineHeight: 1.6, marginBottom: '2.5rem' }}>
+          To complete your purchase, track your package status, and receive receipt confirmations, you need to sign in or create an account.
+        </p>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button onClick={() => navigate('/login?redirect=checkout')} style={{ padding: '1rem 2rem', background: '#1a1a1a', color: '#fff', border: 'none', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', cursor: 'pointer', fontSize: '0.85rem' }}>Log In</button>
+          <button onClick={() => navigate('/register?redirect=checkout')} style={{ padding: '1rem 2rem', background: '#fff', color: '#1a1a1a', border: '1px solid #ddd', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', cursor: 'pointer', fontSize: '0.85rem' }}>Create Account</button>
+        </div>
+      </div>
+    );
+  }
 
   if (cartItems.length === 0 && !success && !polling) {
     return (
