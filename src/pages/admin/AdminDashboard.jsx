@@ -99,8 +99,15 @@ function OrdersTab({ t, accentColor, uiPrompt }) {
   const fetchOrders = () => {
     setLoading(true);
     fetch('/api/orders')
-      .then(r => r.json())
-      .then(data => { setOrders(Array.isArray(data) ? data : []); setLoading(false); })
+      .then(async r => {
+        if (r.status === 401 || r.status === 403) {
+          sessionStorage.removeItem('zanny_admin');
+          window.location.href = '/admin/login';
+          return;
+        }
+        return r.json();
+      })
+      .then(data => { if (data) { setOrders(Array.isArray(data) ? data : []); setLoading(false); } })
       .catch(() => setLoading(false));
   };
 
@@ -124,6 +131,9 @@ function OrdersTab({ t, accentColor, uiPrompt }) {
     
     if (res.ok) {
       setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+    } else if (res.status === 401 || res.status === 403) {
+      sessionStorage.removeItem('zanny_admin');
+      window.location.href = '/admin/login';
     } else {
       const err = await res.json();
       alert(`Failed to update status: ${err.error || 'Unknown error'}`);
@@ -270,6 +280,12 @@ function SecurityTab({ t, accentColor, logout, uiConfirm }) {
         fetch('/api/admin/sessions'),
         fetch('/api/admin/blacklist')
       ]);
+      
+      if (sessRes.status === 401 || sessRes.status === 403 || blRes.status === 401 || blRes.status === 403) {
+        logout();
+        return;
+      }
+      
       if (sessRes.ok) setSessions(await sessRes.json());
       if (blRes.ok) setBlacklists(await blRes.json());
     } catch (err) {
@@ -358,6 +374,12 @@ function SecurityTab({ t, accentColor, logout, uiConfirm }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ oldPassword, newPassword })
       });
+      
+      if (res.status === 401 || res.status === 403) {
+        logout();
+        return;
+      }
+      
       const data = await res.json();
       if (res.ok) {
         setSuccess(true);
