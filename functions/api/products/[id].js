@@ -14,9 +14,6 @@ export async function onRequestDelete(context) {
       return new Response('Not found', { status: 404 });
     }
 
-    // Unlink from historical orders to prevent Foreign Key constraint failures
-    await context.env.DB.prepare("UPDATE order_items SET product_id = NULL WHERE product_id = ?").bind(id).run();
-
     // 2. Delete the image from R2 if it exists
     if (product.image_url) {
       const keyMatch = product.image_url.match(/\/api\/images\/(.+)$/);
