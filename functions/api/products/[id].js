@@ -55,7 +55,7 @@ export async function onRequestPut(context) {
       stock || 0, 
       badge || null, 
       image_url || null, 
-      variations || null, 
+      variations ? JSON.stringify(variations) : null,
       gallery_urls ? JSON.stringify(gallery_urls) : null,
       id
     ).run();
