@@ -602,6 +602,25 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const { products, deleteProduct, getBestSellers } = useProducts();
   const { theme, setTheme, t, resolvedTheme } = useTheme();
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [modalState, setModalState] = useState({ isOpen: false, title: '', message: '', isPrompt: false, promptLabel: '', onConfirm: null, onCancel: null });
+  const bestSellers = getBestSellers();
+
+  const uiConfirm = (title, message) => new Promise(resolve => {
+    setModalState({ isOpen: true, title, message, isPrompt: false, onConfirm: () => { setModalState(prev => ({...prev, isOpen: false})); resolve(true); }, onCancel: () => { setModalState(prev => ({...prev, isOpen: false})); resolve(false); } });
+  });
+
+  const uiPrompt = (title, message, promptLabel) => new Promise(resolve => {
+    setModalState({ isOpen: true, title, message, isPrompt: true, promptLabel, onConfirm: (val) => { setModalState(prev => ({...prev, isOpen: false})); resolve(val); }, onCancel: () => { setModalState(prev => ({...prev, isOpen: false})); resolve(null); } });
+  });
+
+  const totalRevenue = products.reduce((s, p) => s + p.price * p.sold, 0);
+  const logout = () => { sessionStorage.removeItem('zanny_admin'); navigate('/admin/login'); };
+
+  const chartColor  = resolvedTheme === 'dark' ? '#ffffff' : '#1a1a1a';
+  const accentColor = resolvedTheme === 'dark' ? '#00ff9d' : '#00b894';
+
   const [overviewView, setOverviewView] = useState('alerts');
   const [recentOrders, setRecentOrders] = useState([]);
 
