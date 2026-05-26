@@ -170,9 +170,13 @@ export function ProductProvider({ children }) {
       const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setProducts(prev => prev.filter(p => p.id !== id));
+      } else {
+        const errData = await res.json();
+        alert(`Failed to delete product: ${errData.error || 'Server error'}`);
       }
     } catch (err) {
       console.error("Failed to delete product", err);
+      alert(`Network error: ${err.message}`);
     }
   };
 
