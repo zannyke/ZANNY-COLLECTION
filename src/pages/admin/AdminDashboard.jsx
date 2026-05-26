@@ -56,8 +56,41 @@ const CustomTooltip = ({ active, payload, label, t }) => {
   );
 };
 
+// ── Custom UI Modal ───────────────────────────────────────────────────
+function CustomModal({ isOpen, title, message, isPrompt, promptLabel, onConfirm, onCancel, t, accentColor }) {
+  if (!isOpen) return null;
+  const [inputValue, setInputValue] = React.useState('');
+  
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} style={{ background: t.surface, border: `1px solid ${t.border}`, padding: '2rem', width: '90%', maxWidth: '400px', borderRadius: '8px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+        <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.2rem', marginBottom: '1rem', color: t.text }}>{title}</h3>
+        <p style={{ color: t.textMuted, fontSize: '0.9rem', marginBottom: isPrompt ? '1rem' : '2rem', lineHeight: 1.5 }}>{message}</p>
+        
+        {isPrompt && (
+          <div style={{ marginBottom: '2rem' }}>
+            {promptLabel && <label style={{ display: 'block', fontSize: '0.75rem', color: t.textMuted, marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '1px' }}>{promptLabel}</label>}
+            <input 
+              type="text" 
+              value={inputValue}
+              onChange={e => setInputValue(e.target.value)}
+              style={{ width: '100%', padding: '0.75rem', background: t.bg, border: `1px solid ${t.border}`, color: t.text, fontFamily: 'var(--font-body)', fontSize: '0.9rem' }} 
+              autoFocus
+            />
+          </div>
+        )}
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+          <button onClick={() => { setInputValue(''); onCancel(); }} style={{ padding: '0.6rem 1.2rem', background: 'transparent', border: `1px solid ${t.border}`, color: t.text, cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = t.surfaceHover} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>Cancel</button>
+          <button onClick={() => { onConfirm(isPrompt ? inputValue : true); setInputValue(''); }} style={{ padding: '0.6rem 1.2rem', background: accentColor || t.text, border: 'none', color: '#000', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>Confirm</button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 // ── Orders Tab ────────────────────────────────────────────────────────
-function OrdersTab({ t, accentColor }) {
+function OrdersTab({ t, accentColor, uiPrompt }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(null);
@@ -76,7 +109,8 @@ function OrdersTab({ t, accentColor }) {
   const updateStatus = async (id, status) => {
     let trackingNumber = null;
     if (status === 'shipped') {
-      trackingNumber = window.prompt("Enter tracking number/link for the customer email (optional):");
+      trackingNumber = await uiPrompt("Tracking Information", "Enter tracking number/link for the customer email (optional):", "Tracking Details");
+      if (trackingNumber === null) return; // User cancelled
     }
 
     setUpdating(id);
@@ -213,7 +247,7 @@ function OrdersTab({ t, accentColor }) {
 }
 
 // ── Security Tab ────────────────────────────────────────────────────────
-function SecurityTab({ t, accentColor, logout }) {
+function SecurityTab({ t, accentColor, logout, uiConfirm }) {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -243,7 +277,8 @@ function SecurityTab({ t, accentColor, logout }) {
   }, []);
 
   const revokeSession = async (id) => {
-    if (!window.confirm("Log out this device immediately?")) return;
+    const confirmed = await uiConfirm("Revoke Session", "Log out this device immediately?");
+    if (!confirmed) return;
     try {
       const res = await fetch('/api/admin/sessions', {
         method: 'DELETE',
@@ -258,7 +293,8 @@ function SecurityTab({ t, accentColor, logout }) {
   };
 
   const blockIp = async (ip_address) => {
-    if (!window.confirm(`Are you sure you want to completely block IP: ${ip_address}? They will be immediately denied access.`)) return;
+    const confirmed = await uiConfirm("Block IP", `Are you sure you want to completely block IP: ${ip_address}? They will be immediately denied access.`);
+    if (!confirmed) return;
     try {
       const res = await fetch('/api/admin/blacklist', {
         method: 'POST',
@@ -276,7 +312,8 @@ function SecurityTab({ t, accentColor, logout }) {
   };
 
   const unblockIp = async (id) => {
-    if (!window.confirm("Remove this IP from the blacklist?")) return;
+    const confirmed = await uiConfirm("Unblock IP", "Remove this IP from the blacklist?");
+    if (!confirmed) return;
     try {
       const res = await fetch('/api/admin/blacklist', {
         method: 'DELETE',
@@ -292,9 +329,9 @@ function SecurityTab({ t, accentColor, logout }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!window.confirm("Are you sure? Changing your password will instantly log out ALL other devices currently signed in.")) {
-      return;
-    }
+    const confirmed = await uiConfirm("Global Logout", "Are you sure? Changing your password will instantly log out ALL other devices currently signed in.");
+    if (!confirmed) return;
+
     if (newPassword !== confirmPassword) {
       setError("New passwords do not match");
       return;
@@ -506,7 +543,16 @@ export default function AdminDashboard() {
   const [chartType, setChartType] = useState('area');
   const [activeTab, setActiveTab] = useState('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [modalState, setModalState] = useState({ isOpen: false, title: '', message: '', isPrompt: false, promptLabel: '', onConfirm: null, onCancel: null });
   const bestSellers = getBestSellers();
+
+  const uiConfirm = (title, message) => new Promise(resolve => {
+    setModalState({ isOpen: true, title, message, isPrompt: false, onConfirm: () => { setModalState(prev => ({...prev, isOpen: false})); resolve(true); }, onCancel: () => { setModalState(prev => ({...prev, isOpen: false})); resolve(false); } });
+  });
+
+  const uiPrompt = (title, message, promptLabel) => new Promise(resolve => {
+    setModalState({ isOpen: true, title, message, isPrompt: true, promptLabel, onConfirm: (val) => { setModalState(prev => ({...prev, isOpen: false})); resolve(val); }, onCancel: () => { setModalState(prev => ({...prev, isOpen: false})); resolve(null); } });
+  });
 
   const totalRevenue = products.reduce((s, p) => s + p.price * p.sold, 0);
   const logout = () => { sessionStorage.removeItem('zanny_admin'); navigate('/admin/login'); };
@@ -819,7 +865,10 @@ export default function AdminDashboard() {
                               onMouseEnter={e => { e.currentTarget.style.borderColor = accentColor; e.currentTarget.style.color = accentColor; }}
                               onMouseLeave={e => { e.currentTarget.style.borderColor = t.border; e.currentTarget.style.color = t.textMuted; }}
                             >Edit / Restock</button>
-                            <button onClick={() => { if(window.confirm('Are you sure you want to completely delete this product?')) deleteProduct(p.id); }} style={{
+                            <button onClick={async () => { 
+                              const confirmed = await uiConfirm("Delete Product", "Are you sure you want to completely delete this product?");
+                              if(confirmed) deleteProduct(p.id); 
+                            }} style={{
                               background: 'none', border: `1px solid ${t.border}`, color: t.textMuted,
                               padding: '0.3rem 0.75rem', cursor: 'pointer', fontSize: '0.7rem', fontFamily: 'var(--font-body)',
                             }}
@@ -844,7 +893,7 @@ export default function AdminDashboard() {
               <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '2rem', letterSpacing: '2px', marginBottom: '0.3rem' }}>Orders</h1>
               <p style={{ color: t.textMuted, fontSize: '0.8rem' }}>Manage and fulfil customer orders from your D1 database.</p>
             </div>
-            <OrdersTab t={t} accentColor={accentColor} />
+            <OrdersTab t={t} accentColor={accentColor} uiPrompt={uiPrompt} />
           </>
         )}
 
@@ -861,9 +910,11 @@ export default function AdminDashboard() {
 
         {/* ── SECURITY TAB ── */}
         {activeTab === 'security' && (
-          <SecurityTab t={t} accentColor={accentColor} logout={logout} />
+          <SecurityTab t={t} accentColor={accentColor} logout={logout} uiConfirm={uiConfirm} />
         )}
       </div>
+
+      <CustomModal {...modalState} t={t} accentColor={accentColor} />
 
       <style>{`
         .admin-order-row { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
