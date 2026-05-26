@@ -33,9 +33,13 @@ export async function onRequestPost(context) {
       return new Response(JSON.stringify({ error: 'M-Pesa API Keys are not configured on the server.' }), { status: 500 });
     }
 
+    const mpesaBaseUrl = env.MPESA_ENV === 'production'
+      ? 'https://api.safaricom.co.ke'
+      : 'https://sandbox.safaricom.co.ke';
+
     // 1. Get OAuth Token
     const authString = btoa(`${consumerKey}:${consumerSecret}`);
-    const tokenRes = await fetch('https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials', {
+    const tokenRes = await fetch(`${mpesaBaseUrl}/oauth/v1/generate?grant_type=client_credentials`, {
       headers: {
         Authorization: `Basic ${authString}`
       }
@@ -57,7 +61,7 @@ export async function onRequestPost(context) {
       BusinessShortCode: shortcode,
       Password: password,
       Timestamp: timestamp,
-      TransactionType: 'CustomerPayBillOnline', // Change to CustomerBuyGoodsOnline for Till Number
+      TransactionType: 'CustomerBuyGoodsOnline', // Correct type for M-Pesa Till Number / Buy Goods
       Amount: Math.ceil(amount),
       PartyA: formattedPhone,
       PartyB: shortcode,
@@ -67,7 +71,7 @@ export async function onRequestPost(context) {
       TransactionDesc: 'Payment for Zanny Collection'
     };
 
-    const stkRes = await fetch('https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest', {
+    const stkRes = await fetch(`${mpesaBaseUrl}/mpesa/stkpush/v1/processrequest`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${access_token}`,
