@@ -7,7 +7,7 @@ import {
 } from 'recharts';
 import { useProducts, CATEGORIES } from '../../context/ProductContext';
 import { useTheme } from '../../context/ThemeContext';
-import { Sun, Moon, Monitor, TrendingUp, BarChart3, Activity, Package, ShoppingBag, LayoutDashboard, Menu, X, MessageSquare, Lock, Eye, EyeOff, Laptop, Trash2, Ban } from 'lucide-react';
+import { Sun, Moon, Monitor, TrendingUp, BarChart3, Activity, Package, ShoppingBag, LayoutDashboard, Menu, X, MessageSquare, Lock, Eye, EyeOff, Laptop, Trash2, Ban, ExternalLink } from 'lucide-react';
 
 // ── Simulated Analytics Data ─────────────────────────────────────────
 const daily   = Array.from({ length: 30 }, (_, i) => ({ date: `Day ${i + 1}`, Visitors: 0, PageViews: 0 }));
@@ -679,12 +679,12 @@ export default function AdminDashboard() {
   };
 
   const navItems = [
-    { id: 'dashboard', label: '▪ Dashboard',   icon: <LayoutDashboard size={14} />, path: null },
-    { id: 'orders',    label: '▪ Orders',       icon: <ShoppingBag size={14} />,    path: null },
-    { id: 'feedback',  label: '▪ Feedback',     icon: <MessageSquare size={14} />,  path: null },
-    { id: 'security',  label: '▪ Security',     icon: <Lock size={14} />,           path: null },
-    { id: 'products',  label: '▪ Add Product',  icon: <Package size={14} />,        path: '/admin/add-product' },
-    { id: 'store',     label: '▪ View Store',   icon: null,                          path: '/' },
+    { id: 'dashboard', label: 'Dashboard',   icon: <LayoutDashboard size={16} strokeWidth={1.5} />, path: null },
+    { id: 'orders',    label: 'Orders',      icon: <ShoppingBag size={16} strokeWidth={1.5} />,     path: null },
+    { id: 'feedback',  label: 'Feedback',    icon: <MessageSquare size={16} strokeWidth={1.5} />,   path: null },
+    { id: 'security',  label: 'Security',    icon: <Lock size={16} strokeWidth={1.5} />,            path: null },
+    { id: 'products',  label: 'Add Product', icon: <Package size={16} strokeWidth={1.5} />,         path: '/admin/add-product' },
+    { id: 'store',     label: 'View Store',  icon: <ExternalLink size={16} strokeWidth={1.5} />,    path: '/' },
   ];
 
   return (
@@ -730,32 +730,42 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1 }}>
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1, marginTop: '1rem' }}>
           {navItems.map(item => {
             const isActive = activeTab === item.id;
             const baseStyle = {
-              padding: '0.65rem 0.75rem', textDecoration: 'none',
-              fontSize: '0.82rem', letterSpacing: '0.5px', borderRadius: '4px',
-              transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '0.5rem',
+              padding: '0.75rem 1rem', textDecoration: 'none',
+              fontSize: '0.85rem', letterSpacing: '0.5px', borderRadius: '8px',
+              transition: 'all 0.2s ease-in-out', display: 'flex', alignItems: 'center', gap: '0.75rem',
               color: isActive ? t.text : t.textMuted,
               background: isActive ? t.surfaceHover : 'transparent',
               border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', width: '100%', textAlign: 'left',
+              fontWeight: isActive ? 600 : 400
             };
+
+            const content = (
+              <>
+                <span style={{ display: 'flex', alignItems: 'center', opacity: isActive ? 1 : 0.7 }}>
+                  {item.icon}
+                </span>
+                <span>{item.label}</span>
+              </>
+            );
 
             if (item.path) {
               return (
                 <Link key={item.id} to={item.path} style={{ ...baseStyle, color: isActive ? t.text : t.textMuted }}
-                  onMouseEnter={e => { e.currentTarget.style.background = t.surfaceHover; e.currentTarget.style.color = t.text; }}
-                  onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = t.textMuted; } }}
-                >{item.label}</Link>
+                  onMouseEnter={e => { e.currentTarget.style.background = t.surfaceHover; e.currentTarget.style.color = t.text; e.currentTarget.querySelector('span').style.opacity = 1; }}
+                  onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = t.textMuted; e.currentTarget.querySelector('span').style.opacity = 0.7; } }}
+                >{content}</Link>
               );
             }
 
             return (
               <button key={item.id} onClick={() => { setActiveTab(item.id); setMobileMenuOpen(false); }} style={baseStyle}
-                onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = t.surfaceHover; e.currentTarget.style.color = t.text; } }}
-                onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = t.textMuted; } }}
-              >{item.label}</button>
+                onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = t.surfaceHover; e.currentTarget.style.color = t.text; e.currentTarget.querySelector('span').style.opacity = 1; } }}
+                onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = t.textMuted; e.currentTarget.querySelector('span').style.opacity = 0.7; } }}
+              >{content}</button>
             );
           })}
         </nav>
