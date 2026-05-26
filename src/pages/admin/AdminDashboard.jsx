@@ -7,14 +7,7 @@ import {
 } from 'recharts';
 import { useProducts, CATEGORIES } from '../../context/ProductContext';
 import { useTheme } from '../../context/ThemeContext';
-import { Sun, Moon, Monitor, TrendingUp, BarChart3, Activity, Package, ShoppingBag, LayoutDashboard, Menu, X, MessageSquare, Lock, Eye, EyeOff, Laptop, Trash2, Ban, ExternalLink } from 'lucide-react';
-
-// ── Simulated Analytics Data ─────────────────────────────────────────
-const daily   = Array.from({ length: 30 }, (_, i) => ({ date: `Day ${i + 1}`, Visitors: 0, PageViews: 0 }));
-const weekly  = ['Week 1','Week 2','Week 3','Week 4'].map(w => ({ date: w, Visitors: 0, PageViews: 0 }));
-const monthly = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map(m => ({ date: m, Visitors: 0, PageViews: 0 }));
-const yearly  = ['2023','2024','2025','2026'].map(y => ({ date: y, Visitors: 0, PageViews: 0 }));
-const DATA = { daily, weekly, monthly, yearly };
+import { Sun, Moon, Monitor, TrendingUp, BarChart3, Activity, Package, ShoppingBag, LayoutDashboard, Menu, X, MessageSquare, Lock, Eye, EyeOff, Laptop, Trash2, Ban, ExternalLink, AlertTriangle, Award } from 'lucide-react';
 
 const STATUS_COLORS = {
   pending:   { bg: '#fff8e1', text: '#f59e0b', border: '#fde68a' },
@@ -609,74 +602,15 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const { products, deleteProduct, getBestSellers } = useProducts();
   const { theme, setTheme, t, resolvedTheme } = useTheme();
-  const [period, setPeriod] = useState('daily');
-  const [chartType, setChartType] = useState('area');
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [modalState, setModalState] = useState({ isOpen: false, title: '', message: '', isPrompt: false, promptLabel: '', onConfirm: null, onCancel: null });
-  const bestSellers = getBestSellers();
+  const [overviewView, setOverviewView] = useState('alerts');
+  const [recentOrders, setRecentOrders] = useState([]);
 
-  const uiConfirm = (title, message) => new Promise(resolve => {
-    setModalState({ isOpen: true, title, message, isPrompt: false, onConfirm: () => { setModalState(prev => ({...prev, isOpen: false})); resolve(true); }, onCancel: () => { setModalState(prev => ({...prev, isOpen: false})); resolve(false); } });
-  });
-
-  const uiPrompt = (title, message, promptLabel) => new Promise(resolve => {
-    setModalState({ isOpen: true, title, message, isPrompt: true, promptLabel, onConfirm: (val) => { setModalState(prev => ({...prev, isOpen: false})); resolve(val); }, onCancel: () => { setModalState(prev => ({...prev, isOpen: false})); resolve(null); } });
-  });
-
-  const totalRevenue = products.reduce((s, p) => s + p.price * p.sold, 0);
-  const logout = () => { sessionStorage.removeItem('zanny_admin'); navigate('/admin/login'); };
-
-  const chartColor  = resolvedTheme === 'dark' ? '#ffffff' : '#1a1a1a';
-  const accentColor = resolvedTheme === 'dark' ? '#00ff9d' : '#00b894';
-
-  const renderChart = () => {
-    const data = DATA[period];
-    const commonProps = { data, margin: { top: 5, right: 10, left: 0, bottom: 5 } };
-    if (chartType === 'bar') return (
-      <BarChart {...commonProps}>
-        <CartesianGrid strokeDasharray="3 3" stroke={t.border} vertical={false} />
-        <XAxis dataKey="date" tick={{ fill: t.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
-        <YAxis tick={{ fill: t.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
-        <Tooltip content={<CustomTooltip t={t} />} cursor={{ fill: t.surfaceHover }} />
-        <Legend wrapperStyle={{ color: t.textMuted, fontSize: '0.75rem' }} />
-        <Bar dataKey="Visitors" fill={chartColor} radius={[2,2,0,0]} />
-        <Bar dataKey="PageViews" fill={accentColor} radius={[2,2,0,0]} />
-      </BarChart>
-    );
-    if (chartType === 'line') return (
-      <LineChart {...commonProps}>
-        <CartesianGrid strokeDasharray="3 3" stroke={t.border} />
-        <XAxis dataKey="date" tick={{ fill: t.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
-        <YAxis tick={{ fill: t.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
-        <Tooltip content={<CustomTooltip t={t} />} />
-        <Legend wrapperStyle={{ color: t.textMuted, fontSize: '0.75rem' }} />
-        <Line type="monotone" dataKey="Visitors" stroke={chartColor} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-        <Line type="monotone" dataKey="PageViews" stroke={accentColor} strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-      </LineChart>
-    );
-    return (
-      <AreaChart {...commonProps}>
-        <defs>
-          <linearGradient id="colorV" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%"  stopColor={chartColor}  stopOpacity={0.15} />
-            <stop offset="95%" stopColor={chartColor}  stopOpacity={0} />
-          </linearGradient>
-          <linearGradient id="colorP" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%"  stopColor={accentColor} stopOpacity={0.15} />
-            <stop offset="95%" stopColor={accentColor} stopOpacity={0} />
-          </linearGradient>
-        </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke={t.border} />
-        <XAxis dataKey="date" tick={{ fill: t.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
-        <YAxis tick={{ fill: t.textMuted, fontSize: 11 }} axisLine={false} tickLine={false} />
-        <Tooltip content={<CustomTooltip t={t} />} />
-        <Legend wrapperStyle={{ color: t.textMuted, fontSize: '0.75rem' }} />
-        <Area type="monotone" dataKey="Visitors"  stroke={chartColor}  strokeWidth={1.5} fill="url(#colorV)" />
-        <Area type="monotone" dataKey="PageViews" stroke={accentColor} strokeWidth={1.5} fill="url(#colorP)" />
-      </AreaChart>
-    );
-  };
+  useEffect(() => {
+    fetch('/api/orders')
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data)) setRecentOrders(data.slice(0, 5)); })
+      .catch(console.error);
+  }, []);
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard',   icon: <LayoutDashboard size={16} strokeWidth={1.5} />, path: null },
@@ -827,43 +761,123 @@ export default function AdminDashboard() {
               <StatCard label="Zanny Drops"    value={products.length} sub={`${CATEGORIES.length} categories`} t={t} />
             </div>
 
-            {/* Traffic Chart */}
-            <div style={{ background: t.surface, border: `1px solid ${t.border}`, padding: '2rem', marginBottom: '2rem' }}>
+            {/* Store Overview Widget */}
+            <div style={{ background: t.surface, border: `1px solid ${t.border}`, padding: '2rem', marginBottom: '2rem', borderRadius: '8px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-                <div>
-                  <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', letterSpacing: '1px' }}>Website Traffic</h2>
-                  <p style={{ fontSize: '0.75rem', color: '#c0392b', marginTop: '0.5rem', marginBottom: '0.5rem' }}>* Log into your Cloudflare Dashboard and turn on "Web Analytics" to track this data.</p>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    {[
-                      { id: 'area', icon: <TrendingUp size={14} />, label: 'Area' },
-                      { id: 'bar',  icon: <BarChart3 size={14} />,  label: 'Bar' },
-                      { id: 'line', icon: <Activity size={14} />,   label: 'Line' },
-                    ].map(type => (
-                      <button key={type.id} onClick={() => setChartType(type.id)} style={{
-                        display: 'flex', alignItems: 'center', gap: '0.4rem',
-                        padding: '0.35rem 0.65rem',
-                        background: chartType === type.id ? t.text : 'transparent',
-                        color: chartType === type.id ? t.bg : t.textMuted,
-                        border: `1px solid ${t.border}`, cursor: 'pointer',
-                        fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.5px', transition: 'all 0.2s',
-                      }}>{type.icon} {type.label}</button>
-                    ))}
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  {['daily','weekly','monthly','yearly'].map(p => (
-                    <button key={p} onClick={() => setPeriod(p)} style={{
-                      padding: '0.35rem 0.85rem',
-                      background: period === p ? t.text : 'transparent',
-                      color: period === p ? t.bg : t.textMuted,
-                      border: `1px solid ${t.border}`, cursor: 'pointer',
-                      fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.5px',
-                      fontFamily: 'var(--font-body)', transition: 'all 0.2s',
-                    }}>{p}</button>
+                <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.2rem', letterSpacing: '1px' }}>Store Overview</h2>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  {[
+                    { id: 'alerts', label: 'Low Stock Alerts', icon: <AlertTriangle size={14} /> },
+                    { id: 'orders', label: 'Recent Orders', icon: <Package size={14} /> },
+                    { id: 'top', label: 'Top Selling', icon: <Award size={14} /> },
+                    { id: 'actions', label: 'Quick Actions', icon: <Activity size={14} /> },
+                  ].map(view => (
+                    <button key={view.id} onClick={() => setOverviewView(view.id)} style={{
+                      display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 1rem',
+                      background: overviewView === view.id ? t.text : 'transparent',
+                      color: overviewView === view.id ? t.bg : t.textMuted,
+                      border: `1px solid ${overviewView === view.id ? t.text : t.border}`, 
+                      cursor: 'pointer', borderRadius: '4px',
+                      fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.5px', transition: 'all 0.2s',
+                    }}>{view.icon} {view.label}</button>
                   ))}
                 </div>
               </div>
-              <ResponsiveContainer width="100%" height={260}>{renderChart()}</ResponsiveContainer>
+
+              {/* View Content */}
+              <div style={{ minHeight: '260px' }}>
+                {overviewView === 'alerts' && (
+                  <div>
+                    {products.filter(p => p.stock < 10).length === 0 ? (
+                      <p style={{ color: t.textMuted, fontSize: '0.9rem', padding: '2rem 0', textAlign: 'center' }}>All products are well stocked.</p>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        {products.filter(p => p.stock < 10).map(p => (
+                          <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', border: `1px solid ${t.border}`, borderRadius: '4px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                              <img src={p.image} alt={p.name} style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} />
+                              <div>
+                                <p style={{ fontWeight: 600, fontSize: '0.9rem' }}>{p.name}</p>
+                                <p style={{ color: t.textMuted, fontSize: '0.75rem' }}>{CATEGORIES.find(c => c.id === p.category)?.label || p.category}</p>
+                              </div>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                              <p style={{ color: '#c0392b', fontWeight: 700, fontSize: '1.1rem' }}>{p.stock} left</p>
+                              <button onClick={() => setActiveTab('products')} style={{ background: 'none', border: 'none', color: accentColor, fontSize: '0.75rem', textDecoration: 'none', cursor: 'pointer' }}>Restock →</button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {overviewView === 'orders' && (
+                  <div>
+                    {recentOrders.length === 0 ? (
+                      <p style={{ color: t.textMuted, fontSize: '0.9rem', padding: '2rem 0', textAlign: 'center' }}>No recent orders.</p>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        {recentOrders.map(o => (
+                          <div key={o.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', border: `1px solid ${t.border}`, borderRadius: '4px' }}>
+                            <div>
+                              <p style={{ fontWeight: 600, fontSize: '0.9rem' }}>Order #{o.id.toString().substring(0,8)}</p>
+                              <p style={{ color: t.textMuted, fontSize: '0.75rem' }}>{o.customer_email}</p>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                              <p style={{ fontWeight: 700 }}>KSh {o.total_amount?.toLocaleString()}</p>
+                              <p style={{ color: t.textMuted, fontSize: '0.75rem', textTransform: 'uppercase' }}>{o.status}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {overviewView === 'top' && (
+                  <div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      {bestSellers.slice(0,5).map((p, i) => (
+                        <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', border: `1px solid ${t.border}`, borderRadius: '4px', background: i === 0 ? t.surfaceHover : 'transparent' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <div style={{ width: '24px', height: '24px', background: accentColor, color: '#000', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.75rem' }}>{i + 1}</div>
+                            <img src={p.image} alt={p.name} style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} />
+                            <div>
+                              <p style={{ fontWeight: 600, fontSize: '0.9rem' }}>{p.name}</p>
+                            </div>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <p style={{ fontWeight: 700 }}>{p.sold} sold</p>
+                            <p style={{ color: t.textMuted, fontSize: '0.75rem' }}>KSh {(p.price * p.sold).toLocaleString()} rev</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {overviewView === 'actions' && (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                    <Link to="/admin/add-product" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '2rem', border: `1px solid ${t.border}`, borderRadius: '8px', textDecoration: 'none', color: t.text, transition: 'all 0.2s', background: t.surfaceHover }}>
+                      <Package size={32} color={accentColor} />
+                      <span style={{ fontWeight: 600 }}>Add New Product</span>
+                    </Link>
+                    <button onClick={() => setActiveTab('orders')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '2rem', border: `1px solid ${t.border}`, borderRadius: '8px', background: 'transparent', color: t.text, cursor: 'pointer', transition: 'all 0.2s' }}>
+                      <ShoppingBag size={32} color={accentColor} />
+                      <span style={{ fontWeight: 600 }}>Review Orders</span>
+                    </button>
+                    <Link to="/" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '2rem', border: `1px solid ${t.border}`, borderRadius: '8px', textDecoration: 'none', color: t.text, transition: 'all 0.2s' }}>
+                      <ExternalLink size={32} color={accentColor} />
+                      <span style={{ fontWeight: 600 }}>Visit Storefront</span>
+                    </Link>
+                    <button onClick={() => setActiveTab('security')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '2rem', border: `1px solid ${t.border}`, borderRadius: '8px', background: 'transparent', color: t.text, cursor: 'pointer', transition: 'all 0.2s' }}>
+                      <Lock size={32} color={accentColor} />
+                      <span style={{ fontWeight: 600 }}>Security Settings</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
