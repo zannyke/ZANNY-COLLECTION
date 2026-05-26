@@ -22,7 +22,10 @@ export async function onRequestDelete(context) {
       }
     }
 
-    // 3. Delete the product from the D1 Database
+    // 3. Delete referencing order items to prevent foreign key constraint violations
+    await context.env.DB.prepare("DELETE FROM order_items WHERE product_id = ?").bind(id).run();
+
+    // 4. Delete the product from the D1 Database
     await context.env.DB.prepare("DELETE FROM products WHERE id = ?").bind(id).run();
 
     return Response.json({ success: true });
