@@ -51,6 +51,15 @@ export async function onRequestPost(context) {
     }
 
     const data = await context.request.json();
+
+    // Check if user is restricted from Cash on Delivery (COD)
+    const userRecord = await context.env.DB.prepare(
+      "SELECT restricted_from_cod FROM users WHERE id = ?"
+    ).bind(user.id).first();
+
+    if (userRecord && userRecord.restricted_from_cod === 1 && data.status === 'pending') {
+      return Response.json({ error: 'Pay on Delivery is temporarily disabled for your account. Please pay upfront via M-Pesa.' }, { status: 400 });
+    }
     
     // VERIFY LIVE STOCK FIRST TO PREVENT INVENTORY RACE CONDITIONS
     for (const item of data.items) {

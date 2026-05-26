@@ -19,7 +19,7 @@ export async function onRequestGet(context) {
     }
 
     const user = await context.env.DB.prepare(
-      "SELECT id, email, first_name, last_name, role, phone_number, default_delivery_zone FROM users WHERE id = ?"
+      "SELECT id, email, first_name, last_name, role, phone_number, default_delivery_zone, restricted_from_cod FROM users WHERE id = ?"
     ).bind(sessionRecord.user_id).first();
 
     if (!user) {
@@ -35,7 +35,8 @@ export async function onRequestGet(context) {
         lastName: user.last_name, 
         role: user.role,
         phone: user.phone_number,
-        deliveryZone: user.default_delivery_zone
+        deliveryZone: user.default_delivery_zone,
+        restricted_from_cod: user.restricted_from_cod
       }
     });
   } catch (err) {
