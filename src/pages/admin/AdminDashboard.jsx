@@ -256,6 +256,11 @@ function SecurityTab({ t, accentColor, logout, uiConfirm }) {
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Vault Lock State
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [vaultPassword, setVaultPassword] = useState('');
+  const [vaultError, setVaultError] = useState('');
+
   const [sessions, setSessions] = useState([]);
   const [blacklists, setBlacklists] = useState([]);
 
@@ -273,8 +278,10 @@ function SecurityTab({ t, accentColor, logout, uiConfirm }) {
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (isUnlocked) {
+      fetchData();
+    }
+  }, [isUnlocked]);
 
   const revokeSession = async (id) => {
     const confirmed = await uiConfirm("Revoke Session", "Log out this device immediately?");
@@ -367,6 +374,47 @@ function SecurityTab({ t, accentColor, logout, uiConfirm }) {
     }
     setLoading(false);
   };
+
+  if (!isUnlocked) {
+    return (
+      <div style={{ maxWidth: '400px', margin: '2rem auto', textAlign: 'center' }}>
+        <div style={{ background: t.surface, border: `1px solid ${t.border}`, padding: '3rem 2rem' }}>
+          <Lock size={48} color={accentColor} style={{ marginBottom: '1.5rem' }} />
+          <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.4rem', marginBottom: '0.5rem', color: t.text, letterSpacing: '1px' }}>Security Vault</h2>
+          <p style={{ color: t.textMuted, fontSize: '0.85rem', marginBottom: '2rem', lineHeight: 1.5 }}>Enter the master security password to access sensitive settings.</p>
+          
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            if (vaultPassword === 'zanny2026') {
+              setIsUnlocked(true);
+            } else {
+              setVaultError('Incorrect master password');
+              setVaultPassword('');
+            }
+          }}>
+            <div style={{ position: 'relative', marginBottom: '1rem' }}>
+              <input 
+                type={showPassword ? "text" : "password"}
+                placeholder="Master Password"
+                value={vaultPassword}
+                onChange={e => { setVaultPassword(e.target.value); setVaultError(''); }}
+                autoFocus
+                style={{ width: '100%', padding: '0.85rem', paddingRight: '2.5rem', background: t.bg, border: `1px solid ${vaultError ? '#c0392b' : t.border}`, color: t.text, fontFamily: 'var(--font-body)', fontSize: '0.9rem', textAlign: 'center' }}
+              />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '0.75rem', top: '0.85rem', background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer' }}>
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+            {vaultError && <p style={{ color: '#c0392b', fontSize: '0.8rem', marginBottom: '1rem', fontWeight: 600 }}>{vaultError}</p>}
+            
+            <button type="submit" style={{ width: '100%', padding: '0.85rem', background: accentColor || t.text, color: '#000', border: 'none', fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '0.85rem' }}>
+              Unlock Vault
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ maxWidth: '500px' }}>
