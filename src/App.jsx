@@ -39,14 +39,16 @@ import NotFound from './pages/NotFound'
 
 import './index.css'
 
-// Route guard for admin (Strict RBAC + Obfuscation)
+// Route guard for admin (Strict RBAC + Obfuscation + Step-Up Auth)
 function AdminRoute({ children }) {
   const { user, loading } = useAuth();
   
   if (loading) return null; // Wait for session check
   
-  // Strict check: only allow if user is logged in AND is an admin
-  if (!user || user.role !== 'admin') {
+  const isUnlocked = sessionStorage.getItem('zanny_admin_unlocked') === 'true';
+  
+  // Strict check: only allow if user is logged in, is an admin, AND has unlocked the dashboard
+  if (!user || user.role !== 'admin' || !isUnlocked) {
     // Obfuscate the existence of the admin panel by showing a 404
     return <Navigate to="/404" replace />;
   }

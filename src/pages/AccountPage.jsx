@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import PageHeader from '../components/PageHeader';
-import { User, LogOut, Trash2, PlusCircle, Package, ChevronRight } from 'lucide-react';
+import { User, LogOut, Trash2, PlusCircle, Package, ChevronRight, Shield, X } from 'lucide-react';
 
 const STATUS_BADGE = {
   pending:   { bg: '#fff8e1', color: '#f59e0b', label: 'Pending' },
@@ -52,6 +52,37 @@ export default function AccountPage() {
   const navigate = useNavigate();
   const [orders, setOrders]   = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
+
+  // Admin step-up auth state
+  const [showAdminPrompt, setShowAdminPrompt] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [adminError, setAdminError] = useState('');
+  const [adminLoading, setAdminLoading] = useState(false);
+
+  const handleAdminAccess = async (e) => {
+    e.preventDefault();
+    if (!adminPassword) return;
+    setAdminLoading(true);
+    try {
+      const res = await fetch('/api/auth/verify-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPassword })
+      });
+      const data = await res.json();
+      if (data.success) {
+        sessionStorage.setItem('zanny_admin_unlocked', 'true');
+        navigate('/admin');
+      } else {
+        setAdminError(data.message || 'Incorrect password.');
+        setAdminPassword('');
+      }
+    } catch (err) {
+      setAdminError('Network error. Please try again.');
+    } finally {
+      setAdminLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -124,6 +155,16 @@ export default function AccountPage() {
                 </div>
               </button>
 
+              {user.role === 'admin' && (
+                <button onClick={() => setShowAdminPrompt(true)} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.9rem 1.25rem', background: '#1a1a1a', border: '1px solid #1a1a1a', cursor: 'pointer', textAlign: 'left', color: '#fff', fontSize: '0.9rem', transition: 'all 0.2s' }}>
+                  <Shield size={16} color="#00ff9d" />
+                  <div style={{ flex: 1 }}>
+                    <span style={{ display: 'block', fontWeight: 600 }}>Admin Dashboard</span>
+                    <span style={{ fontSize: '0.78rem', color: '#ccc' }}>Access the management portal.</span>
+                  </div>
+                </button>
+              )}
+
               <button onClick={handleSignOut} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.9rem 1.25rem', background: '#f9f9f9', border: '1px solid #eee', cursor: 'pointer', textAlign: 'left', color: '#1a1a1a', fontSize: '0.9rem', transition: 'all 0.2s' }}>
                 <LogOut size={16} color="#555" />
                 <span style={{ fontWeight: 600 }}>Sign Out</span>
@@ -164,6 +205,44 @@ export default function AccountPage() {
 
         </motion.div>
       </div>
+
+      {/* Admin Step-up Auth Modal */}
+      {showAdminPrompt && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '1rem' }}>
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} style={{ background: '#fff', width: '100%', maxWidth: '400px', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+            <div style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <Shield size={20} color="#1a1a1a" />
+                <h3 style={{ margin: 0, fontFamily: 'var(--font-heading)', fontSize: '1.1rem' }}>Security Verification</h3>
+              </div>
+              <button onClick={() => { setShowAdminPrompt(false); setAdminError(''); setAdminPassword(''); }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} color="#888" /></button>
+            </div>
+            <form onSubmit={handleAdminAccess} style={{ padding: '2rem 1.5rem' }}>
+              <p style={{ color: '#555', fontSize: '0.88rem', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+                Please enter your master password to unlock the Admin Dashboard.
+              </p>
+              
+              {adminError && (
+                <div style={{ background: '#fee2e2', color: '#dc2626', padding: '0.75rem', borderRadius: '4px', fontSize: '0.8rem', marginBottom: '1rem' }}>
+                  {adminError}
+                </div>
+              )}
+
+              <input
+                type="password"
+                placeholder="Enter password..."
+                value={adminPassword}
+                onChange={e => setAdminPassword(e.target.value)}
+                autoFocus
+                style={{ width: '100%', padding: '0.9rem', border: '1px solid #ddd', borderRadius: '4px', fontSize: '0.95rem', marginBottom: '1.5rem' }}
+              />
+              <button disabled={adminLoading} type="submit" style={{ width: '100%', padding: '0.9rem', background: '#1a1a1a', color: '#fff', border: 'none', borderRadius: '4px', fontSize: '0.95rem', fontWeight: 600, cursor: adminLoading ? 'not-allowed' : 'pointer' }}>
+                {adminLoading ? 'Verifying...' : 'Unlock Dashboard'}
+              </button>
+            </form>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
