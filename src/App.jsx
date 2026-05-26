@@ -32,17 +32,26 @@ import OrderSuccess from './pages/OrderSuccess'
 import OrderDetailPage from './pages/OrderDetailPage'
 
 // Admin pages (no Navbar/Footer)
-import AdminLogin from './pages/admin/AdminLogin'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AddProduct from './pages/admin/AddProduct'
 import EditProduct from './pages/admin/EditProduct'
+import NotFound from './pages/NotFound'
 
 import './index.css'
 
-// Route guard for admin
+// Route guard for admin (Strict RBAC + Obfuscation)
 function AdminRoute({ children }) {
-  const isAuth = sessionStorage.getItem('zanny_admin') === 'true';
-  return isAuth ? children : <Navigate to="/admin/login" replace />;
+  const { user, loading } = useAuth();
+  
+  if (loading) return null; // Wait for session check
+  
+  // Strict check: only allow if user is logged in AND is an admin
+  if (!user || user.role !== 'admin') {
+    // Obfuscate the existence of the admin panel by showing a 404
+    return <Navigate to="/404" replace />;
+  }
+  
+  return children;
 }
 
 // Route guard for customers (Checkout protection)
@@ -75,7 +84,6 @@ function App() {
             <ReviewPopup />
             <Routes>
               {/* ── Admin (no navbar/footer) ── */}
-              <Route path="/admin/login" element={<ThemeProvider><AdminLogin /></ThemeProvider>} />
               <Route path="/admin" element={<AdminRoute><ThemeProvider><AdminDashboard /></ThemeProvider></AdminRoute>} />
               <Route path="/admin/add-product" element={<AdminRoute><ThemeProvider><AddProduct /></ThemeProvider></AdminRoute>} />
               <Route path="/admin/product/edit/:id" element={<AdminRoute><ThemeProvider><EditProduct /></ThemeProvider></AdminRoute>} />
@@ -106,6 +114,10 @@ function App() {
               <Route path="/collections" element={<PublicLayout><CollectionsPage /></PublicLayout>} />
               <Route path="/collections/:categoryId" element={<PublicLayout><CategoryPage /></PublicLayout>} />
               <Route path="/product/:productId" element={<PublicLayout><ProductDetailPage /></PublicLayout>} />
+              
+              {/* Catch-all for 404 Not Found */}
+              <Route path="/404" element={<PublicLayout><NotFound /></PublicLayout>} />
+              <Route path="*" element={<PublicLayout><NotFound /></PublicLayout>} />
             </Routes>
           </Router>
         </CartProvider>
