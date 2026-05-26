@@ -5,42 +5,52 @@ import { CATEGORIES } from '../context/ProductContext';
 import { useProducts } from '../context/ProductContext';
 
 function CategoryCard({ cat, products, index }) {
-  let images = [];
-  let count = 0;
+  let displayImage = cat.fallbackImage;
+  let latestProduct;
+
+  if (cat.id === 'sale') {
+    latestProduct = products.filter(p => p.badge === 'SALE' || p.discount).sort((a, b) => b.id.localeCompare(a.id))[0];
+  } else {
+    latestProduct = products.filter(p => p.category === cat.id).sort((a, b) => b.id.localeCompare(a.id))[0];
+  }
+  
+  if (latestProduct) {
+    displayImage = latestProduct.image_url || latestProduct.image;
+  }
+
+  // Count items
+  const count = cat.id === 'new-arrivals'
+    ? (products.filter(p => p.badge === 'NEW').length || products.length)
+    : cat.id === 'sale'
+    ? products.filter(p => p.badge === 'SALE' || p.discount).length
+    : products.filter(p => p.category === cat.id).length;
+
+  // Slideshow ONLY for new-arrivals
+  const [currentImgIdx, setCurrentImgIdx] = useState(0);
+  let slideshowImages = [];
 
   if (cat.id === 'new-arrivals') {
-    // Get the latest uploaded product from each active category
     const activeCats = [...new Set(products.map(p => p.category).filter(Boolean))];
     const latestItems = activeCats.map(catId => {
       const catProds = products.filter(p => p.category === catId);
       return [...catProds].sort((a, b) => (b.created_at || '').localeCompare(a.created_at || '') || b.id.localeCompare(a.id))[0];
     }).filter(Boolean);
 
-    images = latestItems.map(p => p.image_url || p.image).filter(Boolean);
-    count = products.filter(p => p.badge === 'NEW').length || products.length; // Count of new items or total
-  } else if (cat.id === 'sale') {
-    const saleProds = products.filter(p => p.badge === 'SALE' || p.discount);
-    images = [...new Set(saleProds.map(p => p.image_url || p.image).filter(Boolean))].slice(0, 5);
-    count = saleProds.length;
-  } else {
-    const catProds = products.filter(p => p.category === cat.id);
-    images = [...new Set(catProds.map(p => p.image_url || p.image).filter(Boolean))].slice(0, 5);
-    count = catProds.length;
+    slideshowImages = latestItems.map(p => p.image_url || p.image).filter(Boolean);
+    if (slideshowImages.length === 0 && cat.fallbackImage) {
+      slideshowImages.push(cat.fallbackImage);
+    }
   }
-  
-  if (images.length === 0 && cat.fallbackImage) {
-    images.push(cat.fallbackImage);
-  }
-
-  const [currentImgIdx, setCurrentImgIdx] = useState(0);
 
   useEffect(() => {
-    if (images.length <= 1) return;
+    if (cat.id !== 'new-arrivals' || slideshowImages.length <= 1) return;
     const interval = setInterval(() => {
-      setCurrentImgIdx(prev => (prev + 1) % images.length);
-    }, 2800 + (index * 400)); // Dynamic, faster rotation (2.8s) staggered by index
+      setCurrentImgIdx(prev => (prev + 1) % slideshowImages.length);
+    }, 4500); // Slow, elegant fading slideshow (4.5s)
     return () => clearInterval(interval);
-  }, [images.length, index]);
+  }, [slideshowImages.length, cat.id]);
+
+  const isNewArrivals = cat.id === 'new-arrivals';
 
   return (
     <motion.div
@@ -58,10 +68,11 @@ function CategoryCard({ cat, products, index }) {
           transition={{ duration: 0.3 }}
           style={{ position: 'relative', overflow: 'hidden' }}
         >
-          {/* Category image slideshow with smooth cross-fade */}
+          {/* Cover image wrapper */}
           <div style={{ position: 'relative', aspectRatio: '4/5', overflow: 'hidden', background: '#f4f4f4' }}>
-            {images.length > 0 ? (
-              images.map((img, imgIdx) => (
+            {isNewArrivals && slideshowImages.length > 0 ? (
+              // Slideshow for New Arrivals
+              slideshowImages.map((img, imgIdx) => (
                 <img
                   key={img}
                   src={img}
@@ -73,15 +84,26 @@ function CategoryCard({ cat, products, index }) {
                     objectFit: 'cover',
                     display: 'block',
                     opacity: imgIdx === currentImgIdx ? 1 : 0,
-                    transition: 'opacity 0.8s ease-in-out, transform 0.6s ease-in-out',
+                    transition: 'opacity 1.5s ease-in-out', // Very slow and fading crossfade
                     zIndex: imgIdx === currentImgIdx ? 2 : 1,
                   }}
                 />
               ))
             ) : (
-              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f4f4f4' }}>
-                <span style={{ color: '#aaa', fontSize: '0.7rem', letterSpacing: '2px', textTransform: 'uppercase' }}>ZANNY</span>
-              </div>
+              // Static single image for other categories
+              displayImage ? (
+                <motion.img
+                  whileHover={{ scale: 1.07 }}
+                  transition={{ duration: 0.6 }}
+                  src={displayImage}
+                  alt={cat.label}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                />
+              ) : (
+                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f4f4f4' }}>
+                  <span style={{ color: '#aaa', fontSize: '0.7rem', letterSpacing: '2px', textTransform: 'uppercase' }}>ZANNY</span>
+                </div>
+              )
             )}
             
             {/* Dark overlay on hover */}
@@ -126,17 +148,6 @@ function CategoryCard({ cat, products, index }) {
 export default function CollectionShowcase() {
   const { products } = useProducts();
 
-  // Filter categories to only display those with products
-  const activeCategories = CATEGORIES.filter(cat => {
-    if (cat.id === 'new-arrivals') {
-      return products.length > 0;
-    }
-    if (cat.id === 'sale') {
-      return products.some(p => p.badge === 'SALE' || p.discount);
-    }
-    return products.some(p => p.category === cat.id);
-  });
-
   return (
     <section id="collections" style={{ backgroundColor: '#fff', paddingBottom: '6rem' }}>
       {/* Section header */}
@@ -169,7 +180,7 @@ export default function CollectionShowcase() {
           gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
           gap: '1.5rem',
         }}>
-          {activeCategories.map((cat, i) => (
+          {CATEGORIES.map((cat, i) => (
             <CategoryCard 
               key={cat.id} 
               cat={cat} 
