@@ -21,7 +21,7 @@
   padding: 0;
 }
 
-html, body {
+html, body, #root {
   max-width: 100%;
   overflow-x: hidden;
 }
@@ -50,6 +50,7 @@ ul {
 
 /* Utilities */
 .container {
+  width: 100%;
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 var(--spacing-lg);
