@@ -105,7 +105,7 @@ export default function CustomerRegister() {
             </form>
           ) : (
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <div style={{ display: 'flex', gap: '1rem' }}>
+              <div className="register-names-row" style={{ display: 'flex', gap: '1rem' }}>
                 <div style={{ flex: 1, borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>
                   <input 
                     name="firstName"

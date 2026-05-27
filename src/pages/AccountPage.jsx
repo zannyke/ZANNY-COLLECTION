@@ -27,7 +27,7 @@ function OrderCard({ order }) {
           cursor: 'pointer', textAlign: 'left', flexWrap: 'wrap',
         }}
       >
-        <div style={{ flex: 1 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{ fontWeight: 700, fontSize: '0.9rem', fontFamily: 'var(--font-heading)', letterSpacing: '0.5px', margin: 0 }}>
             Order {order.id.slice(0, 8)}...
           </p>
@@ -35,7 +35,7 @@ function OrderCard({ order }) {
             {order.created_at ? new Date(order.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
           </p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
           <p style={{ fontWeight: 700, fontSize: '0.95rem', margin: 0 }}>KSh {Number(order.total_amount).toLocaleString()}</p>
           <span style={{
             padding: '0.25rem 0.65rem', borderRadius: '50px',
@@ -48,6 +48,7 @@ function OrderCard({ order }) {
     </div>
   );
 }
+
 
 export default function AccountPage() {
   const { user, logout, deleteAccount } = useAuth();
@@ -196,7 +197,7 @@ export default function AccountPage() {
           </div>
 
           {/* Right Column / Content Area */}
-          <div style={{ background: '#fff', border: '1px solid #eee', borderRadius: '12px', padding: '2rem', boxShadow: '0 2px 8px rgba(0,0,0,0.02)', minHeight: '350px' }}>
+          <div className="account-content-card" style={{ background: '#fff', border: '1px solid #eee', borderRadius: '12px', padding: '2rem', boxShadow: '0 2px 8px rgba(0,0,0,0.02)', minHeight: '350px' }}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
