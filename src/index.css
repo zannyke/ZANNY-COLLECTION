@@ -104,6 +104,11 @@ ul {
     overflow: hidden !important;
   }
   
+  .account-grid > div {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+  
   .account-nav-tabs {
     flex-direction: row !important;
     overflow-x: auto !important;
@@ -132,8 +137,10 @@ ul {
 
   /* Account Registration Names Layout */
   .register-names-row {
+    display: flex !important;
     flex-direction: column !important;
     gap: 1.5rem !important;
+    width: 100% !important;
   }
   
   .account-nav-tabs button:nth-child(3) {
@@ -151,6 +158,10 @@ ul {
   /* Cart Page Styles */
   .cart-page-container { padding: 1.5rem 1rem !important; }
   .cart-layout { grid-template-columns: 1fr !important; gap: 1.5rem !important; }
+  .cart-layout > div {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
   .cart-header { display: none !important; }
   .cart-item-container { 
     display: grid !important;
