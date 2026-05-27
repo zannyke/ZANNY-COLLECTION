@@ -39,7 +39,7 @@ export default function CustomSelect({ options, value, onChange, placeholder = "
         }}
       >
         <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {selectedOption ? selectedOption.label : placeholder}
+          {selectedOption ? (selectedOption.shortLabel || selectedOption.label) : placeholder}
         </span>
         <ChevronDown 
           size={16} 

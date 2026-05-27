@@ -169,7 +169,7 @@ export default function CartPage() {
                 <label style={{ fontSize: '0.75rem', color: '#888', textTransform: 'uppercase', letterSpacing: '1px' }}>Estimate Delivery To:</label>
                 <div style={{ border: '1px solid #ddd', background: '#fff', borderRadius: '4px', padding: '0.1rem 0.6rem' }}>
                   <CustomSelect 
-                    options={DELIVERY_ZONES.map(z => ({ value: z.id, label: z.label }))}
+                    options={DELIVERY_ZONES.map(z => ({ value: z.id, label: z.label, shortLabel: z.shortLabel }))}
                     value={selectedZone}
                     onChange={(val) => setSelectedZone(val)}
                     placeholder="Select Delivery Region"

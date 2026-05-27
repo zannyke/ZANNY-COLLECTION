@@ -147,7 +147,7 @@ export default function CustomerRegister() {
                 <div style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '0.5rem', position: 'relative' }}>
                   <MapPin size={18} style={{ color: '#aaa', marginRight: '0.75rem', flexShrink: 0 }} />
                   <CustomSelect 
-                    options={DELIVERY_ZONES.map(z => ({ value: z.id, label: z.label }))}
+                    options={DELIVERY_ZONES.map(z => ({ value: z.id, label: z.label, shortLabel: z.shortLabel }))}
                     value={form.deliveryZone}
                     onChange={(val) => setForm({ ...form, deliveryZone: val })}
                     placeholder="Select Delivery Region"

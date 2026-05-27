@@ -265,7 +265,7 @@ export default function Checkout() {
               <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#444' }}>Delivery Region</label>
               <div style={{ border: '1px solid #ddd', background: '#fff', borderRadius: '4px', padding: '0.2rem 0.85rem' }}>
                 <CustomSelect 
-                  options={DELIVERY_ZONES.map(z => ({ value: z.id, label: z.label }))}
+                  options={DELIVERY_ZONES.map(z => ({ value: z.id, label: z.label, shortLabel: z.shortLabel }))}
                   value={form.zone}
                   onChange={(val) => setForm({ ...form, zone: val })}
                   placeholder="Select Delivery Region"
