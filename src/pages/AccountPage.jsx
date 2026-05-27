@@ -217,8 +217,8 @@ export default function AccountPage() {
                     {loadingOrders && <p style={{ color: '#aaa', fontSize: '0.88rem' }}>Loading orders…</p>}
 
                     {!loadingOrders && orders.length === 0 && (
-                      <div style={{ textAlign: 'center', padding: '3.5rem 0', color: '#bbb' }}>
-                        <p style={{ fontSize: '2.5rem', marginBottom: '0.5rem', margin: 0 }}>📦</p>
+                      <div style={{ textAlign: 'center', padding: '3.5rem 0', color: '#bbb', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                        <Package size={40} color="#ccc" style={{ marginBottom: '1rem' }} />
                         <p style={{ fontSize: '0.9rem', fontWeight: 500, margin: '0.5rem 0' }}>You haven't placed any orders yet.</p>
                         <Link to="/" style={{ display: 'inline-block', marginTop: '0.75rem', color: '#1a1a1a', fontWeight: 700, fontSize: '0.85rem', textDecoration: 'underline' }}>
                           Shop Now →
