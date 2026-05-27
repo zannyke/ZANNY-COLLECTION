@@ -109,24 +109,12 @@ ul {
     width: 100% !important;
   }
   
-  .account-nav-tabs {
-    flex-direction: row !important;
-    overflow-x: auto !important;
-    white-space: nowrap !important;
-    padding: 0.25rem !important;
-    gap: 0.25rem !important;
-    border-radius: 8px !important;
-    width: 100% !important;
-    max-width: 100% !important;
+  .mobile-account-nav {
+    display: block !important;
   }
-  
-  .account-nav-tabs button {
-    flex: 1 0 auto !important;
-    padding: 0.6rem 1rem !important;
-    font-size: 0.85rem !important;
-    margin-top: 0 !important;
-    border-left: none !important;
-    border-bottom: 2px solid transparent !important;
+
+  .account-nav-tabs {
+    display: none !important;
   }
   
   .account-content-card {
@@ -204,6 +192,10 @@ ul {
 /* Cart Page Styles */
 .order-summary-container { position: sticky; top: 100px; padding: 2rem; background: #fafafa; border: 1px solid #eee; border-radius: 8px; }
 .cart-page-container { padding: 3rem 2rem; }
+
+.mobile-account-nav {
+  display: none;
+}
 
 
 

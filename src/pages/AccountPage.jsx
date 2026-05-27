@@ -155,7 +155,37 @@ export default function AccountPage() {
               </p>
             </div>
 
-            {/* Sidebar Navigation (Tabs) */}
+            {/* Mobile Dropdown Tab Selector */}
+            <div className="mobile-account-nav" style={{ width: '100%', marginBottom: '1rem', position: 'relative' }}>
+              <select
+                value={activeTab}
+                onChange={(e) => setActiveTab(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.9rem 1.2rem',
+                  borderRadius: '10px',
+                  border: '1px solid #ddd',
+                  background: '#fff',
+                  fontFamily: 'var(--font-body)',
+                  fontWeight: 600,
+                  fontSize: '0.9rem',
+                  color: '#1a1a1a',
+                  cursor: 'pointer',
+                  appearance: 'none',
+                  WebkitAppearance: 'none',
+                  backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23888888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 1.2rem center',
+                  backgroundSize: '1.25rem'
+                }}
+              >
+                <option value="orders">📋 Order History</option>
+                <option value="profile">⚙️ Account Settings</option>
+                <option value="danger">⚠️ Security & Danger Zone</option>
+              </select>
+            </div>
+
+            {/* Sidebar Navigation (Tabs) - Hidden on Mobile via CSS */}
             <div style={{ background: '#fff', border: '1px solid #eee', borderRadius: '12px', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: '0.5rem' }} className="account-nav-tabs">
               <button 
                 onClick={() => setActiveTab('orders')}
