@@ -217,16 +217,37 @@ export default function Checkout() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#fafafa', paddingBottom: '5rem' }}>
+      <style>{`
+        .checkout-container {
+          max-width: 1000px;
+          padding: 1rem;
+          margin: 0 auto;
+        }
+        .checkout-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 2rem;
+        }
+        @media (min-width: 768px) {
+          .checkout-container {
+            padding: 2rem;
+          }
+          .checkout-grid {
+            grid-template-columns: 1.3fr 1fr;
+            gap: 4rem;
+          }
+        }
+      `}</style>
       <PageHeader title="Checkout" subtitle="Complete your delivery details" />
       
-      <div className="container" style={{ maxWidth: '1000px', padding: '2rem' }}>
+      <div className="checkout-container">
         {pollError && (
           <div style={{ background: '#f8d7da', color: '#721c24', padding: '1rem', marginBottom: '2rem', border: '1px solid #f5c6cb', borderRadius: '4px' }}>
             {pollError}
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '4rem' }}>
+        <div className="checkout-grid">
           
           {/* Form */}
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', background: '#fff', padding: '2rem', border: '1px solid #eee' }}>
