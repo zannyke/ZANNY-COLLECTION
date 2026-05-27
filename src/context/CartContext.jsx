@@ -14,52 +14,44 @@ export function CartProvider({ children }) {
 
   // Track user login state transitions
   const prevUserRef = useRef(user);
+  const isUpdatingFromDbRef = useRef(false);
 
-  // Sync cart from database when logging in, merge items if necessary
+  // Sync cart from database when logging in, or periodically poll for changes
   useEffect(() => {
-    const syncCartOnLogin = async () => {
-      // User just logged in
-      if (user && !prevUserRef.current) {
-        try {
-          const res = await fetch('/api/cart');
-          const data = await res.json();
-          if (data.success) {
-            const dbItems = data.items;
-            
-            // Merge database cart with local cart
-            setCartItems(localItems => {
-              const merged = [...localItems];
-              dbItems.forEach(dbItem => {
-                const existsIdx = merged.findIndex(i => i.id === dbItem.id && i.color === dbItem.color && i.size === dbItem.size);
-                if (existsIdx > -1) {
-                  // Keep the larger quantity or sum them up
-                  merged[existsIdx].qty = Math.max(merged[existsIdx].qty, dbItem.qty);
-                } else {
-                  merged.push(dbItem);
-                }
-              });
-              return merged;
-            });
-          }
-        } catch (err) {
-          console.error("Failed to sync cart from database", err);
+    const fetchCartFromDB = async () => {
+      if (!user) return;
+      try {
+        const res = await fetch('/api/cart');
+        const data = await res.json();
+        if (data.success) {
+          isUpdatingFromDbRef.current = true;
+          setCartItems(data.items || []);
+          setTimeout(() => {
+            isUpdatingFromDbRef.current = false;
+          }, 100);
         }
-      } 
-      // User just logged out: Clear cart
-      else if (!user && prevUserRef.current) {
-        setCartItems([]);
+      } catch (err) {
+        console.error("Failed to sync cart from database", err);
       }
-      prevUserRef.current = user;
     };
 
-    syncCartOnLogin();
+    if (user) {
+      fetchCartFromDB();
+
+      // Poll every 5 seconds for live cart synchronization across devices
+      const interval = setInterval(fetchCartFromDB, 5000);
+      return () => clearInterval(interval);
+    } else if (!user && prevUserRef.current) {
+      setCartItems([]);
+    }
+    prevUserRef.current = user;
   }, [user]);
 
   // Sync state changes back to database (if logged in) or localStorage (if guest)
   useEffect(() => {
     localStorage.setItem('zanny_cart', JSON.stringify(cartItems));
 
-    if (user) {
+    if (user && !isUpdatingFromDbRef.current) {
       // Throttle or simply push the updated cart to backend API
       const pushCartToDB = async () => {
         try {

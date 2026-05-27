@@ -11,13 +11,14 @@ export async function onRequestGet(context) {
     // Join with products table to get up-to-date name, price, and image details
     const items = await context.env.DB.prepare(`
       SELECT 
-        c.id as key,
+        c.id as [key],
         c.product_id as id,
         c.quantity as qty,
         c.size,
         c.color,
         p.name,
         p.price,
+        p.image_url as image,
         p.image_url
       FROM cart_items c
       JOIN products p ON c.product_id = p.id
