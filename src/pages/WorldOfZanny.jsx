@@ -30,10 +30,10 @@ export default function WorldOfZanny() {
         {/* Coming Soon Message */}
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, delay: 0.2 }}
-          style={{ width: '100%', minHeight: '40vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '1px dashed #333', marginTop: '2rem' }}
+          style={{ width: '100%', minHeight: '40vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', border: '1px dashed #333', marginTop: '2rem', padding: '2rem' }}
         >
-          <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: '2.5rem', letterSpacing: '4px', color: '#333', marginBottom: '0.5rem' }}>COMING SOON</span>
-          <span style={{ fontSize: '0.85rem', letterSpacing: '2px', textTransform: 'uppercase', color: '#666' }}>We are curating the latest looks.</span>
+          <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: '2.5rem', letterSpacing: '4px', color: '#333', marginBottom: '0.5rem', width: '100%' }}>COMING SOON</span>
+          <span style={{ fontSize: '0.85rem', letterSpacing: '2px', textTransform: 'uppercase', color: '#666', width: '100%' }}>We are curating the latest looks.</span>
         </motion.div>
 
       </div>
