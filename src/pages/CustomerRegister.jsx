@@ -60,7 +60,7 @@ export default function CustomerRegister() {
         <motion.div 
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          style={{ width: '100%', maxWidth: '400px' }}
+          style={{ width: '100%', maxWidth: '400px', margin: '0 auto' }}
         >
           <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
             <Link to="/" style={{ textDecoration: 'none' }}>
