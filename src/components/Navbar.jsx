@@ -598,27 +598,6 @@ export default function Navbar() {
           </>
         )}
       </AnimatePresence>
-
-      <style>{`
-        .navbar-container { padding: 0.85rem 2rem; }
-        .navbar-logo { transition: opacity 0.2s; }
-        .navbar-logo:hover { opacity: 0.7; }
-        .zanny-text-link:hover { opacity: 0.7; }
-        .sidebar-nav-item:hover { color: #666 !important; }
-        .sidebar-nav-item:hover span { color: #999 !important; }
-
-        @media (max-width: 900px) {
-          .nav-pill-text { display: none; }
-          .search-btn { display: none !important; }
-          .user-btn { display: none !important; }
-        }
-        @media (max-width: 768px) {
-          .navbar-container { padding: 0.75rem 1.2rem !important; }
-          .navbar-logo { font-size: 1.3rem !important; }
-          .zanny-text-link { display: none !important; }
-          .user-btn { display: none !important; }
-        }
-      `}</style>
     </>
   );
 }

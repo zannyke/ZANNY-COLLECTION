@@ -126,3 +126,48 @@ ul {
   }
 }
 
+/* Navbar Styles */
+.navbar-container { padding: 0.85rem 2rem; }
+.navbar-logo { transition: opacity 0.2s; }
+.navbar-logo:hover { opacity: 0.7; }
+.zanny-text-link:hover { opacity: 0.7; }
+.sidebar-nav-item:hover { color: #666 !important; }
+.sidebar-nav-item:hover span { color: #999 !important; }
+
+@media (max-width: 900px) {
+  .nav-pill-text { display: none !important; }
+  .search-btn { display: none !important; }
+  .user-btn { display: none !important; }
+}
+
+@media (max-width: 768px) {
+  .navbar-container { padding: 0.75rem 1.2rem !important; }
+  .navbar-logo { font-size: 1.3rem !important; }
+  .zanny-text-link { display: none !important; }
+  .user-btn { display: flex !important; } /* Profile monogram stays visible and clickable on mobile */
+}
+
+/* Cart Page Styles */
+.order-summary-container { position: sticky; top: 100px; padding: 2rem; background: #fafafa; border: 1px solid #eee; border-radius: 8px; }
+.cart-page-container { padding: 3rem 2rem; }
+
+@media (max-width: 768px) {
+  .cart-page-container { padding: 1.5rem 1rem !important; }
+  .cart-layout { grid-template-columns: 1fr !important; gap: 1.5rem !important; }
+  .cart-header { display: none !important; }
+  .cart-item-container { 
+    display: grid !important;
+    grid-template-columns: 80px 1fr !important;
+    gap: 1rem !important;
+    padding: 1.25rem 0 !important;
+  }
+  .cart-item-subtotal { 
+    grid-column: 1 / -1 !important;
+    text-align: left !important;
+    margin-top: 0.25rem;
+    font-size: 1.05rem;
+  }
+  .order-summary-container { position: static !important; padding: 1.5rem !important; margin-top: 1.5rem; border-radius: 8px; }
+}
+
+
