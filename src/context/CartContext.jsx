@@ -15,6 +15,7 @@ export function CartProvider({ children }) {
   // Track user login state transitions
   const prevUserRef = useRef(user);
   const isUpdatingFromDbRef = useRef(false);
+  const isLocalChangeRef = useRef(false);
 
   // Sync cart from database when logging in, or periodically poll for changes
   useEffect(() => {
@@ -51,7 +52,7 @@ export function CartProvider({ children }) {
   useEffect(() => {
     localStorage.setItem('zanny_cart', JSON.stringify(cartItems));
 
-    if (user && !isUpdatingFromDbRef.current) {
+    if (user && !isUpdatingFromDbRef.current && isLocalChangeRef.current) {
       // Throttle or simply push the updated cart to backend API
       const pushCartToDB = async () => {
         try {
@@ -60,6 +61,7 @@ export function CartProvider({ children }) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ items: cartItems })
           });
+          isLocalChangeRef.current = false;
         } catch (err) {
           console.error("Failed to sync cart changes to database", err);
         }
@@ -75,6 +77,7 @@ export function CartProvider({ children }) {
   }, [cartItems, user]);
 
   const addToCart = (product, size = '', color = '') => {
+    isLocalChangeRef.current = true;
     setCartItems(prev => {
       const key = `${product.id}-${color}-${size}`;
       const exists = prev.find(i => i.key === key);
@@ -86,15 +89,20 @@ export function CartProvider({ children }) {
   };
 
   const removeFromCart = (key) => {
+    isLocalChangeRef.current = true;
     setCartItems(prev => prev.filter(i => i.key !== key));
   };
 
   const updateQty = (key, qty) => {
+    isLocalChangeRef.current = true;
     if (qty < 1) return removeFromCart(key);
     setCartItems(prev => prev.map(i => i.key === key ? { ...i, qty } : i));
   };
 
-  const clearCart = () => setCartItems([]);
+  const clearCart = () => {
+    isLocalChangeRef.current = true;
+    setCartItems([]);
+  };
 
   const cartCount = cartItems.reduce((sum, i) => sum + i.qty, 0);
   const cartTotal = cartItems.reduce((sum, i) => sum + i.price * i.qty, 0);
