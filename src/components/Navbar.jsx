@@ -248,9 +248,8 @@ export default function Navbar() {
           )}
 
           {/* Monogram avatar (unique to Zanny) */}
-          <motion.button
-            whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.92 }}
+          <Link
+            to={isAuthenticated ? "/account" : "/login"}
             className="user-btn"
             style={{
               width: '32px', height: '32px',
@@ -258,7 +257,7 @@ export default function Navbar() {
               border: `1.5px solid ${iconColor}`,
               background: 'transparent',
               color: iconColor,
-              cursor: 'default',
+              cursor: 'pointer',
               fontFamily: 'var(--font-heading)',
               fontWeight: 700,
               fontSize: '0.9rem',
@@ -266,10 +265,11 @@ export default function Navbar() {
               letterSpacing: 0,
               transition: 'all 0.35s',
               flexShrink: 0,
+              textDecoration: 'none',
             }}
           >
-            {isAuthenticated ? user.firstName[0] : "Z"}
-          </motion.button>
+            {isAuthenticated ? user.firstName[0].toUpperCase() : "Z"}
+          </Link>
 
           {/* Cart link with live diamond badge */}
           <Link
