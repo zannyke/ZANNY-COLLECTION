@@ -142,6 +142,11 @@ ul {
     gap: 1.5rem !important;
     width: 100% !important;
   }
+
+  /* Auth Pages (Login/Register) Mobile Padding */
+  .auth-page-container {
+    padding-top: 80px !important;
+  }
   
   .account-nav-tabs button:nth-child(3) {
     border-bottom: 2px solid transparent !important;

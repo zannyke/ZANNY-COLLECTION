@@ -53,7 +53,7 @@ export default function CustomerLogin() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', background: '#fff', fontFamily: 'var(--font-body)' }}>
+    <div className="auth-page-container" style={{ minHeight: '100vh', display: 'flex', background: '#fff', fontFamily: 'var(--font-body)' }}>
       {/* Left side: Visual */}
       <div style={{ 
         flex: 1, background: '#111 url(/login-bg-v2.jpg) center/cover no-repeat', 

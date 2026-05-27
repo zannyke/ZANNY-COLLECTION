@@ -54,7 +54,7 @@ export default function CustomerRegister() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', background: '#fff', fontFamily: 'var(--font-body)' }}>
+    <div className="auth-page-container" style={{ minHeight: '100vh', display: 'flex', background: '#fff', fontFamily: 'var(--font-body)' }}>
       {/* Right side: Form */}
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
         <motion.div 
