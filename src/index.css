@@ -21,12 +21,16 @@
   padding: 0;
 }
 
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 body {
   font-family: var(--font-body);
   background-color: var(--color-bg);
   color: var(--color-text);
   line-height: 1.6;
-  overflow-x: hidden;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -90,3 +94,35 @@ ul {
     font-size: 1.8rem;
   }
 }
+
+/* Account Page Responsive Layout */
+@media (max-width: 768px) {
+  .account-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+  
+  .account-nav-tabs {
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    white-space: nowrap !important;
+    padding: 0.25rem !important;
+    gap: 0.25rem !important;
+    border-radius: 8px !important;
+  }
+  
+  .account-nav-tabs button {
+    flex: 1 0 auto !important;
+    padding: 0.6rem 1rem !important;
+    font-size: 0.85rem !important;
+    margin-top: 0 !important;
+    border-left: none !important;
+    border-bottom: 2px solid transparent !important;
+  }
+  
+  /* Active tab border highlight underneath on mobile danger tab */
+  .account-nav-tabs button:nth-child(3) {
+    border-bottom: 2px solid transparent !important;
+  }
+}
+

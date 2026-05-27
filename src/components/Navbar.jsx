@@ -615,6 +615,8 @@ export default function Navbar() {
         @media (max-width: 768px) {
           .navbar-container { padding: 0.75rem 1.2rem !important; }
           .navbar-logo { font-size: 1.3rem !important; }
+          .zanny-text-link { display: none !important; }
+          .user-btn { display: none !important; }
         }
       `}</style>
     </>

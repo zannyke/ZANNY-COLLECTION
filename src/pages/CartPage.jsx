@@ -241,10 +241,20 @@ export default function CartPage() {
         .cart-page-container { padding: 3rem 2rem; }
         @media (max-width: 768px) {
           .cart-page-container { padding: 1.5rem 1rem !important; }
-          .cart-layout { grid-template-columns: 1fr !important; }
+          .cart-layout { grid-template-columns: 1fr !important; gap: 1.5rem !important; }
           .cart-header { display: none !important; }
-          .cart-item-container { flex-direction: row !important; flex-wrap: wrap; gap: 1rem !important; }
-          .cart-item-subtotal { width: 100%; text-align: left !important; margin-top: 0.25rem; font-size: 1.1rem; }
+          .cart-item-container { 
+            display: grid !important;
+            grid-template-columns: 80px 1fr !important;
+            gap: 1rem !important;
+            padding: 1.25rem 0 !important;
+          }
+          .cart-item-subtotal { 
+            grid-column: 1 / -1 !important;
+            text-align: left !important;
+            margin-top: 0.25rem;
+            font-size: 1.05rem;
+          }
           .order-summary-container { position: static !important; padding: 1.5rem !important; margin-top: 1.5rem; border-radius: 8px; }
         }
       `}</style>

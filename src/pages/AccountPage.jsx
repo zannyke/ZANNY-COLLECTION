@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import PageHeader from '../components/PageHeader';
-import { User, LogOut, Trash2, PlusCircle, Package, ChevronRight, Shield, X } from 'lucide-react';
+import { User, LogOut, Trash2, PlusCircle, Package, ChevronRight, Shield, X, AlertTriangle, Settings } from 'lucide-react';
 
 const STATUS_BADGE = {
   pending:   { bg: '#fff8e1', color: '#f59e0b', label: 'Pending' },
@@ -18,23 +18,25 @@ function OrderCard({ order }) {
   const sc = STATUS_BADGE[order.status] || STATUS_BADGE.pending;
 
   return (
-    <div style={{ border: '1px solid #eee', borderRadius: '4px', overflow: 'hidden' }}>
+    <div style={{ border: '1px solid #f0f0f0', borderRadius: '8px', overflow: 'hidden', transition: 'all 0.2s', background: '#fff' }}>
       <button
         onClick={() => navigate(`/order/${order.id}`)}
         style={{
           width: '100%', display: 'flex', alignItems: 'center', gap: '1rem',
-          padding: '1rem 1.25rem', background: '#fff', border: 'none',
+          padding: '1.25rem', background: '#fff', border: 'none',
           cursor: 'pointer', textAlign: 'left', flexWrap: 'wrap',
         }}
       >
         <div style={{ flex: 1 }}>
-          <p style={{ fontWeight: 700, fontSize: '0.88rem', fontFamily: 'var(--font-heading)', letterSpacing: '0.5px' }}>{order.id}</p>
-          <p style={{ color: '#888', fontSize: '0.75rem', marginTop: '0.15rem' }}>
+          <p style={{ fontWeight: 700, fontSize: '0.9rem', fontFamily: 'var(--font-heading)', letterSpacing: '0.5px', margin: 0 }}>
+            Order {order.id.slice(0, 8)}...
+          </p>
+          <p style={{ color: '#888', fontSize: '0.75rem', marginTop: '0.25rem', margin: 0 }}>
             {order.created_at ? new Date(order.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <p style={{ fontWeight: 700, fontSize: '0.95rem' }}>KSh {Number(order.total_amount).toLocaleString()}</p>
+          <p style={{ fontWeight: 700, fontSize: '0.95rem', margin: 0 }}>KSh {Number(order.total_amount).toLocaleString()}</p>
           <span style={{
             padding: '0.25rem 0.65rem', borderRadius: '50px',
             fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px',
@@ -52,6 +54,7 @@ export default function AccountPage() {
   const navigate = useNavigate();
   const [orders, setOrders]   = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
+  const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'profile' | 'danger'
 
   // Admin step-up auth state
   const [showAdminPrompt, setShowAdminPrompt] = useState(false);
@@ -89,7 +92,6 @@ export default function AccountPage() {
     fetch('/api/orders')
       .then(r => r.json())
       .then(data => {
-        // Filter to only this user's orders
         const mine = Array.isArray(data) ? data.filter(o => o.user_id === user.id) : [];
         setOrders(mine);
         setLoadingOrders(false);
@@ -97,7 +99,6 @@ export default function AccountPage() {
       .catch(() => setLoadingOrders(false));
   }, [user]);
 
-  // Listen for feedback submissions from the global ReviewPopup
   useEffect(() => {
     const handleFeedback = (e) => {
       setOrders(prev => prev.map(o => 
@@ -122,88 +123,196 @@ export default function AccountPage() {
     <div style={{ minHeight: '100vh', background: '#fafafa', fontFamily: 'var(--font-body)', paddingBottom: '5rem' }}>
       <PageHeader title="My Account" subtitle="Manage your profile, orders, and preferences." />
 
-      <div className="container" style={{ maxWidth: '860px', marginTop: '3rem' }}>
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-
-          {/* ── Profile Card ── */}
-          <div style={{ background: '#fff', border: '1px solid #eee', padding: '2rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', borderBottom: '1px solid #f0f0f0', paddingBottom: '1.5rem', marginBottom: '1.5rem' }}>
+      <div className="container" style={{ maxWidth: '1000px', marginTop: '3rem', padding: '0 1rem' }}>
+        
+        {/* Modern Split Dashboard Layout */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(240px, 280px) 1fr', gap: '2rem', alignItems: 'start' }} className="account-grid">
+          
+          {/* Sidebar / Left Column */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            
+            {/* User Profile Summary Card */}
+            <div style={{ background: '#fff', border: '1px solid #eee', padding: '1.5rem', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)', textAlign: 'center' }}>
               <div style={{
-                width: '60px', height: '60px', borderRadius: '50%',
-                background: '#1a1a1a', color: '#fff',
+                width: '70px', height: '70px', borderRadius: '50%',
+                background: 'linear-gradient(135deg, #1a1a1a 0%, #444 100%)', color: '#fff',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '1.6rem',
+                fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '1.8rem',
+                margin: '0 auto 1rem auto', boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
               }}>
                 {user.firstName[0].toUpperCase()}
               </div>
-              <div>
-                <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.4rem', margin: 0, textTransform: 'uppercase' }}>
-                  {user.firstName} {user.lastName}
-                </h2>
-                <p style={{ color: '#888', margin: '0.25rem 0 0', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <User size={13} /> {user.email}
-                </p>
-              </div>
+              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.2rem', margin: 0, textTransform: 'uppercase', color: '#1a1a1a' }}>
+                {user.firstName} {user.lastName}
+              </h2>
+              <p style={{ color: '#888', margin: '0.25rem 0 0', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+                <User size={13} /> {user.email}
+              </p>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <button onClick={() => navigate('/register')} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.9rem 1.25rem', background: '#f9f9f9', border: '1px solid #eee', cursor: 'pointer', textAlign: 'left', color: '#1a1a1a', fontSize: '0.9rem', transition: 'all 0.2s' }}>
-                <PlusCircle size={16} color="#555" />
-                <div style={{ flex: 1 }}>
-                  <span style={{ display: 'block', fontWeight: 600 }}>Add Another Account</span>
-                  <span style={{ fontSize: '0.78rem', color: '#888' }}>Register a new profile.</span>
-                </div>
+            {/* Sidebar Navigation (Tabs) */}
+            <div style={{ background: '#fff', border: '1px solid #eee', borderRadius: '12px', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: '0.5rem' }} className="account-nav-tabs">
+              <button 
+                onClick={() => setActiveTab('orders')}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.85rem 1rem', border: 'none', borderRadius: '8px',
+                  background: activeTab === 'orders' ? '#1a1a1a' : 'transparent',
+                  color: activeTab === 'orders' ? '#fff' : '#444',
+                  fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s'
+                }}
+              >
+                <Package size={18} />
+                <span>Order History</span>
               </button>
+              
+              <button 
+                onClick={() => setActiveTab('profile')}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.85rem 1rem', border: 'none', borderRadius: '8px',
+                  background: activeTab === 'profile' ? '#1a1a1a' : 'transparent',
+                  color: activeTab === 'profile' ? '#fff' : '#444',
+                  fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s', marginTop: '0.25rem'
+                }}
+              >
+                <Settings size={18} />
+                <span>Account Settings</span>
+              </button>
+              
+              <button 
+                onClick={() => setActiveTab('danger')}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.85rem 1rem', border: 'none', borderRadius: '8px',
+                  background: activeTab === 'danger' ? '#fff5f5' : 'transparent',
+                  color: activeTab === 'danger' ? '#c0392b' : '#c0392b',
+                  fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s', marginTop: '0.25rem',
+                  borderLeft: activeTab === 'danger' ? '3px solid #c0392b' : '3px solid transparent'
+                }}
+              >
+                <AlertTriangle size={18} />
+                <span>Security & Danger Zone</span>
+              </button>
+            </div>
 
-              {user.role === 'admin' && (
-                <button onClick={() => setShowAdminPrompt(true)} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.9rem 1.25rem', background: '#1a1a1a', border: '1px solid #1a1a1a', cursor: 'pointer', textAlign: 'left', color: '#fff', fontSize: '0.9rem', transition: 'all 0.2s' }}>
-                  <Shield size={16} color="#00ff9d" />
-                  <div style={{ flex: 1 }}>
-                    <span style={{ display: 'block', fontWeight: 600 }}>Admin Dashboard</span>
-                    <span style={{ fontSize: '0.78rem', color: '#ccc' }}>Access the management portal.</span>
+          </div>
+
+          {/* Right Column / Content Area */}
+          <div style={{ background: '#fff', border: '1px solid #eee', borderRadius: '12px', padding: '2rem', boxShadow: '0 2px 8px rgba(0,0,0,0.02)', minHeight: '350px' }}>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.15 }}
+              >
+                
+                {/* ── Tab: Orders ── */}
+                {activeTab === 'orders' && (
+                  <div>
+                    <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', letterSpacing: '0.5px', textTransform: 'uppercase', margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#1a1a1a', borderBottom: '1px solid #f0f0f0', paddingBottom: '0.75rem' }}>
+                      <Package size={20} /> Order History
+                    </h3>
+
+                    {loadingOrders && <p style={{ color: '#aaa', fontSize: '0.88rem' }}>Loading orders…</p>}
+
+                    {!loadingOrders && orders.length === 0 && (
+                      <div style={{ textAlign: 'center', padding: '3.5rem 0', color: '#bbb' }}>
+                        <p style={{ fontSize: '2.5rem', marginBottom: '0.5rem', margin: 0 }}>📦</p>
+                        <p style={{ fontSize: '0.9rem', fontWeight: 500, margin: '0.5rem 0' }}>You haven't placed any orders yet.</p>
+                        <Link to="/" style={{ display: 'inline-block', marginTop: '0.75rem', color: '#1a1a1a', fontWeight: 700, fontSize: '0.85rem', textDecoration: 'underline' }}>
+                          Shop Now →
+                        </Link>
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      {orders.map(order => <OrderCard key={order.id} order={order} />)}
+                    </div>
                   </div>
-                </button>
-              )}
+                )}
 
-              <button onClick={handleSignOut} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.9rem 1.25rem', background: '#f9f9f9', border: '1px solid #eee', cursor: 'pointer', textAlign: 'left', color: '#1a1a1a', fontSize: '0.9rem', transition: 'all 0.2s' }}>
-                <LogOut size={16} color="#555" />
-                <span style={{ fontWeight: 600 }}>Sign Out</span>
-              </button>
+                {/* ── Tab: Profile / Account Settings ── */}
+                {activeTab === 'profile' && (
+                  <div>
+                    <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', letterSpacing: '0.5px', textTransform: 'uppercase', margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#1a1a1a', borderBottom: '1px solid #f0f0f0', paddingBottom: '0.75rem' }}>
+                      <Settings size={20} /> Account Settings
+                    </h3>
+                    
+                    <p style={{ fontSize: '0.88rem', color: '#666', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+                      Manage secondary links or access dashboard management options if you are an administrator.
+                    </p>
 
-              <button onClick={handleDelete} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.9rem 1.25rem', background: '#fff5f5', border: '1px solid #ffebeb', cursor: 'pointer', textAlign: 'left', color: '#c0392b', fontSize: '0.9rem', marginTop: '0.5rem', transition: 'all 0.2s' }}>
-                <Trash2 size={16} />
-                <div style={{ flex: 1 }}>
-                  <span style={{ display: 'block', fontWeight: 600 }}>Delete Account</span>
-                  <span style={{ fontSize: '0.78rem', opacity: 0.8 }}>Permanently remove your data.</span>
-                </div>
-              </button>
-            </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      <button onClick={() => navigate('/register')} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem 1.25rem', background: '#f9f9f9', border: '1px solid #eee', borderRadius: '8px', cursor: 'pointer', textAlign: 'left', color: '#1a1a1a', fontSize: '0.9rem', transition: 'all 0.2s' }}>
+                        <PlusCircle size={18} color="#555" />
+                        <div style={{ flex: 1 }}>
+                          <span style={{ display: 'block', fontWeight: 600 }}>Add Another Account</span>
+                          <span style={{ fontSize: '0.78rem', color: '#888' }}>Register an additional profile.</span>
+                        </div>
+                      </button>
+
+                      {user.role === 'admin' && (
+                        <button onClick={() => setShowAdminPrompt(true)} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem 1.25rem', background: '#1a1a1a', border: '1px solid #1a1a1a', borderRadius: '8px', cursor: 'pointer', textAlign: 'left', color: '#fff', fontSize: '0.9rem', transition: 'all 0.2s' }}>
+                          <Shield size={18} color="#00ff9d" />
+                          <div style={{ flex: 1 }}>
+                            <span style={{ display: 'block', fontWeight: 600 }}>Admin Dashboard</span>
+                            <span style={{ fontSize: '0.78rem', color: '#ccc' }}>Access the secure backend management system.</span>
+                          </div>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Tab: Security & Danger Zone ── */}
+                {activeTab === 'danger' && (
+                  <div>
+                    <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', letterSpacing: '0.5px', textTransform: 'uppercase', margin: '0 0 1.5rem 0', display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#c0392b', borderBottom: '1px solid #f9ebea', paddingBottom: '0.75rem' }}>
+                      <AlertTriangle size={20} /> Security & Danger Zone
+                    </h3>
+                    
+                    <div style={{ background: '#fff5f5', border: '1px solid #ffebeb', borderRadius: '8px', padding: '1rem 1.25rem', color: '#c0392b', fontSize: '0.85rem', display: 'flex', gap: '0.75rem', alignItems: 'flex-start', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+                      <AlertTriangle size={18} style={{ flexShrink: 0, marginTop: '2px' }} />
+                      <div>
+                        <strong style={{ display: 'block', marginBottom: '0.25rem' }}>Important Security Notice</strong>
+                        Actions performed in this area are critical. Deleting your account will remove all order histories, addresses, and account files immediately.
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      {/* Sign Out Card */}
+                      <div style={{ border: '1px solid #eee', borderRadius: '8px', padding: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                        <div>
+                          <span style={{ display: 'block', fontWeight: 600, fontSize: '0.9rem', color: '#1a1a1a' }}>Sign Out</span>
+                          <span style={{ fontSize: '0.78rem', color: '#888' }}>End your current active session on this device.</span>
+                        </div>
+                        <button onClick={handleSignOut} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.2rem', background: '#f9f9f9', border: '1px solid #ddd', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', color: '#444', transition: 'all 0.2s' }}>
+                          <LogOut size={15} />
+                          <span>Sign Out</span>
+                        </button>
+                      </div>
+
+                      {/* Delete Account Card */}
+                      <div style={{ border: '1px solid #f9ebea', borderRadius: '8px', padding: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', background: '#fcf8f8' }}>
+                        <div>
+                          <span style={{ display: 'block', fontWeight: 600, fontSize: '0.9rem', color: '#c0392b' }}>Delete Account</span>
+                          <span style={{ fontSize: '0.78rem', color: '#a04000' }}>Permanently erase your account records from the database.</span>
+                        </div>
+                        <button onClick={handleDelete} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.2rem', background: '#c0392b', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', color: '#fff', transition: 'all 0.2s' }}>
+                          <Trash2 size={15} />
+                          <span>Delete Account</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+              </motion.div>
+            </AnimatePresence>
           </div>
 
-          {/* ── Order History ── */}
-          <div style={{ background: '#fff', border: '1px solid #eee', padding: '2rem' }}>
-            <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <Package size={18} /> Order History
-            </h3>
+        </div>
 
-            {loadingOrders && <p style={{ color: '#aaa', fontSize: '0.88rem' }}>Loading orders…</p>}
-
-            {!loadingOrders && orders.length === 0 && (
-              <div style={{ textAlign: 'center', padding: '2.5rem 0', color: '#bbb' }}>
-                <p style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📦</p>
-                <p style={{ fontSize: '0.88rem' }}>You haven't placed any orders yet.</p>
-                <Link to="/" style={{ display: 'inline-block', marginTop: '0.75rem', color: '#1a1a1a', fontWeight: 600, fontSize: '0.85rem', textDecoration: 'underline' }}>
-                  Shop Now →
-                </Link>
-              </div>
-            )}
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {orders.map(order => <OrderCard key={order.id} order={order} />)}
-            </div>
-          </div>
-
-        </motion.div>
       </div>
 
       {/* Admin Step-up Auth Modal */}
