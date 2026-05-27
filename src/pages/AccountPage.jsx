@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import PageHeader from '../components/PageHeader';
+import ConfirmationModal from '../components/ConfirmationModal';
 import { User, LogOut, Trash2, PlusCircle, Package, ChevronRight, Shield, X, AlertTriangle, Settings } from 'lucide-react';
 
 const STATUS_BADGE = {
@@ -56,6 +57,7 @@ export default function AccountPage() {
   const [orders, setOrders]   = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'profile' | 'danger'
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Admin step-up auth state
   const [showAdminPrompt, setShowAdminPrompt] = useState(false);
@@ -103,7 +105,7 @@ export default function AccountPage() {
   useEffect(() => {
     const handleFeedback = (e) => {
       setOrders(prev => prev.map(o => 
-        o.id === e.detail.orderId ? { ...o, has_feedback: 1 } : o
+          o.id === e.detail.orderId ? { ...o, has_feedback: 1 } : o
       ));
     };
     window.addEventListener('feedbackSubmitted', handleFeedback);
@@ -112,10 +114,12 @@ export default function AccountPage() {
 
   const handleSignOut = () => { logout(); navigate('/'); };
   const handleDelete  = () => {
-    if (window.confirm('Are you sure you want to delete your account? This cannot be undone.')) {
-      deleteAccount();
-      navigate('/');
-    }
+    setShowDeleteConfirm(true);
+  };
+  const confirmDelete = () => {
+    setShowDeleteConfirm(false);
+    deleteAccount();
+    navigate('/');
   };
 
   if (!user) return null;
@@ -353,6 +357,16 @@ export default function AccountPage() {
           </motion.div>
         </div>
       )}
+
+      <ConfirmationModal 
+        isOpen={showDeleteConfirm}
+        title="Delete Account"
+        message="Are you sure you want to delete your account? This action cannot be undone and you will lose all order history."
+        onConfirm={confirmDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+        confirmText="Delete Account"
+        cancelText="Keep Account"
+      />
     </div>
   );
 }

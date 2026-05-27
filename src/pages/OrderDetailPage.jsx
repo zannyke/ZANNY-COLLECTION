@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ChevronLeft, Package, Star, AlertCircle, RefreshCw, Navigation, CheckCircle2, Circle } from 'lucide-react';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 const STATUS_BADGE = {
   pending:   { bg: '#f5f5f5', color: '#1a1a1a', label: 'Pending', msg: 'Waiting to be processed' },
@@ -189,6 +190,7 @@ export default function OrderDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [cancelling, setCancelling] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -239,8 +241,12 @@ export default function OrderDetailPage() {
   const diffHours = (now - orderTime) / (1000 * 60 * 60);
   const canCancel = order.status === 'pending' && diffHours < 24;
 
-  const handleCancel = async () => {
-    if (!window.confirm("Are you sure you want to cancel this order?")) return;
+  const handleCancel = () => {
+    setShowConfirmModal(true);
+  };
+
+  const confirmCancel = async () => {
+    setShowConfirmModal(false);
     setCancelling(true);
     try {
       const res = await fetch('/api/orders', {
@@ -391,6 +397,16 @@ export default function OrderDetailPage() {
         </div>
 
       </div>
+
+      <ConfirmationModal 
+        isOpen={showConfirmModal}
+        title="Cancel Order"
+        message="Are you sure you want to cancel this order? This action cannot be undone."
+        onConfirm={confirmCancel}
+        onCancel={() => setShowConfirmModal(false)}
+        confirmText="Cancel Order"
+        cancelText="Keep Order"
+      />
     </div>
   );
 }
