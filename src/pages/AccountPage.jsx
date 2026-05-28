@@ -155,7 +155,7 @@ export default function AccountPage() {
               </p>
             </div>
 
-            {/* Mobile Dropdown Tab Selector for cleaner navigation */}
+            {/* Mobile Dropdown Tab Selector for highly professional and clean navigation */}
             <div className="mobile-account-nav" style={{ width: '100%', marginBottom: '1rem', position: 'relative' }}>
               <select
                 value={activeTab}
