@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import PageHeader from '../components/PageHeader';
 import ConfirmationModal from '../components/ConfirmationModal';
-import { User, LogOut, Trash2, PlusCircle, Package, ChevronRight, ChevronDown, Shield, X, AlertTriangle, Settings } from 'lucide-react';
+import { User, LogOut, Trash2, PlusCircle, Package, ChevronRight, ChevronDown, Shield, X, AlertTriangle, Settings, Loader2 } from 'lucide-react';
 
 const STATUS_BADGE = {
   pending:   { bg: '#fff8e1', color: '#f59e0b', label: 'Pending' },
@@ -339,7 +339,18 @@ export default function AccountPage() {
                       <Package size={20} /> Order History
                     </h3>
 
-                    {loadingOrders && <p style={{ color: '#aaa', fontSize: '0.88rem' }}>Loading orders…</p>}
+                    {loadingOrders && (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '4rem 0', gap: '0.75rem' }}>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                          style={{ display: 'inline-block', color: '#1a1a1a' }}
+                        >
+                          <Loader2 size={24} />
+                        </motion.div>
+                        <p style={{ color: '#888', fontSize: '0.85rem', fontWeight: 500, margin: 0, letterSpacing: '0.5px' }}>Loading your orders...</p>
+                      </div>
+                    )}
 
                     {!loadingOrders && orders.length === 0 && (
                       <div style={{ textAlign: 'center', padding: '3.5rem 0', color: '#bbb', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>

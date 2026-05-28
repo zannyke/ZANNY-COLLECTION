@@ -228,36 +228,84 @@ export default function EditProduct() {
 
           <div>
             <label style={labelStyle}>Main Thumbnail Image</label>
-            <input 
-              type="file" 
-              accept="image/*"
-              style={{ ...inputStyle('image'), padding: '0.65rem 1rem', cursor: 'pointer' }} 
-              onChange={(e) => {
-                const selected = e.target.files[0];
-                if (selected) {
-                  setFile(selected);
-                  setPreview(URL.createObjectURL(selected));
-                }
-              }} 
-            />
+            <label
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '2.2rem 1.5rem',
+                background: t.input,
+                border: `2px dashed ${t.border}`,
+                borderRadius: '10px',
+                cursor: 'pointer',
+                textAlign: 'center',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = t.text}
+              onMouseLeave={e => e.currentTarget.style.borderColor = t.border}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem' }}>
+                <span style={{ fontSize: '1.4rem', color: t.textMuted }}>↑</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: t.text }}>Click to upload thumbnail</span>
+                <span style={{ fontSize: '0.7rem', color: t.textMuted }}>PNG, JPG or WEBP up to 5MB</span>
+                {file && <span style={{ fontSize: '0.75rem', color: resolvedTheme === 'dark' ? '#00ff9d' : '#05cd99', fontWeight: 700, marginTop: '0.5rem' }}>✓ {file.name}</span>}
+              </div>
+              <input 
+                type="file" 
+                accept="image/*"
+                style={{ display: 'none' }} 
+                onChange={(e) => {
+                  const selected = e.target.files[0];
+                  if (selected) {
+                    setFile(selected);
+                    setPreview(URL.createObjectURL(selected));
+                  }
+                }} 
+              />
+            </label>
           </div>
 
           <div>
             <label style={labelStyle}>Additional Gallery Images</label>
-            <input 
-              type="file" 
-              accept="image/*"
-              multiple
-              style={{ ...inputStyle('gallery'), padding: '0.65rem 1rem', cursor: 'pointer' }} 
-              onChange={(e) => {
-                const selectedFiles = Array.from(e.target.files);
-                if (selectedFiles.length > 0) {
-                  setGalleryFiles(prev => [...prev, ...selectedFiles]);
-                  const previews = selectedFiles.map(f => URL.createObjectURL(f));
-                  setGalleryPreviews(prev => [...prev, ...previews]);
-                }
-              }} 
-            />
+            <label
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '2.2rem 1.5rem',
+                background: t.input,
+                border: `2px dashed ${t.border}`,
+                borderRadius: '10px',
+                cursor: 'pointer',
+                textAlign: 'center',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = t.text}
+              onMouseLeave={e => e.currentTarget.style.borderColor = t.border}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem' }}>
+                <span style={{ fontSize: '1.4rem', color: t.textMuted }}>＋</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: t.text }}>Click to upload gallery images</span>
+                <span style={{ fontSize: '0.7rem', color: t.textMuted }}>Select multiple files</span>
+                {galleryFiles.length > 0 && <span style={{ fontSize: '0.75rem', color: resolvedTheme === 'dark' ? '#00ff9d' : '#05cd99', fontWeight: 700, marginTop: '0.5rem' }}>✓ {galleryFiles.length} files selected</span>}
+              </div>
+              <input 
+                type="file" 
+                accept="image/*"
+                multiple
+                style={{ display: 'none' }} 
+                onChange={(e) => {
+                  const selectedFiles = Array.from(e.target.files);
+                  if (selectedFiles.length > 0) {
+                    setGalleryFiles(prev => [...prev, ...selectedFiles]);
+                    const previews = selectedFiles.map(f => URL.createObjectURL(f));
+                    setGalleryPreviews(prev => [...prev, ...previews]);
+                  }
+                }} 
+              />
+            </label>
             {existingGallery.length > 0 && (
               <div style={{ marginTop: '1rem' }}>
                 <p style={{ fontSize: '0.75rem', color: t.textMuted, marginBottom: '0.5rem' }}>Current Gallery Images</p>
