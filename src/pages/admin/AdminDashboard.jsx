@@ -415,7 +415,7 @@ function SecurityTab({ t, accentColor, logout, uiConfirm }) {
                 value={vaultPassword}
                 onChange={e => { setVaultPassword(e.target.value); setVaultError(''); }}
                 autoFocus
-                style={{ width: '100%', padding: '0.85rem', paddingRight: '2.5rem', background: t.bg, border: `1px solid ${vaultError ? '#c0392b' : t.border}`, color: t.text, fontFamily: 'var(--font-body)', fontSize: '0.9rem', textAlign: 'center' }}
+                style={{ width: '100%', padding: '0.85rem', paddingRight: '2.5rem', background: t.input, border: `1px solid ${vaultError ? '#c0392b' : t.border}`, color: t.text, fontFamily: 'var(--font-body)', fontSize: '0.9rem', textAlign: 'center', borderRadius: '8px' }}
               />
               <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '0.75rem', top: '0.85rem', background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer' }}>
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -423,7 +423,7 @@ function SecurityTab({ t, accentColor, logout, uiConfirm }) {
             </div>
             {vaultError && <p style={{ color: '#c0392b', fontSize: '0.8rem', marginBottom: '1rem', fontWeight: 600 }}>{vaultError}</p>}
             
-            <button type="submit" style={{ width: '100%', padding: '0.85rem', background: accentColor || t.text, color: '#000', border: 'none', fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '0.85rem' }}>
+            <button type="submit" style={{ width: '100%', padding: '0.85rem', background: accentColor || t.text, color: rawTheme.bg, border: 'none', fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '0.85rem', borderRadius: '8px' }}>
               Unlock Vault
             </button>
           </form>
@@ -450,7 +450,7 @@ function SecurityTab({ t, accentColor, logout, uiConfirm }) {
               required
               value={oldPassword}
               onChange={e => setOldPassword(e.target.value)}
-              style={{ width: '100%', padding: '0.75rem', paddingRight: '2.5rem', background: t.bg, border: `1px solid ${t.border}`, color: t.text, fontFamily: 'var(--font-body)', fontSize: '0.9rem' }} 
+              style={{ width: '100%', padding: '0.75rem', paddingRight: '2.5rem', background: t.input, border: `1px solid ${t.border}`, color: t.text, fontFamily: 'var(--font-body)', fontSize: '0.9rem', borderRadius: '8px' }} 
             />
             <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '0.75rem', top: '2.1rem', background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer' }}>
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -463,7 +463,7 @@ function SecurityTab({ t, accentColor, logout, uiConfirm }) {
               required
               value={newPassword}
               onChange={e => setNewPassword(e.target.value)}
-              style={{ width: '100%', padding: '0.75rem', paddingRight: '2.5rem', background: t.bg, border: `1px solid ${t.border}`, color: t.text, fontFamily: 'var(--font-body)', fontSize: '0.9rem' }} 
+              style={{ width: '100%', padding: '0.75rem', paddingRight: '2.5rem', background: t.input, border: `1px solid ${t.border}`, color: t.text, fontFamily: 'var(--font-body)', fontSize: '0.9rem', borderRadius: '8px' }} 
             />
             <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '0.75rem', top: '2.1rem', background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer' }}>
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -476,7 +476,7 @@ function SecurityTab({ t, accentColor, logout, uiConfirm }) {
               required
               value={confirmPassword}
               onChange={e => setConfirmPassword(e.target.value)}
-              style={{ width: '100%', padding: '0.75rem', paddingRight: '2.5rem', background: t.bg, border: `1px solid ${t.border}`, color: t.text, fontFamily: 'var(--font-body)', fontSize: '0.9rem' }} 
+              style={{ width: '100%', padding: '0.75rem', paddingRight: '2.5rem', background: t.input, border: `1px solid ${t.border}`, color: t.text, fontFamily: 'var(--font-body)', fontSize: '0.9rem', borderRadius: '8px' }} 
             />
             <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '0.75rem', top: '2.1rem', background: 'none', border: 'none', color: t.textMuted, cursor: 'pointer' }}>
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -492,10 +492,10 @@ function SecurityTab({ t, accentColor, logout, uiConfirm }) {
             style={{ 
               marginTop: '1rem', width: '100%', padding: '0.85rem', 
               background: loading ? t.surfaceHover : t.text, 
-              color: loading ? t.textMuted : t.bg, 
+              color: loading ? t.textMuted : rawTheme.bg, 
               border: 'none', cursor: loading ? 'default' : 'pointer', 
               fontFamily: 'var(--font-body)', fontSize: '0.85rem', fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase',
-              transition: 'all 0.2s'
+              transition: 'all 0.2s', borderRadius: '8px'
             }}
           >
             {loading ? 'Updating...' : 'Update Password'}
@@ -509,7 +509,7 @@ function SecurityTab({ t, accentColor, logout, uiConfirm }) {
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {sessions.map(s => (
-            <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', border: `1px solid ${s.is_current ? accentColor : t.border}`, background: t.bg, gap: '1rem', flexWrap: 'wrap' }}>
+            <div key={s.id} className="glass-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', border: `1px solid ${s.is_current ? accentColor : t.border}`, background: t.input, gap: '1rem', flexWrap: 'wrap', borderRadius: '8px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <Laptop size={24} color={s.is_current ? accentColor : t.textMuted} />
                 <div>
@@ -545,7 +545,7 @@ function SecurityTab({ t, accentColor, logout, uiConfirm }) {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {blacklists.map(b => (
-              <div key={b.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', border: `1px solid ${t.border}`, background: t.bg }}>
+              <div key={b.id} className="glass-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', border: `1px solid ${t.border}`, background: t.input, borderRadius: '8px' }}>
                 <div>
                   <p style={{ fontWeight: 600, fontSize: '0.9rem', color: '#c0392b' }}>{b.ip_address}</p>
                   <p style={{ fontSize: '0.75rem', color: t.textMuted, marginTop: '0.2rem' }}>Blocked on: {new Date(b.created_at).toLocaleString()}</p>
@@ -806,9 +806,9 @@ export default function AdminDashboard() {
                 <p style={{ color: t.textMuted, fontSize: '0.8rem' }}>Welcome back. Here's what's happening with Zanny Collection.</p>
               </div>
               <Link to="/admin/add-product" style={{
-                padding: '0.75rem 1.5rem', background: t.text, color: t.bg,
+                padding: '0.75rem 1.5rem', background: t.text, color: rawTheme.bg,
                 textDecoration: 'none', fontSize: '0.78rem', fontWeight: 700,
-                letterSpacing: '1.5px', textTransform: 'uppercase',
+                letterSpacing: '1.5px', textTransform: 'uppercase', borderRadius: '8px'
               }}>+ Add Product</Link>
             </div>
 
@@ -834,9 +834,9 @@ export default function AdminDashboard() {
                     <button key={view.id} onClick={() => setOverviewView(view.id)} style={{
                       display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 1rem',
                       background: overviewView === view.id ? t.text : 'transparent',
-                      color: overviewView === view.id ? t.bg : t.textMuted,
+                      color: overviewView === view.id ? rawTheme.bg : t.textMuted,
                       border: `1px solid ${overviewView === view.id ? t.text : t.border}`, 
-                      cursor: 'pointer', borderRadius: '4px',
+                      cursor: 'pointer', borderRadius: '8px',
                       fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.5px', transition: 'all 0.2s',
                     }}>{view.icon} {view.label}</button>
                   ))}
