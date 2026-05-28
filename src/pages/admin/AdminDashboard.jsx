@@ -695,10 +695,25 @@ export default function AdminDashboard() {
             }}>Z</div>
             <p style={{ fontSize: '0.85rem', fontWeight: 700, letterSpacing: '1px' }}>ZANNY ADMIN</p>
           </div>
-          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{ background: 'none', border: 'none', color: t.text, cursor: 'pointer' }}>
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          <button onClick={() => setMobileMenuOpen(true)} style={{ background: 'none', border: 'none', color: t.text, cursor: 'pointer' }}>
+            <Menu size={24} />
           </button>
         </div>
+
+        {/* Mobile Drawer Overlay */}
+        {mobileMenuOpen && (
+          <div 
+            onClick={() => setMobileMenuOpen(false)} 
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(8, 10, 24, 0.5)',
+              backdropFilter: 'blur(4px)',
+              WebkitBackdropFilter: 'blur(4px)',
+              zIndex: 25,
+            }} 
+          />
+        )}
 
         {/* ── Sidebar ── */}
         <div className={`admin-sidebar ${mobileMenuOpen ? 'open' : ''}`} style={{
@@ -709,19 +724,24 @@ export default function AdminDashboard() {
           backdropFilter: 'blur(24px) saturate(140%)',
           WebkitBackdropFilter: 'blur(24px) saturate(140%)',
         }}>
-          <div style={{ marginBottom: '2.5rem' }} className="sidebar-logo">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-            <div style={{
-              width: '34px', height: '34px', borderRadius: '50%', border: `1.5px solid ${t.sidebarTextActive}`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '0.9rem', color: t.sidebarTextActive
-            }}>Z</div>
-            <div>
-              <p style={{ fontSize: '0.85rem', fontWeight: 700, letterSpacing: '1px', color: t.sidebarTextActive }}>ZANNY</p>
-              <p style={{ fontSize: '0.65rem', color: t.sidebarText, letterSpacing: '0.5px' }}>Admin Console</p>
+          <div style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} className="sidebar-logo">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{
+                width: '34px', height: '34px', borderRadius: '50%', border: `1.5px solid ${t.sidebarTextActive}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '0.9rem', color: t.sidebarTextActive
+              }}>Z</div>
+              <div>
+                <p style={{ fontSize: '0.85rem', fontWeight: 700, letterSpacing: '1px', color: t.sidebarTextActive }}>ZANNY</p>
+                <p style={{ fontSize: '0.65rem', color: t.sidebarText, letterSpacing: '0.5px' }}>Admin Console</p>
+              </div>
             </div>
+            <button className="sidebar-close-btn" onClick={() => setMobileMenuOpen(false)} style={{
+              background: 'none', border: 'none', color: t.sidebarText, cursor: 'pointer', padding: '0.2rem', display: 'none'
+            }}>
+              <X size={20} />
+            </button>
           </div>
-        </div>
 
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1, marginTop: '1rem' }}>
           {navItems.map(item => {
@@ -1089,12 +1109,14 @@ export default function AdminDashboard() {
         .order-col-mid { flex: 1; min-width: 180px; }
         .order-col-right { margin-left: auto; display: flex; align-items: center; gap: 1rem; }
 
+        .sidebar-close-btn { display: none; }
+
         @media (max-width: 900px) {
           .admin-main-content { margin-left: 0 !important; padding: 1.5rem 1rem !important; }
           .mobile-admin-header { display: flex !important; }
-          .admin-sidebar { transform: translateX(-100%); }
-          .admin-sidebar.open { transform: translateX(0); box-shadow: 4px 0 24px rgba(0,0,0,0.2); }
-          .sidebar-logo { display: none; }
+          .admin-sidebar { transform: translateX(-100%); z-index: 30 !important; }
+          .admin-sidebar.open { transform: translateX(0); box-shadow: 4px 0 24px rgba(0,0,0,0.35) !important; }
+          .sidebar-close-btn { display: block !important; }
         }
         
         @media (max-width: 600px) {
