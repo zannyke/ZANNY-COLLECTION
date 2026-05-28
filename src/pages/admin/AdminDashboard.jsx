@@ -672,13 +672,13 @@ export default function AdminDashboard() {
         <div style={{ marginBottom: '2.5rem' }} className="sidebar-logo">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
             <div style={{
-              width: '34px', height: '34px', borderRadius: '50%', border: `1.5px solid ${t.text}`,
+              width: '34px', height: '34px', borderRadius: '50%', border: `1.5px solid ${t.sidebarTextActive}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '0.9rem', color: t.text
+              fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '0.9rem', color: t.sidebarTextActive
             }}>Z</div>
             <div>
-              <p style={{ fontSize: '0.85rem', fontWeight: 700, letterSpacing: '1px' }}>ZANNY</p>
-              <p style={{ fontSize: '0.65rem', color: t.textMuted, letterSpacing: '0.5px' }}>Admin Console</p>
+              <p style={{ fontSize: '0.85rem', fontWeight: 700, letterSpacing: '1px', color: t.sidebarTextActive }}>ZANNY</p>
+              <p style={{ fontSize: '0.65rem', color: t.sidebarText, letterSpacing: '0.5px' }}>Admin Console</p>
             </div>
           </div>
         </div>
@@ -690,8 +690,8 @@ export default function AdminDashboard() {
               padding: '0.75rem 1rem', textDecoration: 'none',
               fontSize: '0.85rem', letterSpacing: '0.5px', borderRadius: '8px',
               transition: 'all 0.2s ease-in-out', display: 'flex', alignItems: 'center', gap: '0.75rem',
-              color: isActive ? t.text : t.textMuted,
-              background: isActive ? t.surfaceHover : 'transparent',
+              color: isActive ? t.sidebarTextActive : t.sidebarText,
+              background: isActive ? t.sidebarHover : 'transparent',
               border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', width: '100%', textAlign: 'left',
               fontWeight: isActive ? 600 : 400
             };
@@ -707,24 +707,24 @@ export default function AdminDashboard() {
 
             if (item.path) {
               return (
-                <Link key={item.id} to={item.path} style={{ ...baseStyle, color: isActive ? t.text : t.textMuted }}
-                  onMouseEnter={e => { e.currentTarget.style.background = t.surfaceHover; e.currentTarget.style.color = t.text; e.currentTarget.querySelector('span').style.opacity = 1; }}
-                  onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = t.textMuted; e.currentTarget.querySelector('span').style.opacity = 0.7; } }}
+                <Link key={item.id} to={item.path} style={{ ...baseStyle }}
+                  onMouseEnter={e => { e.currentTarget.style.background = t.sidebarHover; e.currentTarget.style.color = t.sidebarTextActive; e.currentTarget.querySelector('span').style.opacity = 1; }}
+                  onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = t.sidebarText; e.currentTarget.querySelector('span').style.opacity = 0.7; } }}
                 >{content}</Link>
               );
             }
 
             return (
               <button key={item.id} onClick={() => { setActiveTab(item.id); setMobileMenuOpen(false); }} style={baseStyle}
-                onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = t.surfaceHover; e.currentTarget.style.color = t.text; e.currentTarget.querySelector('span').style.opacity = 1; } }}
-                onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = t.textMuted; e.currentTarget.querySelector('span').style.opacity = 0.7; } }}
+                onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = t.sidebarHover; e.currentTarget.style.color = t.sidebarTextActive; e.currentTarget.querySelector('span').style.opacity = 1; } }}
+                onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = t.sidebarText; e.currentTarget.querySelector('span').style.opacity = 0.7; } }}
               >{content}</button>
             );
           })}
         </nav>
 
         {/* Theme Switcher */}
-        <div style={{ marginBottom: '1.5rem', padding: '0.5rem', background: t.surface, borderRadius: '8px', display: 'flex', gap: '0.25rem' }}>
+        <div style={{ marginBottom: '1.5rem', padding: '0.4rem', background: t.sidebarHover, borderRadius: '8px', display: 'flex', gap: '0.25rem' }}>
           {[
             { id: 'light',  icon: <Sun size={14} />,     label: 'Light' },
             { id: 'dark',   icon: <Moon size={14} />,    label: 'Dark' },
@@ -734,9 +734,9 @@ export default function AdminDashboard() {
               key={item.id} onClick={() => setTheme(item.id)}
               style={{
                 flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                padding: '0.5rem', border: 'none', borderRadius: '4px',
-                background: theme === item.id ? (resolvedTheme === 'dark' ? '#333' : '#eee') : 'transparent',
-                color: theme === item.id ? t.text : t.textMuted,
+                padding: '0.5rem', border: 'none', borderRadius: '6px',
+                background: theme === item.id ? t.sidebar : 'transparent',
+                color: theme === item.id ? t.sidebarTextActive : t.sidebarText,
                 cursor: 'pointer', transition: 'all 0.2s',
               }} title={item.label}
             >{item.icon}</button>

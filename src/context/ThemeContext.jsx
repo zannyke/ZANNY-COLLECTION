@@ -26,26 +26,32 @@ export function ThemeProvider({ children }) {
   // Design Tokens for Admin
   const colors = {
     dark: {
-      bg: '#0e0e0e',
-      surface: '#181818',
-      surfaceHover: '#1e1e1e',
-      border: '#2a2a2a',
+      bg: '#0b1437',
+      surface: '#111c44',
+      surfaceHover: '#1b2a68',
+      border: '#1b2c66',
       text: '#ffffff',
-      textMuted: '#666666',
+      textMuted: '#a3aed0',
       accent: '#00ff9d',
-      sidebar: '#111111',
-      input: '#111111',
+      sidebar: '#111c44',
+      sidebarText: '#a3aed0',
+      sidebarTextActive: '#ffffff',
+      sidebarHover: '#1b2a68',
+      input: '#0b1437',
     },
     light: {
-      bg: '#f8f9fa',
+      bg: '#f4f7fe',
       surface: '#ffffff',
-      surfaceHover: '#f1f3f5',
-      border: '#dee2e6',
-      text: '#1a1a1a',
-      textMuted: '#868e96',
-      accent: '#00b894',
-      sidebar: '#ffffff',
-      input: '#f1f3f5',
+      surfaceHover: '#f4f7fe',
+      border: '#e0e5f2',
+      text: '#1b254b',
+      textMuted: '#a3aed0',
+      accent: '#05cd99', // Emerald/Forest green
+      sidebar: '#0b2545', // Dark Navy Blue sidebar
+      sidebarText: '#8ca3d4',
+      sidebarTextActive: '#ffffff',
+      sidebarHover: '#133b6e',
+      input: '#f4f7fe',
     }
   };
 
