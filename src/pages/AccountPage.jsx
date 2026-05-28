@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import PageHeader from '../components/PageHeader';
 import ConfirmationModal from '../components/ConfirmationModal';
-import { User, LogOut, Trash2, PlusCircle, Package, ChevronRight, Shield, X, AlertTriangle, Settings } from 'lucide-react';
+import { User, LogOut, Trash2, PlusCircle, Package, ChevronRight, ChevronDown, Shield, X, AlertTriangle, Settings } from 'lucide-react';
 
 const STATUS_BADGE = {
   pending:   { bg: '#fff8e1', color: '#f59e0b', label: 'Pending' },
@@ -58,6 +58,15 @@ export default function AccountPage() {
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'profile' | 'danger'
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    if (!dropdownOpen) return;
+    const handleOutsideClick = () => setDropdownOpen(false);
+    window.addEventListener('click', handleOutsideClick);
+    return () => window.removeEventListener('click', handleOutsideClick);
+  }, [dropdownOpen]);
+
 
   // Admin step-up auth state
   const [showAdminPrompt, setShowAdminPrompt] = useState(false);
@@ -124,6 +133,13 @@ export default function AccountPage() {
 
   if (!user) return null;
 
+  const tabOptions = [
+    { id: 'orders', label: 'Order History', icon: <Package size={18} /> },
+    { id: 'profile', label: 'Account Settings', icon: <Settings size={18} /> },
+    { id: 'danger', label: 'Security & Danger Zone', icon: <AlertTriangle size={18} color="#c0392b" /> },
+  ];
+  const activeTabOption = tabOptions.find(t => t.id === activeTab) || tabOptions[0];
+
   return (
     <div style={{ minHeight: '100vh', background: '#fafafa', fontFamily: 'var(--font-body)', paddingBottom: '5rem' }}>
       <PageHeader title="My Account" subtitle="Manage your profile, orders, and preferences." />
@@ -155,35 +171,110 @@ export default function AccountPage() {
               </p>
             </div>
 
-            {/* Mobile Dropdown Tab Selector for highly professional and clean navigation */}
-            <div className="mobile-account-nav" style={{ width: '100%', marginBottom: '1rem', position: 'relative' }}>
-              <select
-                value={activeTab}
-                onChange={(e) => setActiveTab(e.target.value)}
+            {/* Custom Styled Mobile Dropdown Tab Selector matching the website's dark minimalist aesthetic */}
+            <div className="mobile-account-nav" style={{ width: '100%', marginBottom: '1.5rem', position: 'relative', zIndex: 10 }}>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDropdownOpen(!dropdownOpen);
+                }}
                 style={{
                   width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
                   padding: '0.9rem 1.2rem',
                   borderRadius: '10px',
-                  border: '1px solid #ddd',
-                  background: '#fff',
+                  border: '1px solid #1a1a1a',
+                  background: '#1a1a1a',
+                  color: '#fff',
                   fontFamily: 'var(--font-body)',
                   fontWeight: 600,
                   fontSize: '0.9rem',
-                  color: '#1a1a1a',
                   cursor: 'pointer',
-                  appearance: 'none',
-                  WebkitAppearance: 'none',
-                  backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23888888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 1.2rem center',
-                  backgroundSize: '1.25rem'
+                  textAlign: 'left',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                 }}
               >
-                <option value="orders">📋 Order History</option>
-                <option value="profile">⚙️ Account Settings</option>
-                <option value="danger">⚠️ Security & Danger Zone</option>
-              </select>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  {activeTabOption.icon}
+                  <span style={{ textTransform: 'uppercase', letterSpacing: '0.5px' }}>{activeTabOption.label}</span>
+                </div>
+                <ChevronDown 
+                  size={16} 
+                  color="#fff"
+                  style={{ 
+                    transform: dropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', 
+                    transition: 'transform 0.25s ease' 
+                  }} 
+                />
+              </button>
+
+              <AnimatePresence>
+                {dropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.15 }}
+                    style={{
+                      position: 'absolute',
+                      top: '110%',
+                      left: 0,
+                      right: 0,
+                      background: '#fff',
+                      border: '1px solid #eee',
+                      borderRadius: '10px',
+                      boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+                      overflow: 'hidden',
+                      zIndex: 99
+                    }}
+                  >
+                    {tabOptions.map((tab) => (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => {
+                          setActiveTab(tab.id);
+                          setDropdownOpen(false);
+                        }}
+                        style={{
+                          width: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.75rem',
+                          padding: '1rem 1.25rem',
+                          border: 'none',
+                          background: activeTab === tab.id ? '#fafafa' : 'transparent',
+                          color: tab.id === 'danger' ? '#c0392b' : '#1a1a1a',
+                          fontWeight: activeTab === tab.id ? 700 : 500,
+                          fontSize: '0.9rem',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          borderLeft: activeTab === tab.id 
+                            ? (tab.id === 'danger' ? '4px solid #c0392b' : '4px solid #1a1a1a') 
+                            : '4px solid transparent',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        {tab.icon}
+                        <span style={{ flex: 1 }}>{tab.label}</span>
+                        {activeTab === tab.id && (
+                          <span style={{ 
+                            width: '6px', 
+                            height: '6px', 
+                            borderRadius: '50%', 
+                            background: tab.id === 'danger' ? '#c0392b' : '#1a1a1a' 
+                          }} />
+                        )}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
+
 
             {/* Sidebar Navigation (Tabs) - Hidden on Mobile via CSS */}
             <div style={{ background: '#fff', border: '1px solid #eee', borderRadius: '12px', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: '0.5rem' }} className="account-nav-tabs">
