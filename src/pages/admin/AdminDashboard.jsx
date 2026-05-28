@@ -23,6 +23,7 @@ function StatCard({ label, value, sub, accent, t }) {
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
+      className="glass-card"
       style={{
         background: t.surface, border: `1px solid ${t.border}`,
         padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.4rem',
@@ -38,7 +39,7 @@ function StatCard({ label, value, sub, accent, t }) {
 const CustomTooltip = ({ active, payload, label, t }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div style={{ background: t.surface, border: `1px solid ${t.border}`, padding: '0.75rem 1rem' }}>
+    <div className="glass-card" style={{ background: t.surface, border: `1px solid ${t.border}`, padding: '0.75rem 1rem' }}>
       <p style={{ color: t.textMuted, fontSize: '0.75rem', marginBottom: '0.4rem' }}>{label}</p>
       {payload.map(p => (
         <p key={p.name} style={{ color: p.color, fontSize: '0.85rem' }}>
@@ -55,8 +56,8 @@ function CustomModal({ isOpen, title, message, isPrompt, promptLabel, onConfirm,
   const [inputValue, setInputValue] = React.useState('');
   
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} style={{ background: t.surface, border: `1px solid ${t.border}`, padding: '2rem', width: '90%', maxWidth: '400px', borderRadius: '8px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}>
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="glass-card" style={{ background: t.surface, border: `1px solid ${t.border}`, padding: '2rem', width: '95%', maxWidth: '420px', borderRadius: '16px', boxShadow: '0 20px 50px rgba(0,0,0,0.3)' }}>
         <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.2rem', marginBottom: '1rem', color: t.text }}>{title}</h3>
         <p style={{ color: t.textMuted, fontSize: '0.9rem', marginBottom: isPrompt ? '1rem' : '2rem', lineHeight: 1.5 }}>{message}</p>
         
@@ -67,15 +68,15 @@ function CustomModal({ isOpen, title, message, isPrompt, promptLabel, onConfirm,
               type="text" 
               value={inputValue}
               onChange={e => setInputValue(e.target.value)}
-              style={{ width: '100%', padding: '0.75rem', background: t.bg, border: `1px solid ${t.border}`, color: t.text, fontFamily: 'var(--font-body)', fontSize: '0.9rem' }} 
+              style={{ width: '100%', padding: '0.75rem', background: t.input, border: `1px solid ${t.border}`, color: t.text, fontFamily: 'var(--font-body)', fontSize: '0.9rem', borderRadius: '8px' }} 
               autoFocus
             />
           </div>
         )}
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-          <button onClick={() => { setInputValue(''); onCancel(); }} style={{ padding: '0.6rem 1.2rem', background: 'transparent', border: `1px solid ${t.border}`, color: t.text, cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = t.surfaceHover} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>Cancel</button>
-          <button onClick={() => { onConfirm(isPrompt ? inputValue : true); setInputValue(''); }} style={{ padding: '0.6rem 1.2rem', background: accentColor || t.text, border: 'none', color: '#000', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>Confirm</button>
+          <button onClick={() => { setInputValue(''); onCancel(); }} style={{ padding: '0.6rem 1.2rem', background: 'transparent', border: `1px solid ${t.border}`, color: t.text, cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', transition: 'all 0.2s', borderRadius: '8px' }} onMouseEnter={e => e.currentTarget.style.background = t.surfaceHover} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>Cancel</button>
+          <button onClick={() => { onConfirm(isPrompt ? inputValue : true); setInputValue(''); }} style={{ padding: '0.6rem 1.2rem', background: accentColor || t.text, border: 'none', color: '#000', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600, borderRadius: '8px' }}>Confirm</button>
         </div>
       </motion.div>
     </div>
@@ -601,7 +602,7 @@ function FeedbackTab({ t }) {
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const { products, deleteProduct, getBestSellers } = useProducts();
-  const { theme, setTheme, t, resolvedTheme } = useTheme();
+  const { theme, setTheme, t: rawTheme, resolvedTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [modalState, setModalState] = useState({ isOpen: false, title: '', message: '', isPrompt: false, promptLabel: '', onConfirm: null, onCancel: null });
@@ -631,6 +632,23 @@ export default function AdminDashboard() {
       .catch(console.error);
   }, []);
 
+  const isDark = resolvedTheme === 'dark';
+  const glassT = {
+    bg: 'transparent',
+    surface: isDark ? 'rgba(15, 23, 42, 0.45)' : 'rgba(255, 255, 255, 0.6)',
+    surfaceHover: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.85)',
+    border: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(11, 20, 55, 0.12)',
+    text: isDark ? '#ffffff' : '#0f172a',
+    textMuted: isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(15, 23, 42, 0.65)',
+    accent: accentColor,
+    sidebar: isDark ? 'rgba(15, 23, 42, 0.6)' : 'rgba(255, 255, 255, 0.75)',
+    sidebarText: isDark ? 'rgba(255, 255, 255, 0.7)' : 'rgba(15, 23, 42, 0.75)',
+    sidebarTextActive: isDark ? '#ffffff' : '#0f172a',
+    sidebarHover: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.05)',
+    input: isDark ? 'rgba(0, 0, 0, 0.25)' : 'rgba(255, 255, 255, 0.55)',
+  };
+  const t = glassT;
+
   const navItems = [
     { id: 'dashboard', label: 'Dashboard',   icon: <LayoutDashboard size={16} strokeWidth={1.5} />, path: null },
     { id: 'orders',    label: 'Orders',      icon: <ShoppingBag size={16} strokeWidth={1.5} />,     path: null },
@@ -641,36 +659,58 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div style={{ minHeight: '100vh', background: t.bg, color: t.text, fontFamily: 'var(--font-body)', transition: 'background 0.3s, color 0.3s' }}>
-      
-      {/* Mobile Header (Only visible on small screens) */}
-      <div className="mobile-admin-header" style={{
-        display: 'none', justifyContent: 'space-between', alignItems: 'center',
-        padding: '1rem 1.5rem', background: t.sidebar, borderBottom: `1px solid ${t.border}`,
-        position: 'sticky', top: 0, zIndex: 20
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{
-            width: '30px', height: '30px', borderRadius: '50%', border: `1.5px solid ${t.text}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '0.8rem', color: t.text
-          }}>Z</div>
-          <p style={{ fontSize: '0.85rem', fontWeight: 700, letterSpacing: '1px' }}>ZANNY ADMIN</p>
-        </div>
-        <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{ background: 'none', border: 'none', color: t.text, cursor: 'pointer' }}>
-          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      </div>
+    <div style={{
+      minHeight: '100vh',
+      backgroundImage: 'url(/homepage-background.jpg)',
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundAttachment: 'fixed',
+      color: t.text,
+      fontFamily: 'var(--font-body)',
+      position: 'relative'
+    }}>
+      {/* Dark/Light overlay for premium readability */}
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        background: isDark ? 'rgba(8, 10, 24, 0.72)' : 'rgba(244, 247, 254, 0.45)',
+        zIndex: 1,
+        pointerEvents: 'none'
+      }} />
 
-      {/* ── Sidebar ── */}
-      <div className={`admin-sidebar ${mobileMenuOpen ? 'open' : ''}`} style={{
-        position: 'fixed', top: 0, left: 0, bottom: 0, width: '240px',
-        background: t.sidebar, borderRight: `1px solid ${t.border}`,
-        display: 'flex', flexDirection: 'column', padding: '2rem 1.5rem', zIndex: 15,
-        transition: 'transform 0.3s ease',
-      }}>
-        <div style={{ marginBottom: '2.5rem' }} className="sidebar-logo">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+      <div style={{ position: 'relative', zIndex: 2, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+        
+        {/* Mobile Header (Only visible on small screens) */}
+        <div className="mobile-admin-header" style={{
+          display: 'none', justifyContent: 'space-between', alignItems: 'center',
+          padding: '1rem 1.5rem', background: t.sidebar, borderBottom: `1px solid ${t.border}`,
+          position: 'sticky', top: 0, zIndex: 20,
+          backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{
+              width: '30px', height: '30px', borderRadius: '50%', border: `1.5px solid ${t.text}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '0.8rem', color: t.text
+            }}>Z</div>
+            <p style={{ fontSize: '0.85rem', fontWeight: 700, letterSpacing: '1px' }}>ZANNY ADMIN</p>
+          </div>
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{ background: 'none', border: 'none', color: t.text, cursor: 'pointer' }}>
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+
+        {/* ── Sidebar ── */}
+        <div className={`admin-sidebar ${mobileMenuOpen ? 'open' : ''}`} style={{
+          position: 'fixed', top: 0, left: 0, bottom: 0, width: '240px',
+          background: t.sidebar, borderRight: `1px solid ${t.border}`,
+          display: 'flex', flexDirection: 'column', padding: '2rem 1.5rem', zIndex: 15,
+          transition: 'transform 0.3s ease',
+          backdropFilter: 'blur(24px) saturate(140%)',
+          WebkitBackdropFilter: 'blur(24px) saturate(140%)',
+        }}>
+          <div style={{ marginBottom: '2.5rem' }} className="sidebar-logo">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
             <div style={{
               width: '34px', height: '34px', borderRadius: '50%', border: `1.5px solid ${t.sidebarTextActive}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -1027,9 +1067,23 @@ export default function AdminDashboard() {
         )}
       </div>
 
+      </div>
+
       <CustomModal {...modalState} t={t} accentColor={accentColor} />
 
       <style>{`
+        .glass-card {
+          backdrop-filter: blur(20px) saturate(140%) !important;
+          -webkit-backdrop-filter: blur(20px) saturate(140%) !important;
+          border-radius: 12px !important;
+          box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15) !important;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        .glass-card:hover {
+          box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.25) !important;
+          transform: translateY(-1px);
+        }
+
         .admin-order-row { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
         .order-col-left { flex: 0 0 auto; }
         .order-col-mid { flex: 1; min-width: 180px; }

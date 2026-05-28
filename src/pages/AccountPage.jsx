@@ -16,12 +16,16 @@ const STATUS_BADGE = {
 
 function OrderCard({ order }) {
   const navigate = useNavigate();
+  const [clicked, setClicked] = useState(false);
   const sc = STATUS_BADGE[order.status] || STATUS_BADGE.pending;
 
   return (
     <div style={{ border: '1px solid #f0f0f0', borderRadius: '8px', overflow: 'hidden', transition: 'all 0.2s', background: '#fff' }}>
       <button
-        onClick={() => navigate(`/order/${order.id}`)}
+        onClick={() => {
+          setClicked(true);
+          navigate(`/order/${order.id}`);
+        }}
         style={{
           width: '100%', display: 'flex', alignItems: 'center', gap: '1rem',
           padding: '1.25rem', background: '#fff', border: 'none',
@@ -43,7 +47,17 @@ function OrderCard({ order }) {
             fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px',
             background: sc.bg, color: sc.color,
           }}>{sc.label}</span>
-          <ChevronRight size={14} color="#888" />
+          {clicked ? (
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+              style={{ display: 'inline-flex', color: '#1a1a1a' }}
+            >
+              <Loader2 size={14} />
+            </motion.div>
+          ) : (
+            <ChevronRight size={14} color="#888" />
+          )}
         </div>
       </button>
     </div>
@@ -340,16 +354,7 @@ export default function AccountPage() {
                     </h3>
 
                     {loadingOrders && (
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '4rem 0', gap: '0.75rem' }}>
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                          style={{ display: 'inline-block', color: '#1a1a1a' }}
-                        >
-                          <Loader2 size={24} />
-                        </motion.div>
-                        <p style={{ color: '#888', fontSize: '0.85rem', fontWeight: 500, margin: 0, letterSpacing: '0.5px' }}>Loading your orders...</p>
-                      </div>
+                      <p style={{ color: '#888', fontSize: '0.85rem', textAlign: 'center', padding: '2rem 0' }}>Loading orders...</p>
                     )}
 
                     {!loadingOrders && orders.length === 0 && (
