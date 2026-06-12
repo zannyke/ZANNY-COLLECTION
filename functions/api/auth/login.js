@@ -18,20 +18,35 @@ export async function onRequestPost(context) {
       return Response.json({ success: false, message: 'Email not verified. Please check your email for the code.', needsVerification: true, email: user.email }, { status: 403 });
     }
 
-    // Hash the input password with the stored salt
-    const enc = new TextEncoder();
-    const keyMaterial = await crypto.subtle.importKey(
-      "raw", enc.encode(data.password), "PBKDF2", false, ["deriveBits"]
-    );
-    // Convert hex string salt back to Uint8Array
-    const saltBuffer = new Uint8Array(user.salt.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-    const hashBuffer = await crypto.subtle.deriveBits(
-      { name: "PBKDF2", salt: saltBuffer, iterations: 100000, hash: "SHA-256" },
-      keyMaterial, 256
-    );
-    const inputHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+    // Hash the input password and verify
+    let isValid = false;
+    let actualHash = user.password_hash || '';
+    let actualSaltHex = user.salt || '';
 
-    if (inputHash !== user.password_hash) {
+    if (!user.salt && user.password_hash && user.password_hash.startsWith('pbkdf2:')) {
+      const parts = user.password_hash.split(':');
+      if (parts.length === 3) {
+        actualSaltHex = parts[1];
+        actualHash = parts[2];
+      }
+    }
+
+    if (actualSaltHex) {
+      const enc = new TextEncoder();
+      const keyMaterial = await crypto.subtle.importKey(
+        "raw", enc.encode(data.password), "PBKDF2", false, ["deriveBits"]
+      );
+      // Convert hex string salt back to Uint8Array
+      const saltBuffer = new Uint8Array(actualSaltHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+      const hashBuffer = await crypto.subtle.deriveBits(
+        { name: "PBKDF2", salt: saltBuffer, iterations: 100000, hash: "SHA-256" },
+        keyMaterial, 256
+      );
+      const inputHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+      isValid = (inputHash === actualHash);
+    }
+
+    if (!isValid) {
       return Response.json({ success: false, message: 'Invalid credentials' }, { status: 401 });
     }
 
@@ -51,7 +66,16 @@ export async function onRequestPost(context) {
 
     return new Response(JSON.stringify({ 
       success: true, 
-      user: { id: user.id, email: user.email, firstName: user.first_name, lastName: user.last_name, role: user.role, phone: user.phone_number, deliveryZone: user.default_delivery_zone, restricted_from_cod: user.restricted_from_cod } 
+      user: { 
+        id: user.id, 
+        email: user.email, 
+        firstName: user.first_name || (user.full_name ? user.full_name.split(' ')[0] : ''), 
+        lastName: user.last_name || (user.full_name ? user.full_name.split(' ').slice(1).join(' ') : ''), 
+        role: user.role, 
+        phone: user.phone_number || user.phone || '', 
+        deliveryZone: user.default_delivery_zone, 
+        restricted_from_cod: user.restricted_from_cod 
+      } 
     }), {
       headers: {
         'Content-Type': 'application/json',

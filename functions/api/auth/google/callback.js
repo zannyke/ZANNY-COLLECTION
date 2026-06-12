@@ -46,7 +46,7 @@ export async function onRequestGet(context) {
     if (!user) {
       const newId = crypto.randomUUID();
       await context.env.DB.prepare(
-        "INSERT INTO users (id, email, first_name, last_name, is_verified, auth_provider, login_count, last_login) VALUES (?, ?, ?, ?, 1, 'google', 1, CURRENT_TIMESTAMP)"
+        "INSERT INTO users (id, email, password_hash, salt, first_name, last_name, is_verified, auth_provider, login_count, last_login) VALUES (?, ?, 'google-auth', '', ?, ?, 1, 'google', 1, CURRENT_TIMESTAMP)"
       ).bind(newId, googleUser.email, googleUser.given_name || 'User', googleUser.family_name || '').run();
       user = { id: newId, email: googleUser.email };
     } else {

@@ -31,10 +31,10 @@ export async function onRequestGet(context) {
       user: { 
         id: user.id, 
         email: user.email, 
-        firstName: user.first_name, 
-        lastName: user.last_name, 
+        firstName: user.first_name || (user.full_name ? user.full_name.split(' ')[0] : ''), 
+        lastName: user.last_name || (user.full_name ? user.full_name.split(' ').slice(1).join(' ') : ''), 
         role: user.role,
-        phone: user.phone_number,
+        phone: user.phone_number || user.phone || '',
         deliveryZone: user.default_delivery_zone,
         restricted_from_cod: user.restricted_from_cod
       }
