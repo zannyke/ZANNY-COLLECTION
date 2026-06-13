@@ -143,6 +143,7 @@ export default function Checkout() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: user?.id || 'guest',
+          recipientName: form.fullName,
           totalAmount: finalTotal,
           shippingAddress: fullAddress,
           phoneNumber: form.phone,

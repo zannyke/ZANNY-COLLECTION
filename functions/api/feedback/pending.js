@@ -11,7 +11,7 @@ export async function onRequestGet(context) {
     // Find the most recent delivered order that hasn't been dismissed
     // AND doesn't exist in the feedback table.
     const order = await env.DB.prepare(`
-      SELECT o.id, o.total_amount, o.created_at
+      SELECT o.id, o.total_amount, o.created_at, o.items
       FROM orders o
       LEFT JOIN feedback f ON o.id = f.order_id
       WHERE o.user_id = ? 
@@ -26,13 +26,22 @@ export async function onRequestGet(context) {
       return new Response(JSON.stringify({ pending: null }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
 
-    // Fetch the items for this order so the popup can show what they bought
-    const { results: items } = await env.DB.prepare(
-      `SELECT oi.quantity, oi.size, p.name, p.image_url 
-       FROM order_items oi
-       JOIN products p ON oi.product_id = p.id
-       WHERE oi.order_id = ?`
-    ).bind(order.id).all();
+    let items = [];
+    try {
+      if (order.items) {
+        const rawItems = JSON.parse(order.items);
+        if (Array.isArray(rawItems)) {
+          items = rawItems.map(item => ({
+            quantity: item.quantity || 1,
+            size: item.selected_size || '',
+            name: item.product?.name || '',
+            image_url: item.product?.images?.[0] || item.product?.image_url || ''
+          }));
+        }
+      }
+    } catch (e) {
+      console.error("Failed to parse items for feedback pending", e);
+    }
 
     return new Response(JSON.stringify({ 
       pending: { ...order, items } 

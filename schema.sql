@@ -60,6 +60,21 @@ CREATE INDEX IF NOT EXISTS idx_products_active ON products(is_active);
 CREATE INDEX IF NOT EXISTS idx_products_new ON products(is_new);
 CREATE INDEX IF NOT EXISTS idx_products_sale ON products(is_sale);
 
+-- ── Cart Items ────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS cart_items (
+  id          TEXT PRIMARY KEY,
+  user_id     TEXT NOT NULL,
+  product_id  TEXT NOT NULL,
+  quantity    INTEGER DEFAULT 1,
+  size        TEXT DEFAULT '',
+  color       TEXT DEFAULT '',
+  created_at  TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_cart_items_user ON cart_items(user_id);
+
 -- ── Wishlists ─────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS wishlists (
   user_id    TEXT NOT NULL,

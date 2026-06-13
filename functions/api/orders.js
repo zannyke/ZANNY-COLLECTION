@@ -1,5 +1,6 @@
 import { getCurrentUser } from '../utils/auth.js';
 
+// GET /api/orders - Fetch orders (all for admin, user-specific for customers)
 export async function onRequestGet(context) {
   try {
     const user = await getCurrentUser(context);
@@ -7,9 +8,16 @@ export async function onRequestGet(context) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    let query = `SELECT o.*, CASE WHEN f.id IS NOT NULL THEN 1 ELSE 0 END as has_feedback 
-       FROM orders o 
-       LEFT JOIN feedback f ON o.id = f.order_id`;
+    let query = `
+      SELECT 
+        o.*, 
+        u.email as customer_email, 
+        u.first_name as customer_name,
+        CASE WHEN f.id IS NOT NULL THEN 1 ELSE 0 END as has_feedback 
+      FROM orders o 
+      LEFT JOIN users u ON o.user_id = u.id
+      LEFT JOIN feedback f ON o.id = f.order_id
+    `;
     let bindArgs = [];
 
     if (user.role !== 'admin') {
@@ -21,21 +29,33 @@ export async function onRequestGet(context) {
 
     const { results: orders } = await context.env.DB.prepare(query).bind(...bindArgs).all();
 
-    // For each order, fetch its items
-    const enriched = await Promise.all(orders.map(async (order) => {
-      const { results: items } = await context.env.DB.prepare(
-        `SELECT oi.*, p.name as product_name, p.image_url
-         FROM order_items oi
-         LEFT JOIN products p ON oi.product_id = p.id
-         WHERE oi.order_id = ?`
-      ).bind(order.id).all();
-      
-      const feedback = await context.env.DB.prepare(
-        `SELECT id FROM feedback WHERE order_id = ?`
-      ).bind(order.id).first();
+    // Map and enrich each order from its JSON items list
+    const enriched = orders.map((order) => {
+      let parsedItems = [];
+      try {
+        if (order.items) {
+          const rawItems = JSON.parse(order.items);
+          if (Array.isArray(rawItems)) {
+            parsedItems = rawItems.map(item => ({
+              product_id: item.product?.id || '',
+              product_name: item.product?.name || '',
+              image_url: item.product?.images?.[0] || item.product?.image_url || '',
+              quantity: item.quantity || 1,
+              size: item.selected_size || '',
+              color: item.selected_color || '',
+              price_at_purchase: item.product?.price || 0
+            }));
+          }
+        }
+      } catch (e) {
+        console.error("Failed to parse items for order " + order.id, e);
+      }
 
-      return { ...order, items, has_feedback: feedback ? 1 : 0 };
-    }));
+      return { 
+        ...order, 
+        items: parsedItems
+      };
+    });
 
     return Response.json(enriched);
   } catch (err) {
@@ -43,6 +63,7 @@ export async function onRequestGet(context) {
   }
 }
 
+// POST /api/orders - Create a new order
 export async function onRequestPost(context) {
   try {
     const user = await getCurrentUser(context);
@@ -61,10 +82,11 @@ export async function onRequestPost(context) {
       return Response.json({ error: 'Pay on Delivery is temporarily disabled for your account. Please pay upfront via M-Pesa.' }, { status: 400 });
     }
     
-    // VERIFY LIVE STOCK FIRST TO PREVENT INVENTORY RACE CONDITIONS
+    // VERIFY LIVE STOCK FIRST AND FETCH DETAILS TO SERIALIZE
+    const serializedItemsArray = [];
     for (const item of data.items) {
       const product = await context.env.DB.prepare(
-        "SELECT stock, name FROM products WHERE id = ?"
+        "SELECT * FROM products WHERE id = ?"
       ).bind(item.id).first();
 
       if (!product) {
@@ -76,36 +98,74 @@ export async function onRequestPost(context) {
           error: `Out of stock: ${product.name}. Only ${product.stock} left. Please return to your cart and remove/adjust this item.` 
         }, { status: 400 });
       }
+
+      // Parse JSON fields from products table for full product description
+      let images = [];
+      try { if (product.images) images = JSON.parse(product.images); } catch (e) { console.warn("Failed to parse product images:", e); }
+      if (images.length === 0 && product.image_url) {
+        images = [product.image_url];
+      }
+      
+      let colors = [];
+      try { if (product.colors) colors = JSON.parse(product.colors); } catch (e) { console.warn("Failed to parse product colors:", e); }
+      
+      let sizes = [];
+      try { if (product.sizes) sizes = JSON.parse(product.sizes); } catch (e) { console.warn("Failed to parse product sizes:", e); }
+
+      serializedItemsArray.push({
+        product: {
+          id: product.id,
+          name: product.name,
+          subtitle: product.subtitle || '',
+          description: product.description || '',
+          price: product.price,
+          original_price: product.original_price,
+          images: images,
+          colors: colors,
+          sizes: sizes,
+          category: product.category || product.category_slug || '',
+          is_new: product.is_new === 1,
+          is_sale: product.is_sale === 1,
+          stock: product.stock
+        },
+        selected_color: item.color || '',
+        selected_size: item.size || '',
+        quantity: item.qty
+      });
     }
 
     // Generate order ID
     const orderId = 'ORD-' + Date.now().toString().slice(-6);
+    const itemsJson = JSON.stringify(serializedItemsArray);
+    const recipientName = data.recipientName || (user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '');
+    const recipientPhone = data.phoneNumber || '';
+    const deliveryAddress = data.shippingAddress || '';
+    const shippingAddress = data.shippingAddress || '';
     
     // Insert into orders table
     const orderStmt = context.env.DB.prepare(
-      "INSERT INTO orders (id, user_id, total_amount, shipping_address, phone_number, status) VALUES (?, ?, ?, ?, ?, ?)"
+      `INSERT INTO orders (
+        id, user_id, items, total_amount, status, 
+        delivery_address, shipping_address, 
+        recipient_name, recipient_phone, phone_number
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
       orderId, 
       user.id, // SECURE: Bind session user ID
+      itemsJson,
       data.totalAmount, 
-      data.shippingAddress, 
-      data.phoneNumber,
-      'pending'
+      data.status || 'pending',
+      deliveryAddress,
+      shippingAddress,
+      recipientName,
+      recipientPhone,
+      data.phoneNumber
     );
     
     await orderStmt.run();
 
-    // Insert order items
-    // (In a real app we'd use batch execution, but doing it in a loop for simplicity)
+    // Decrement stock and increment sold count in products table
     for (const item of data.items) {
-      const itemId = crypto.randomUUID();
-      await context.env.DB.prepare(
-        "INSERT INTO order_items (id, order_id, product_id, quantity, size, price_at_purchase) VALUES (?, ?, ?, ?, ?, ?)"
-      ).bind(
-        itemId, orderId, item.id, item.qty, item.size, item.price
-      ).run();
-
-      // Increment sold count AND decrement stock in products table
       await context.env.DB.prepare(
         "UPDATE products SET sold = sold + ?, stock = MAX(0, stock - ?) WHERE id = ?"
       ).bind(item.qty, item.qty, item.id).run();
@@ -117,7 +177,7 @@ export async function onRequestPost(context) {
     // Send email notification to Admin and Customer
     if (context.env.RESEND_API_KEY) {
       try {
-        const itemsHtml = data.items.map(item => `<li>${item.qty}x Item ID [${item.id}] (Size: ${item.size}) - KSh ${item.price.toLocaleString()}</li>`).join('');
+        const itemsHtml = serializedItemsArray.map(item => `<li>${item.quantity}x ${item.product.name} (Size: ${item.selected_size}) - KSh ${item.product.price.toLocaleString()}</li>`).join('');
         await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
@@ -196,7 +256,7 @@ export async function onRequestPatch(context) {
       return Response.json({ error: 'Invalid status' }, { status: 400 });
     }
 
-    // Fetch the order to get the user_id
+    // Fetch the order details
     const order = await context.env.DB.prepare(`
       SELECT o.*, u.email, u.first_name, u.consecutive_cancellations, u.restricted_from_cod, u.consecutive_successful_orders 
       FROM orders o LEFT JOIN users u ON o.user_id = u.id 
@@ -238,15 +298,24 @@ export async function onRequestPatch(context) {
     await context.env.DB.prepare(updateQuery).bind(...bindParams).run();
 
     if (status === 'cancelled') {
-      // Restore stock
-      const { results: items } = await context.env.DB.prepare(
-        "SELECT product_id, quantity FROM order_items WHERE order_id = ?"
-      ).bind(id).all();
+      // Restore stock from JSON items column
+      let items = [];
+      try {
+        if (order.items) {
+          items = JSON.parse(order.items);
+        }
+      } catch (e) {
+        console.error("Failed to parse items for cancellation stock restore", e);
+      }
       
       for (const item of items) {
-        await context.env.DB.prepare(
-          "UPDATE products SET sold = MAX(0, sold - ?), stock = stock + ? WHERE id = ?"
-        ).bind(item.quantity, item.quantity, item.product_id).run();
+        const productId = item.product?.id || item.product_id;
+        const quantity = item.quantity || item.qty || 1;
+        if (productId) {
+          await context.env.DB.prepare(
+            "UPDATE products SET sold = MAX(0, sold - ?), stock = stock + ? WHERE id = ?"
+          ).bind(quantity, quantity, productId).run();
+        }
       }
 
       // Notify admin if cancelled by customer
@@ -325,18 +394,29 @@ export async function onRequestPatch(context) {
           } else if (status === 'delivered') {
             subject = `Your Order #${id} has been Delivered!`;
             
-            // Build Receipt HTML
-            const { results: items } = await context.env.DB.prepare(
-              "SELECT oi.*, p.name FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ?"
-            ).bind(id).all();
+            // Build Receipt HTML from JSON items list
+            let items = [];
+            try {
+              if (order.items) {
+                items = JSON.parse(order.items);
+              }
+            } catch (e) {
+              console.error("Failed to parse items for delivered email receipt", e);
+            }
 
-            const itemsHtml = items.map(item => `
-              <tr>
-                <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.name} <br><small style="color: #888;">Size: ${item.size}</small></td>
-                <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
-                <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">KSh ${(item.price_at_purchase * item.quantity).toLocaleString()}</td>
-              </tr>
-            `).join('');
+            const itemsHtml = items.map(item => {
+              const name = item.product?.name || '';
+              const size = item.selected_size || '';
+              const qty = item.quantity || 1;
+              const price = item.product?.price || 0;
+              return `
+                <tr>
+                  <td style="padding: 10px; border-bottom: 1px solid #eee;">${name} <br><small style="color: #888;">Size: ${size}</small></td>
+                  <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">${qty}</td>
+                  <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">KSh ${(price * qty).toLocaleString()}</td>
+                </tr>
+              `;
+            }).join('');
 
             const paymentText = order.mpesa_receipt 
               ? `<p><strong>Payment Method:</strong> M-Pesa (Receipt: ${order.mpesa_receipt})</p>`

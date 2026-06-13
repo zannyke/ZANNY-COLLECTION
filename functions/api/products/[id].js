@@ -43,9 +43,21 @@ export async function onRequestPut(context) {
 
     const { name, category, description, price, original_price, discount_label, stock, badge, image_url, variations, gallery_urls } = data;
 
+    let parsedVariations = [];
+    if (variations) {
+      if (typeof variations === 'string') {
+        try { parsedVariations = JSON.parse(variations); } catch(e) { console.error("Failed to parse variations JSON:", e); }
+      } else if (Array.isArray(variations)) {
+        parsedVariations = variations;
+      }
+    }
+    const colors = Array.from(new Set(parsedVariations.map(v => v.color).filter(Boolean)));
+    const sizes = Array.from(new Set(parsedVariations.map(v => v.size).filter(Boolean)));
+    const images = [image_url, ...(gallery_urls || [])].filter(Boolean);
+
     await context.env.DB.prepare(`
       UPDATE products 
-      SET name = ?, category = ?, description = ?, price = ?, original_price = ?, discount_label = ?, stock = ?, badge = ?, image_url = ?, variations = ?, gallery_urls = ?
+      SET name = ?, category = ?, description = ?, price = ?, original_price = ?, discount_label = ?, stock = ?, badge = ?, image_url = ?, variations = ?, gallery_urls = ?, colors = ?, sizes = ?, images = ?
       WHERE id = ?
     `).bind(
       name, category, description, 
@@ -57,6 +69,9 @@ export async function onRequestPut(context) {
       image_url || null, 
       variations ? JSON.stringify(variations) : null,
       gallery_urls ? JSON.stringify(gallery_urls) : null,
+      JSON.stringify(colors),
+      JSON.stringify(sizes),
+      JSON.stringify(images),
       id
     ).run();
 
