@@ -243,7 +243,7 @@ export default function Navbar() {
                 transition: 'opacity 0.2s', display: 'flex', alignItems: 'center', gap: '0.3rem'
               }}
             >
-              {user.firstName.toUpperCase()}
+              {(user.firstName || '').toUpperCase()}
             </Link>
           )}
 
@@ -268,7 +268,7 @@ export default function Navbar() {
               textDecoration: 'none',
             }}
           >
-            {isAuthenticated ? user.firstName[0].toUpperCase() : "Z"}
+            {isAuthenticated ? (user.firstName && user.firstName[0] ? user.firstName[0].toUpperCase() : 'U') : "Z"}
           </Link>
 
           {/* Cart link with live diamond badge */}
@@ -572,12 +572,12 @@ export default function Navbar() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1rem',
                 }}>
-                  {isAuthenticated ? user.firstName[0].toUpperCase() : 'Z'}
+                  {isAuthenticated ? (user.firstName && user.firstName[0] ? user.firstName[0].toUpperCase() : 'U') : 'Z'}
                 </div>
                 <div style={{ flex: 1 }}>
                   {isAuthenticated ? (
                     <>
-                      <p style={{ fontSize: '0.8rem', fontWeight: 600, letterSpacing: '1px', margin: 0, textTransform: 'uppercase' }}>{user.firstName} {user.lastName}</p>
+                      <p style={{ fontSize: '0.8rem', fontWeight: 600, letterSpacing: '1px', margin: 0, textTransform: 'uppercase' }}>{user.firstName || ''} {user.lastName || ''}</p>
                       <div style={{ display: 'flex', gap: '0.8rem', marginTop: '0.3rem' }}>
                         <Link to="/account" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: '0.75rem', color: '#555', textDecoration: 'underline' }}>Manage Account</Link>
                       </div>

@@ -175,10 +175,10 @@ export default function AccountPage() {
                 fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '1.8rem',
                 margin: '0 auto 1rem auto', boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
               }}>
-                {user.firstName[0].toUpperCase()}
+                {user.firstName && user.firstName[0] ? user.firstName[0].toUpperCase() : 'U'}
               </div>
               <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.2rem', margin: 0, textTransform: 'uppercase', color: '#1a1a1a' }}>
-                {user.firstName} {user.lastName}
+                {user.firstName || ''} {user.lastName || ''}
               </h2>
               <p style={{ color: '#888', margin: '0.25rem 0 0', fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
                 <User size={13} /> {user.email}
