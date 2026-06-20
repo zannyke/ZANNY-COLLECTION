@@ -1,4 +1,5 @@
 import { requireAdmin } from '../utils/auth.js';
+import { broadcastNotification } from '../utils/fcm.js';
 
 export async function onRequestGet(context) {
   try {
@@ -119,6 +120,13 @@ export async function onRequestPost(context) {
       JSON.stringify(sizes),
       JSON.stringify(images)
     ).run();
+
+    if (data.send_push === true || data.sendPush === true) {
+      const title = `New Arrival: ${data.name}! 🚀`;
+      const body = data.push_body || `Check out the new drop: ${data.name} is in stock now in ${data.category || 'New Arrivals'}. Tap to view!`;
+      const route = `/product/${id}`;
+      await broadcastNotification(context, title, body, route);
+    }
 
     return Response.json({ success: true, id });
   } catch (err) {
