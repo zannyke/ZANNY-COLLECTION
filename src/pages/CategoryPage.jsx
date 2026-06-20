@@ -80,7 +80,9 @@ function ProductCard({ product }) {
   const currentVariation = variations.find(v => 
     v.color === selectedColor && (requiresSize ? v.size === selectedSize : true)
   );
-  const maxStock = currentVariation ? Number(currentVariation.quantity) : 0;
+  const maxStock = variations.length > 0
+    ? (currentVariation ? Number(currentVariation.quantity) : 0)
+    : Number(product.stock || 0);
   const isGlobalOutOfStock = product.stock <= 0;
 
   const handleAdd = (e) => {

@@ -41,34 +41,90 @@ export async function onRequestPut(context) {
     const id = context.params.id;
     const data = await context.request.json();
 
-    const { name, category, description, price, original_price, discount_label, stock, badge, image_url, variations, gallery_urls } = data;
+    // Resolve images
+    let resolved_image_url = data.image_url || data.image || '';
+    let resolved_gallery_urls = data.gallery_urls || [];
+    if (!resolved_image_url && data.images && data.images.length > 0) {
+      resolved_image_url = data.images[0];
+      resolved_gallery_urls = data.images.slice(1);
+    }
+    const images = [resolved_image_url, ...(resolved_gallery_urls || [])].filter(Boolean);
 
+    // Resolve variations
     let parsedVariations = [];
-    if (variations) {
-      if (typeof variations === 'string') {
-        try { parsedVariations = JSON.parse(variations); } catch(e) { console.error("Failed to parse variations JSON:", e); }
-      } else if (Array.isArray(variations)) {
-        parsedVariations = variations;
+    if (data.variations) {
+      if (typeof data.variations === 'string') {
+        try { parsedVariations = JSON.parse(data.variations); } catch(e) { console.error("Failed to parse variations JSON:", e); }
+      } else if (Array.isArray(data.variations)) {
+        parsedVariations = data.variations;
       }
     }
-    const colors = Array.from(new Set(parsedVariations.map(v => v.color).filter(Boolean)));
-    const sizes = Array.from(new Set(parsedVariations.map(v => v.size).filter(Boolean)));
-    const images = [image_url, ...(gallery_urls || [])].filter(Boolean);
+
+    let colors = [];
+    let sizes = [];
+    const stock = Number(data.stock || 0);
+
+    if (parsedVariations && parsedVariations.length > 0) {
+      colors = Array.from(new Set(parsedVariations.map(v => v.color).filter(Boolean)));
+      sizes = Array.from(new Set(parsedVariations.map(v => v.size).filter(Boolean)));
+    } else {
+      let rawColors = [];
+      if (data.colors) {
+        rawColors = Array.isArray(data.colors) ? data.colors : (typeof data.colors === 'string' ? JSON.parse(data.colors) : []);
+      }
+      let rawSizes = [];
+      if (data.sizes) {
+        rawSizes = Array.isArray(data.sizes) ? data.sizes : (typeof data.sizes === 'string' ? JSON.parse(data.sizes) : []);
+      }
+      colors = Array.from(new Set(rawColors.filter(Boolean)));
+      sizes = Array.from(new Set(rawSizes.filter(Boolean)));
+
+      const cLen = colors.length || 1;
+      const sLen = sizes.length || 1;
+      const totalCombinations = cLen * sLen;
+      const baseQty = Math.floor(stock / totalCombinations);
+      const remainder = stock % totalCombinations;
+
+      let idx = 0;
+      if (colors.length > 0 && sizes.length > 0) {
+        for (const c of colors) {
+          for (const s of sizes) {
+            const qty = baseQty + (idx === totalCombinations - 1 ? remainder : 0);
+            parsedVariations.push({ color: c, size: s, quantity: qty });
+            idx++;
+          }
+        }
+      } else if (colors.length > 0) {
+        for (const c of colors) {
+          const qty = baseQty + (idx === totalCombinations - 1 ? remainder : 0);
+          parsedVariations.push({ color: c, size: '', quantity: qty });
+          idx++;
+        }
+      } else if (sizes.length > 0) {
+        for (const s of sizes) {
+          const qty = baseQty + (idx === totalCombinations - 1 ? remainder : 0);
+          parsedVariations.push({ color: '', size: s, quantity: qty });
+          idx++;
+        }
+      } else {
+        parsedVariations.push({ color: '', size: '', quantity: stock });
+      }
+    }
 
     await context.env.DB.prepare(`
       UPDATE products 
       SET name = ?, category = ?, description = ?, price = ?, original_price = ?, discount_label = ?, stock = ?, badge = ?, image_url = ?, variations = ?, gallery_urls = ?, colors = ?, sizes = ?, images = ?
       WHERE id = ?
     `).bind(
-      name, category, description, 
-      price || 0, 
-      original_price || null, 
-      discount_label || null, 
-      stock || 0, 
-      badge || null, 
-      image_url || null, 
-      variations ? JSON.stringify(variations) : null,
-      gallery_urls ? JSON.stringify(gallery_urls) : null,
+      data.name, data.category, data.description || '', 
+      data.price || 0, 
+      data.original_price || null, 
+      data.discount_label || null, 
+      stock, 
+      data.badge || null, 
+      resolved_image_url || null, 
+      JSON.stringify(parsedVariations),
+      JSON.stringify(resolved_gallery_urls),
       JSON.stringify(colors),
       JSON.stringify(sizes),
       JSON.stringify(images),

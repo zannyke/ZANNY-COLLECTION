@@ -60,7 +60,9 @@ export default function ProductDetailPage() {
   const currentVariation = variations.find(v => 
     v.color === selectedColor && (requiresSize ? v.size === selectedSize : true)
   );
-  const maxStock = currentVariation ? Number(currentVariation.quantity) : 0;
+  const maxStock = variations.length > 0
+    ? (currentVariation ? Number(currentVariation.quantity) : 0)
+    : Number(product.stock || 0);
 
   useEffect(() => {
     if (quantity > maxStock) {
@@ -128,7 +130,7 @@ export default function ProductDetailPage() {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3 }}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                 />
               </AnimatePresence>
 

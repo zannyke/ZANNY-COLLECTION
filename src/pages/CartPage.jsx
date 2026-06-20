@@ -21,10 +21,15 @@ export default function CartPage() {
   const hasOutOfStockItems = cartItems.some(item => {
     const liveProduct = products.find(p => p.id === item.id);
     if (!liveProduct) return true;
-    const variation = liveProduct.parsedVariations?.find(v => 
-      v.color === item.color && (!item.size || v.size === item.size)
-    );
-    return !variation || Number(variation.quantity) <= 0 || item.qty > Number(variation.quantity);
+    const variations = liveProduct.parsedVariations || [];
+    if (variations.length > 0) {
+      const variation = variations.find(v => 
+        v.color === item.color && (!item.size || v.size === item.size)
+      );
+      return !variation || Number(variation.quantity) <= 0 || item.qty > Number(variation.quantity);
+    } else {
+      return Number(liveProduct.stock || 0) <= 0 || item.qty > Number(liveProduct.stock || 0);
+    }
   });
 
   const handleCheckout = () => {
@@ -75,11 +80,16 @@ export default function CartPage() {
               {cartItems.map((item, idx) => {
                 const liveProduct = products.find(p => p.id === item.id);
                 let liveStock = 0;
-                if (liveProduct && liveProduct.parsedVariations) {
-                  const variation = liveProduct.parsedVariations.find(v => 
-                    v.color === item.color && (!item.size || v.size === item.size)
-                  );
-                  if (variation) liveStock = Number(variation.quantity);
+                if (liveProduct) {
+                  const variations = liveProduct.parsedVariations || [];
+                  if (variations.length > 0) {
+                    const variation = variations.find(v => 
+                      v.color === item.color && (!item.size || v.size === item.size)
+                    );
+                    if (variation) liveStock = Number(variation.quantity);
+                  } else {
+                    liveStock = Number(liveProduct.stock || 0);
+                  }
                 }
                 const isOutOfStock = liveStock <= 0;
 

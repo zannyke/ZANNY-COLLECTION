@@ -26,6 +26,16 @@ export async function onRequestPost(context) {
     const data = await context.request.json();
     const id = crypto.randomUUID();
 
+    // Resolve image_url and gallery_urls
+    let image_url = data.image || data.image_url || '';
+    let gallery_urls = data.gallery_urls || [];
+    if (!image_url && data.images && data.images.length > 0) {
+      image_url = data.images[0];
+      gallery_urls = data.images.slice(1);
+    }
+    const images = [image_url, ...(gallery_urls || [])].filter(Boolean);
+
+    // Resolve variations
     let variations = [];
     if (data.variations) {
       if (typeof data.variations === 'string') {
@@ -34,9 +44,57 @@ export async function onRequestPost(context) {
         variations = data.variations;
       }
     }
-    const colors = Array.from(new Set(variations.map(v => v.color).filter(Boolean)));
-    const sizes = Array.from(new Set(variations.map(v => v.size).filter(Boolean)));
-    const images = [data.image, ...(data.gallery_urls || [])].filter(Boolean);
+
+    let colors = [];
+    let sizes = [];
+    const stock = Number(data.stock || 0);
+
+    if (variations && variations.length > 0) {
+      colors = Array.from(new Set(variations.map(v => v.color).filter(Boolean)));
+      sizes = Array.from(new Set(variations.map(v => v.size).filter(Boolean)));
+    } else {
+      let rawColors = [];
+      if (data.colors) {
+        rawColors = Array.isArray(data.colors) ? data.colors : (typeof data.colors === 'string' ? JSON.parse(data.colors) : []);
+      }
+      let rawSizes = [];
+      if (data.sizes) {
+        rawSizes = Array.isArray(data.sizes) ? data.sizes : (typeof data.sizes === 'string' ? JSON.parse(data.sizes) : []);
+      }
+      colors = Array.from(new Set(rawColors.filter(Boolean)));
+      sizes = Array.from(new Set(rawSizes.filter(Boolean)));
+
+      const cLen = colors.length || 1;
+      const sLen = sizes.length || 1;
+      const totalCombinations = cLen * sLen;
+      const baseQty = Math.floor(stock / totalCombinations);
+      const remainder = stock % totalCombinations;
+
+      let idx = 0;
+      if (colors.length > 0 && sizes.length > 0) {
+        for (const c of colors) {
+          for (const s of sizes) {
+            const qty = baseQty + (idx === totalCombinations - 1 ? remainder : 0);
+            variations.push({ color: c, size: s, quantity: qty });
+            idx++;
+          }
+        }
+      } else if (colors.length > 0) {
+        for (const c of colors) {
+          const qty = baseQty + (idx === totalCombinations - 1 ? remainder : 0);
+          variations.push({ color: c, size: '', quantity: qty });
+          idx++;
+        }
+      } else if (sizes.length > 0) {
+        for (const s of sizes) {
+          const qty = baseQty + (idx === totalCombinations - 1 ? remainder : 0);
+          variations.push({ color: '', size: s, quantity: qty });
+          idx++;
+        }
+      } else {
+        variations.push({ color: '', size: '', quantity: stock });
+      }
+    }
 
     await context.env.DB.prepare(
       `INSERT INTO products (
@@ -52,11 +110,11 @@ export async function onRequestPost(context) {
       Number(data.price),
       data.original_price ? Number(data.original_price) : null,
       data.discount_label || null,
-      Number(data.stock),
+      stock,
       data.badge || null,
-      data.image || '',
+      image_url,
       JSON.stringify(variations),
-      JSON.stringify(data.gallery_urls || []),
+      JSON.stringify(gallery_urls),
       JSON.stringify(colors),
       JSON.stringify(sizes),
       JSON.stringify(images)
