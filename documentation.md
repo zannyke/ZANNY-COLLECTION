@@ -61,6 +61,12 @@ To support unified operation between the Flutter mobile application and the Clou
 - Fetched cart entries are normalized on load to construct a unique variation key: `${id}-${color}-${size}`.
 - Relative cart images are dynamically prefixed with the CDN URL, ensuring that checkout/cart drawer thumbnails load correctly.
 
+### C. Fallback Color & Size Resolution for Legacy Products
+- **Vulnerability**: Products in the D1 database without the `variations` column populated would display no colors and show all sizes as out-of-stock, blocking users from adding items to their cart.
+- **Resolution**:
+  - The website now parses the D1 `colors` and `sizes` JSON arrays on fetch and stores them in `p.parsedColors` and `p.parsedSizes`.
+  - Both [ProductDetailPage.jsx](file:///c:/Users/Administrator/Desktop/website/src/pages/ProductDetailPage.jsx) and [CategoryPage.jsx](file:///c:/Users/Administrator/Desktop/website/src/pages/CategoryPage.jsx) (`ProductCard` component) implement fallback checks: if `variations` is empty, they fall back to rendering colors/sizes from `parsedColors` and `parsedSizes`, using `product.stock` as the global quantity limit.
+
 ---
 
 ## 7. APK Uploads & Version Release Management
