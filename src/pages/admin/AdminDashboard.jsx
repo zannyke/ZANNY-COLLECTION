@@ -261,7 +261,7 @@ function SecurityTab({ t, accentColor, logout, uiConfirm }) {
   const [showPassword, setShowPassword] = useState(false);
 
   // Vault Lock State
-  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(() => sessionStorage.getItem('zanny_admin_unlocked') === 'true');
   const [vaultPassword, setVaultPassword] = useState('');
   const [vaultError, setVaultError] = useState('');
 
@@ -402,6 +402,7 @@ function SecurityTab({ t, accentColor, logout, uiConfirm }) {
           <form onSubmit={(e) => {
             e.preventDefault();
             if (vaultPassword === 'zanny2026') {
+              sessionStorage.setItem('zanny_admin_unlocked', 'true');
               setIsUnlocked(true);
             } else {
               setVaultError('Incorrect master password');
