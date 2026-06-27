@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useAuth } from './AuthContext';
+import { resolveImageUrl } from './ProductContext';
 
 const CartContext = createContext();
 
@@ -26,7 +27,12 @@ export function CartProvider({ children }) {
         const data = await res.json();
         if (data.success) {
           isUpdatingFromDbRef.current = true;
-          setCartItems(data.items || []);
+          const normalized = (data.items || []).map(item => ({
+            ...item,
+            key: `${item.id}-${item.color || ''}-${item.size || ''}`,
+            image: resolveImageUrl(item.image)
+          }));
+          setCartItems(normalized);
           setTimeout(() => {
             isUpdatingFromDbRef.current = false;
           }, 100);

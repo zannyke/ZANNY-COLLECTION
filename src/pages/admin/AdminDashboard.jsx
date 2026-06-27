@@ -598,6 +598,237 @@ function FeedbackTab({ t }) {
   );
 }
 
+// ── App Updates Tab ───────────────────────────────────────────────────
+function VersionTab({ t, accentColor, rawTheme }) {
+  const [apkInfo, setApkInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [version, setVersion] = useState('');
+  const [build, setBuild] = useState('');
+  const [apkUrl, setApkUrl] = useState('');
+  const [changelog, setChangelog] = useState('');
+  const [adminSecret, setAdminSecret] = useState('ZannyAdmin2024Secret');
+  
+  const [uploading, setUploading] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [statusMsg, setStatusMsg] = useState({ text: '', isError: false });
+
+  const fetchVersionInfo = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/version');
+      if (res.ok) {
+        const data = await res.json();
+        setApkInfo(data);
+        if (data) {
+          setVersion(data.version || '');
+          setBuild(String((data.build || 0) + 1));
+          setApkUrl(data.url || '');
+          setChangelog('');
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchVersionInfo();
+  }, []);
+
+  const handleApkUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    setStatusMsg({ text: 'Uploading APK to Cloudflare R2...', isError: false });
+    
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('/api/upload-apk', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (res.ok && data.url) {
+        setApkUrl(data.url);
+        setStatusMsg({ text: 'APK uploaded successfully! URL set in form.', isError: false });
+      } else {
+        setStatusMsg({ text: data.error || 'Upload failed', isError: true });
+      }
+    } catch (err) {
+      setStatusMsg({ text: 'Network error during upload', isError: true });
+    }
+    setUploading(false);
+  };
+
+  const handlePublish = async (e) => {
+    e.preventDefault();
+    setPublishing(true);
+    setStatusMsg({ text: 'Publishing update...', isError: false });
+
+    try {
+      const res = await fetch('/api/version', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          version,
+          build: Number(build),
+          url: apkUrl,
+          changelog,
+          admin_secret: adminSecret
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setStatusMsg({ text: 'Version published successfully!', isError: false });
+        fetchVersionInfo();
+      } else {
+        setStatusMsg({ text: data.error || 'Publish failed', isError: true });
+      }
+    } catch (err) {
+      setStatusMsg({ text: 'Network error during publish', isError: true });
+    }
+    setPublishing(false);
+  };
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
+      
+      {/* Current Version Details */}
+      <div style={{ background: t.surface, border: `1px solid ${t.border}`, padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', alignSelf: 'start' }}>
+        <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', letterSpacing: '1px', margin: 0 }}>Current APK Release</h2>
+        
+        {loading ? (
+          <p style={{ color: t.textMuted, fontSize: '0.85rem' }}>Fetching version details...</p>
+        ) : !apkInfo ? (
+          <p style={{ color: t.textMuted, fontSize: '0.85rem' }}>No active release configuration found.</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '0.85rem' }}>
+            <div>
+              <p style={{ color: t.textMuted, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.3rem' }}>Version / Build</p>
+              <p style={{ fontWeight: 600, fontSize: '1.1rem' }}>v{apkInfo.version} <span style={{ color: t.textMuted, fontWeight: 400, fontSize: '0.9rem' }}>({apkInfo.build})</span></p>
+            </div>
+            
+            <div>
+              <p style={{ color: t.textMuted, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.3rem' }}>Release URL</p>
+              <a href={apkInfo.url} target="_blank" rel="noopener noreferrer" style={{ color: accentColor, wordBreak: 'break-all', display: 'inline-block', textDecoration: 'underline' }}>
+                {apkInfo.url}
+              </a>
+            </div>
+
+            <div>
+              <p style={{ color: t.textMuted, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.3rem' }}>Changelog</p>
+              <p style={{ color: t.text, lineHeight: 1.4 }}>{apkInfo.changelog || 'No changelog provided.'}</p>
+            </div>
+
+            <div>
+              <p style={{ color: t.textMuted, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.3rem' }}>Published At</p>
+              <p style={{ color: t.text }}>{new Date(apkInfo.publishedAt).toLocaleString()}</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Release Form */}
+      <div style={{ background: t.surface, border: `1px solid ${t.border}`, padding: '2rem' }}>
+        <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', letterSpacing: '1px', marginBottom: '1.5rem', margin: 0 }}>Release New Version</h2>
+        
+        {/* Upload Card */}
+        <div style={{ margin: '1.5rem 0', padding: '1rem', border: `1px dashed ${t.border}`, borderRadius: '8px', background: t.input }}>
+          <label style={{ display: 'block', fontSize: '0.75rem', color: t.textMuted, marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '1.5px' }}>Upload APK File First</label>
+          <input 
+            type="file" 
+            accept=".apk"
+            onChange={handleApkUpload}
+            disabled={uploading}
+            style={{ width: '100%', color: t.text, fontSize: '0.8rem' }}
+          />
+          {uploading && <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.75rem', color: accentColor }}>Uploading file...</p>}
+        </div>
+
+        <form onSubmit={handlePublish} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1.5rem' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.75rem', color: t.textMuted, marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Version String</label>
+            <input 
+              type="text" 
+              required 
+              placeholder="e.g. 1.0.24"
+              value={version} 
+              onChange={e => setVersion(e.target.value)}
+              style={{ width: '100%', padding: '0.75rem', background: t.input, border: `1px solid ${t.border}`, color: t.text, fontFamily: 'var(--font-body)', fontSize: '0.85rem', borderRadius: '8px' }} 
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '0.75rem', color: t.textMuted, marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Build Number</label>
+            <input 
+              type="number" 
+              required 
+              placeholder="e.g. 43"
+              value={build} 
+              onChange={e => setBuild(e.target.value)}
+              style={{ width: '100%', padding: '0.75rem', background: t.input, border: `1px solid ${t.border}`, color: t.text, fontFamily: 'var(--font-body)', fontSize: '0.85rem', borderRadius: '8px' }} 
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '0.75rem', color: t.textMuted, marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '1px' }}>APK R2 URL</label>
+            <input 
+              type="url" 
+              required 
+              placeholder="https://pub-..."
+              value={apkUrl} 
+              onChange={e => setApkUrl(e.target.value)}
+              style={{ width: '100%', padding: '0.75rem', background: t.input, border: `1px solid ${t.border}`, color: t.text, fontFamily: 'var(--font-body)', fontSize: '0.85rem', borderRadius: '8px' }} 
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '0.75rem', color: t.textMuted, marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Changelog</label>
+            <textarea 
+              required 
+              rows={3}
+              placeholder="e.g. Added new category items and fixed push notifications."
+              value={changelog} 
+              onChange={e => setChangelog(e.target.value)}
+              style={{ width: '100%', padding: '0.75rem', background: t.input, border: `1px solid ${t.border}`, color: t.text, fontFamily: 'var(--font-body)', fontSize: '0.85rem', borderRadius: '8px', resize: 'vertical' }} 
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '0.75rem', color: t.textMuted, marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Admin secret key</label>
+            <input 
+              type="password" 
+              required 
+              value={adminSecret} 
+              onChange={e => setAdminSecret(e.target.value)}
+              style={{ width: '100%', padding: '0.75rem', background: t.input, border: `1px solid ${t.border}`, color: t.text, fontFamily: 'var(--font-body)', fontSize: '0.85rem', borderRadius: '8px' }} 
+            />
+          </div>
+
+          {statusMsg.text && (
+            <p style={{ color: statusMsg.isError ? '#c0392b' : accentColor, fontSize: '0.8rem', fontWeight: 600, margin: '0.5rem 0' }}>
+              {statusMsg.text}
+            </p>
+          )}
+
+          <button 
+            type="submit" 
+            disabled={publishing || uploading}
+            style={{ width: '100%', padding: '0.85rem', background: accentColor || t.text, color: rawTheme.bg, border: 'none', fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', cursor: (publishing || uploading) ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-body)', fontSize: '0.85rem', borderRadius: '8px', opacity: (publishing || uploading) ? 0.6 : 1 }}
+          >
+            {publishing ? 'Publishing...' : 'Publish APK Release'}
+          </button>
+        </form>
+      </div>
+
+    </div>
+  );
+}
+
 // ── Main Dashboard ────────────────────────────────────────────────────
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -653,6 +884,7 @@ export default function AdminDashboard() {
     { id: 'dashboard', label: 'Dashboard',   icon: <LayoutDashboard size={16} strokeWidth={1.5} />, path: null },
     { id: 'orders',    label: 'Orders',      icon: <ShoppingBag size={16} strokeWidth={1.5} />,     path: null },
     { id: 'feedback',  label: 'Feedback',    icon: <MessageSquare size={16} strokeWidth={1.5} />,   path: null },
+    { id: 'version',   label: 'App Updates', icon: <Laptop size={16} strokeWidth={1.5} />,          path: null },
     { id: 'security',  label: 'Security',    icon: <Lock size={16} strokeWidth={1.5} />,            path: null },
     { id: 'products',  label: 'Add Product', icon: <Package size={16} strokeWidth={1.5} />,         path: '/admin/add-product' },
     { id: 'store',     label: 'View Store',  icon: <ExternalLink size={16} strokeWidth={1.5} />,    path: '/' },
@@ -1078,6 +1310,17 @@ export default function AdminDashboard() {
               <p style={{ color: t.textMuted, fontSize: '0.8rem' }}>Read what your customers are saying about your products.</p>
             </div>
             <FeedbackTab t={t} />
+          </>
+        )}
+
+        {/* ── APP UPDATES TAB ── */}
+        {activeTab === 'version' && (
+          <>
+            <div style={{ marginBottom: '2.5rem' }}>
+              <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '2rem', letterSpacing: '2px', marginBottom: '0.3rem' }}>App Updates</h1>
+              <p style={{ color: t.textMuted, fontSize: '0.8rem' }}>Manage and publish Android app APK updates to your users.</p>
+            </div>
+            <VersionTab t={t} accentColor={accentColor} rawTheme={rawTheme} />
           </>
         )}
 

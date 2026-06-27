@@ -12,6 +12,17 @@ export const CATEGORIES = [
   { id: 'sale',             label: 'Sale',                 description: 'Premium pieces, reduced prices.',          fallbackImage: '', emoji: '🔥' },
 ];
 
+export const R2_CDN_BASE = "https://pub-0a4117480fe8436ca1a1255ce208d231.r2.dev/";
+
+export const resolveImageUrl = (url) => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:') || url.startsWith('/api/')) {
+    return url;
+  }
+  const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
+  return `${R2_CDN_BASE}${cleanUrl}`;
+};
+
 const DEFAULT_PRODUCTS = [];
 
 const ProductContext = createContext();
@@ -31,10 +42,20 @@ export function ProductProvider({ children }) {
             let parsedVariations = [];
             let parsedGallery = [];
             try { if (p.variations) parsedVariations = JSON.parse(p.variations); } catch(e) {}
-            try { if (p.gallery_urls) parsedGallery = JSON.parse(p.gallery_urls); } catch(e) {}
+            try { 
+              if (p.gallery_urls) {
+                const rawGallery = JSON.parse(p.gallery_urls);
+                if (Array.isArray(rawGallery)) {
+                  parsedGallery = rawGallery.map(img => resolveImageUrl(img));
+                }
+              }
+            } catch(e) {}
+            
+            const resolvedImg = resolveImageUrl(p.image_url);
             return { 
               ...p, 
-              image: p.image_url || '',
+              image: resolvedImg || '',
+              image_url: resolvedImg || '',
               sold: p.sold || 0,
               price: Number(p.price) || 0,
               stock: Number(p.stock) || 0,
@@ -91,11 +112,14 @@ export function ProductProvider({ children }) {
       });
       const data = await res.json();
       if (data.success && data.id) {
+        const resolvedImg = resolveImageUrl(imageUrl);
+        const resolvedGallery = galleryUrls.map(img => resolveImageUrl(img));
         const newProd = {
           ...product,
           id: data.id,
-          image: imageUrl,
-          image_url: imageUrl,
+          image: resolvedImg,
+          image_url: resolvedImg,
+          parsedGallery: resolvedGallery,
           sold: 0,
           created_at: new Date().toISOString()
         };
@@ -150,9 +174,10 @@ export function ProductProvider({ children }) {
         setProducts(prev => prev.map(p => {
           if (p.id === id) {
             let parsedVariations = [];
-            let parsedGallery = galleryUrls;
+            let parsedGallery = galleryUrls.map(img => resolveImageUrl(img));
             try { if (updatedData.variations) parsedVariations = JSON.parse(updatedData.variations); } catch(e) {}
-            return { ...p, ...updatedData, image: imageUrl, image_url: imageUrl, parsedVariations, parsedGallery };
+            const resolvedImg = resolveImageUrl(imageUrl);
+            return { ...p, ...updatedData, image: resolvedImg, image_url: resolvedImg, parsedVariations, parsedGallery };
           }
           return p;
         }));
