@@ -24,7 +24,9 @@ export default function ProductDetailPage() {
   const product = products.find(p => p.id.toString() === productId);
   const requiresSize = product?.category !== 'accessories';
   const variations = product?.parsedVariations || [];
-  const availableColors = [...new Set(variations.map(v => v.color))].filter(Boolean);
+  const availableColors = variations.length > 0
+    ? [...new Set(variations.map(v => v.color))].filter(Boolean)
+    : (product?.parsedColors || []);
 
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
@@ -40,15 +42,17 @@ export default function ProductDetailPage() {
     }
   }, [availableColors, selectedColor]);
 
-  const availableSizesForColor = variations
-    .filter(v => v.color === selectedColor && Number(v.quantity) > 0)
-    .map(v => v.size)
-    .filter(Boolean);
+  const availableSizesForColor = variations.length > 0
+    ? variations
+        .filter(v => v.color === selectedColor && Number(v.quantity) > 0)
+        .map(v => v.size)
+        .filter(Boolean)
+    : (product?.parsedSizes || []);
 
   useEffect(() => {
-    if (requiresSize && selectedColor) {
+    if (requiresSize) {
       if (availableSizesForColor.length > 0) {
-        if (!availableSizesForColor.includes(selectedSize)) {
+        if (!selectedSize || !availableSizesForColor.includes(selectedSize)) {
           setSelectedSize(availableSizesForColor[0]);
         }
       } else {
@@ -62,7 +66,7 @@ export default function ProductDetailPage() {
   );
   const maxStock = variations.length > 0
     ? (currentVariation ? Number(currentVariation.quantity) : 0)
-    : Number(product.stock || 0);
+    : Number(product?.stock || 0);
 
   useEffect(() => {
     if (quantity > maxStock) {
@@ -250,10 +254,14 @@ export default function ProductDetailPage() {
                 <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                   {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map(size => {
                     // Check if this size exists for ANY color (just to show it disabled if it exists in the product but not for this color)
-                    const sizeExistsInProduct = variations.some(v => v.size === size);
+                    const sizeExistsInProduct = variations.length > 0
+                      ? variations.some(v => v.size === size)
+                      : (product?.parsedSizes || []).includes(size);
                     if (!sizeExistsInProduct && availableSizesForColor.length > 0) return null; // hide completely if product never uses this size
 
-                    const isAvailable = availableSizesForColor.includes(size);
+                    const isAvailable = variations.length > 0
+                      ? availableSizesForColor.includes(size)
+                      : (product?.parsedSizes || []).includes(size);
                     return (
                       <button
                         key={size}

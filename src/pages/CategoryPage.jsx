@@ -55,14 +55,18 @@ function ProductCard({ product }) {
   const requiresSize = product.category !== 'accessories';
   const variations = product.parsedVariations || [];
   
-  const availableColors = [...new Set(variations.map(v => v.color))].filter(Boolean);
+  const availableColors = variations.length > 0
+    ? [...new Set(variations.map(v => v.color))].filter(Boolean)
+    : (product.parsedColors || []);
   const [selectedColor, setSelectedColor] = useState(availableColors[0] || '');
   const [showAllColors, setShowAllColors] = useState(false);
 
-  const availableSizesForColor = variations
-    .filter(v => v.color === selectedColor && Number(v.quantity) > 0)
-    .map(v => v.size)
-    .filter(Boolean);
+  const availableSizesForColor = variations.length > 0
+    ? variations
+        .filter(v => v.color === selectedColor && Number(v.quantity) > 0)
+        .map(v => v.size)
+        .filter(Boolean)
+    : (product.parsedSizes || []);
 
   const [selectedSize, setSelectedSize] = useState(availableSizesForColor[0] || (requiresSize ? SIZES[2] : ''));
   const [added, setAdded] = useState(false);
@@ -75,7 +79,7 @@ function ProductCard({ product }) {
         setSelectedSize('');
       }
     }
-  }, [selectedColor, requiresSize]);
+  }, [selectedColor, requiresSize, availableSizesForColor]);
 
   const currentVariation = variations.find(v => 
     v.color === selectedColor && (requiresSize ? v.size === selectedSize : true)

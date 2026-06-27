@@ -41,7 +41,11 @@ export function ProductProvider({ children }) {
           setProducts(data.map(p => {
             let parsedVariations = [];
             let parsedGallery = [];
+            let parsedColors = [];
+            let parsedSizes = [];
             try { if (p.variations) parsedVariations = JSON.parse(p.variations); } catch(e) {}
+            try { if (p.colors) parsedColors = JSON.parse(p.colors); } catch(e) {}
+            try { if (p.sizes) parsedSizes = JSON.parse(p.sizes); } catch(e) {}
             try { 
               if (p.gallery_urls) {
                 const rawGallery = JSON.parse(p.gallery_urls);
@@ -60,7 +64,9 @@ export function ProductProvider({ children }) {
               price: Number(p.price) || 0,
               stock: Number(p.stock) || 0,
               parsedVariations,
-              parsedGallery
+              parsedGallery,
+              parsedColors,
+              parsedSizes
             };
           }));
         } else {
@@ -114,12 +120,18 @@ export function ProductProvider({ children }) {
       if (data.success && data.id) {
         const resolvedImg = resolveImageUrl(imageUrl);
         const resolvedGallery = galleryUrls.map(img => resolveImageUrl(img));
+        let parsedColors = [];
+        let parsedSizes = [];
+        try { if (product.colors) parsedColors = JSON.parse(product.colors); } catch(e) {}
+        try { if (product.sizes) parsedSizes = JSON.parse(product.sizes); } catch(e) {}
         const newProd = {
           ...product,
           id: data.id,
           image: resolvedImg,
           image_url: resolvedImg,
           parsedGallery: resolvedGallery,
+          parsedColors,
+          parsedSizes,
           sold: 0,
           created_at: new Date().toISOString()
         };
@@ -175,9 +187,22 @@ export function ProductProvider({ children }) {
           if (p.id === id) {
             let parsedVariations = [];
             let parsedGallery = galleryUrls.map(img => resolveImageUrl(img));
+            let parsedColors = [];
+            let parsedSizes = [];
             try { if (updatedData.variations) parsedVariations = JSON.parse(updatedData.variations); } catch(e) {}
+            try { if (updatedData.colors) parsedColors = JSON.parse(updatedData.colors); } catch(e) {}
+            try { if (updatedData.sizes) parsedSizes = JSON.parse(updatedData.sizes); } catch(e) {}
             const resolvedImg = resolveImageUrl(imageUrl);
-            return { ...p, ...updatedData, image: resolvedImg, image_url: resolvedImg, parsedVariations, parsedGallery };
+            return { 
+              ...p, 
+              ...updatedData, 
+              image: resolvedImg, 
+              image_url: resolvedImg, 
+              parsedVariations, 
+              parsedGallery,
+              parsedColors,
+              parsedSizes
+            };
           }
           return p;
         }));
