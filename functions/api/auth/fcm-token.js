@@ -1,4 +1,4 @@
-import { getCurrentUser } from '../utils/auth.js';
+import { getCurrentUser } from '../../utils/auth.js';
 
 export async function onRequestPost(context) {
   try {
