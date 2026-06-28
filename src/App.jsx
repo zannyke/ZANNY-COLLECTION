@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import Navbar from './components/Navbar'
 import ScrollToTop from './components/ScrollToTop'
 import CookieConsent from './components/CookieConsent'
+import AppBanner from './components/AppBanner'
 import ReviewPopup from './components/ReviewPopup'
 import { ThemeProvider } from './context/ThemeContext'
 
@@ -30,6 +31,7 @@ import Checkout from './pages/Checkout'
 import CollectionsPage from './pages/CollectionsPage'
 import OrderSuccess from './pages/OrderSuccess'
 import OrderDetailPage from './pages/OrderDetailPage'
+import AppPage from './pages/AppPage'
 
 // Admin pages (no Navbar/Footer)
 import AdminDashboard from './pages/admin/AdminDashboard'
@@ -69,6 +71,7 @@ function UserRoute({ children }) {
 function PublicLayout({ children }) {
   return (
     <>
+      <AppBanner />
       <Navbar />
       {children}
       <CookieConsent />
@@ -112,6 +115,7 @@ function App() {
               
               <Route path="/discover" element={<PublicLayout><Discover /></PublicLayout>} />
               <Route path="/world-of-zanny" element={<PublicLayout><WorldOfZanny /></PublicLayout>} />
+              <Route path="/app" element={<PublicLayout><AppPage /></PublicLayout>} />
               
               <Route path="/collections" element={<PublicLayout><CollectionsPage /></PublicLayout>} />
               <Route path="/collections/:categoryId" element={<PublicLayout><CategoryPage /></PublicLayout>} />

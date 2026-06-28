@@ -54,6 +54,7 @@ export default function Navbar() {
     { id: 'collections', title: 'Collections', path: '/collections' },
     { id: 'discover', title: 'Discover', path: '/discover' },
     { id: 'world-of-zanny', title: 'World of Zanny', path: '/world-of-zanny' },
+    { id: 'app', title: 'Get the App', path: '/app' },
     { id: 'contact', title: 'Contact Us', path: '/contact' },
     { id: 'shipping', title: 'Shipping & Returns', path: '/shipping' },
     { id: 'faqs', title: 'FAQs', path: '/faqs' },
@@ -216,8 +217,9 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* ── RIGHT: contact + monogram + cart ── */}
+        {/* ── RIGHT: auth + monogram + cart ── */}
         <div style={{ display: 'flex', gap: '1.2rem', flex: 1, justifyContent: 'flex-end', alignItems: 'center' }}>
+
           {/* Auth Link */}
           {!isAuthenticated ? (
             <Link
@@ -486,6 +488,7 @@ export default function Navbar() {
                     { label: 'Collections', to: '/collections' },
                     { label: 'Discover', to: '/discover' },
                     { label: 'World of Zanny', to: '/world-of-zanny' },
+                    { label: 'Get the App', to: '/app' },
                   ].map((item) => (
                     item.to.startsWith('/#') ? (
                       <a

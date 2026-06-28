@@ -157,6 +157,9 @@ ul {
   .search-btn { display: none !important; }
   .zanny-text-link { display: none !important; }
   .user-btn { display: flex !important; }
+  /* Hide the "Get App" text label on mobile — icon stays visible */
+  .nav-get-app-text { display: none !important; }
+  .navbar-get-app-btn { padding: 0.45rem 0.65rem !important; }
 
   /* Cart Page Styles */
   .cart-page-container { padding: 1.5rem 1rem !important; }

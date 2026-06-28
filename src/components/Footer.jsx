@@ -33,6 +33,14 @@ export default function Footer() {
             <li><Link to="/cookie" className="footer-link">Cookie Policy</Link></li>
           </ul>
         </div>
+
+        <div>
+          <h5 style={{ textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '1.5rem', fontSize: '0.875rem' }}>Mobile App</h5>
+          <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', color: '#999', fontSize: '0.875rem' }}>
+            <li><Link to="/app" className="footer-link">Get the App</Link></li>
+            <li><Link to="/app#how-to-install" className="footer-link">How to Install</Link></li>
+          </ul>
+        </div>
       </div>
 
       <div style={{ borderTop: '1px solid #333', paddingTop: '1.5rem', textAlign: 'center', color: '#666', fontSize: '0.75rem' }}>
