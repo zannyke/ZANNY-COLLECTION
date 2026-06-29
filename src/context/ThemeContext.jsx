@@ -23,35 +23,35 @@ export function ThemeProvider({ children }) {
     }
   }, [theme]);
 
-  // Design Tokens for Admin
+  // Design Tokens for Admin (Monochromatic luxury streetwear theme matching the main website)
   const colors = {
     dark: {
-      bg: '#0b1437',
-      surface: '#111c44',
-      surfaceHover: '#1b2a68',
-      border: '#1b2c66',
+      bg: '#000000',
+      surface: '#121212',
+      surfaceHover: '#1c1c1e',
+      border: '#242426',
       text: '#ffffff',
-      textMuted: '#a3aed0',
-      accent: '#00ff9d',
-      sidebar: '#111c44',
-      sidebarText: '#a3aed0',
+      textMuted: '#a1a1a6',
+      accent: '#ffffff',
+      sidebar: '#121212',
+      sidebarText: '#8e8e93',
       sidebarTextActive: '#ffffff',
-      sidebarHover: '#1b2a68',
-      input: '#0b1437',
+      sidebarHover: '#1c1c1e',
+      input: '#1e1e1f',
     },
     light: {
-      bg: '#f4f7fe',
+      bg: '#f8f8f8',
       surface: '#ffffff',
-      surfaceHover: '#f4f7fe',
-      border: '#e0e5f2',
-      text: '#1b254b',
-      textMuted: '#a3aed0',
-      accent: '#05cd99', // Emerald/Forest green
-      sidebar: '#0b2545', // Dark Navy Blue sidebar
-      sidebarText: '#8ca3d4',
-      sidebarTextActive: '#ffffff',
-      sidebarHover: '#133b6e',
-      input: '#f4f7fe',
+      surfaceHover: '#f0f0f0',
+      border: '#e5e5e7',
+      text: '#1a1a1a',
+      textMuted: '#6e6e73',
+      accent: '#1a1a1a',
+      sidebar: '#ffffff',
+      sidebarText: '#86868b',
+      sidebarTextActive: '#1a1a1a',
+      sidebarHover: '#f5f5f7',
+      input: '#f5f5f7',
     }
   };
 

@@ -251,7 +251,7 @@ function OrdersTab({ t, accentColor, uiPrompt }) {
 }
 
 // ── Security Tab ────────────────────────────────────────────────────────
-function SecurityTab({ t, accentColor, logout, uiConfirm }) {
+function SecurityTab({ t, accentColor, logout, uiConfirm, rawTheme }) {
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -853,7 +853,7 @@ export default function AdminDashboard() {
   const logout = () => { sessionStorage.removeItem('zanny_admin'); navigate('/admin/login'); };
 
   const chartColor  = resolvedTheme === 'dark' ? '#ffffff' : '#1a1a1a';
-  const accentColor = resolvedTheme === 'dark' ? '#00ff9d' : '#00b894';
+  const accentColor = resolvedTheme === 'dark' ? '#ffffff' : '#1a1a1a';
 
   const [overviewView, setOverviewView] = useState('alerts');
   const [recentOrders, setRecentOrders] = useState([]);
@@ -1328,7 +1328,7 @@ export default function AdminDashboard() {
 
         {/* ── SECURITY TAB ── */}
         {activeTab === 'security' && (
-          <SecurityTab t={t} accentColor={accentColor} logout={logout} uiConfirm={uiConfirm} />
+          <SecurityTab t={t} accentColor={accentColor} logout={logout} uiConfirm={uiConfirm} rawTheme={rawTheme} />
         )}
       </div>
 
