@@ -34,9 +34,9 @@ export function AuthProvider({ children }) {
       const data = await res.json();
       if (data.success) {
         setUser(data.user);
-        return { success: true };
+        return { success: true, user: data.user };
       }
-      return { success: false, message: data.message, needsVerification: data.needsVerification, email: data.email };
+      return { success: false, message: data.message, needsVerification: data.needsVerification, email: data.email, secondsLeft: data.secondsLeft };
     } catch (err) {
       return { success: false, message: 'Server error' };
     }

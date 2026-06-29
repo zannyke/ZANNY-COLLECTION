@@ -394,7 +394,10 @@ export default function AccountPage() {
                       </button>
 
                       {user.role === 'admin' && (
-                        <button onClick={() => setShowAdminPrompt(true)} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem 1.25rem', background: '#1a1a1a', border: '1px solid #1a1a1a', borderRadius: '8px', cursor: 'pointer', textAlign: 'left', color: '#fff', fontSize: '0.9rem', transition: 'all 0.2s' }}>
+                        <button onClick={() => {
+                          sessionStorage.setItem('zanny_admin_unlocked', 'true');
+                          navigate('/admin');
+                        }} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem 1.25rem', background: '#1a1a1a', border: '1px solid #1a1a1a', borderRadius: '8px', cursor: 'pointer', textAlign: 'left', color: '#fff', fontSize: '0.9rem', transition: 'all 0.2s' }}>
                           <Shield size={18} color="#00ff9d" />
                           <div style={{ flex: 1 }}>
                             <span style={{ display: 'block', fontWeight: 600 }}>Admin Dashboard</span>

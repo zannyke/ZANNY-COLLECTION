@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
@@ -12,21 +12,72 @@ export default function CustomerLogin() {
   const [needsVerification, setNeedsVerification] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [lockoutTime, setLockoutTime] = useState(0);
   
   const { login, verify } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || "/";
 
+  // Check lockout on load or email change
+  useEffect(() => {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail) return;
+    const stored = localStorage.getItem(`lockout_until_${cleanEmail}`);
+    if (stored) {
+      const remaining = Math.ceil((Number(stored) - Date.now()) / 1000);
+      if (remaining > 0) {
+        setLockoutTime(remaining);
+        setError(`Too many failed login attempts. Please try again in ${remaining} seconds.`);
+      } else {
+        localStorage.removeItem(`lockout_until_${cleanEmail}`);
+        setError('');
+      }
+    } else {
+      setLockoutTime(0);
+      setError('');
+    }
+  }, [email]);
+
+  // Handle countdown tick
+  useEffect(() => {
+    if (lockoutTime <= 0) return;
+    const timer = setInterval(() => {
+      setLockoutTime(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          const cleanEmail = email.trim().toLowerCase();
+          localStorage.removeItem(`lockout_until_${cleanEmail}`);
+          setError('');
+          return 0;
+        }
+        const nextTime = prev - 1;
+        setError(`Too many failed login attempts. Please try again in ${nextTime} seconds.`);
+        return nextTime;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [lockoutTime, email]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (lockoutTime > 0) return;
+    
     setLoading(true);
     setError('');
 
     setTimeout(async () => {
       const res = await login(email, password);
       if (res.success) {
+        if (res.user?.role === 'admin') {
+          sessionStorage.setItem('zanny_admin_unlocked', 'true');
+        }
         navigate(from, { replace: true });
+      } else if (res.secondsLeft) {
+        const until = Date.now() + res.secondsLeft * 1000;
+        localStorage.setItem(`lockout_until_${email.trim().toLowerCase()}`, String(until));
+        setLockoutTime(res.secondsLeft);
+        setError(res.message);
       } else if (res.needsVerification) {
         setNeedsVerification(true);
       } else {
@@ -182,11 +233,14 @@ export default function CustomerLogin() {
 
               <button 
                 type="submit" 
-                disabled={loading}
+                disabled={loading || lockoutTime > 0}
                 style={{ 
-                  background: '#1a1a1a', color: '#fff', border: 'none', padding: '1rem', 
+                  background: (loading || lockoutTime > 0) ? '#555' : '#1a1a1a', 
+                  color: '#fff', border: 'none', padding: '1rem', 
                   fontSize: '0.85rem', fontWeight: 700, letterSpacing: '2px', 
-                  textTransform: 'uppercase', cursor: 'pointer', display: 'flex', 
+                  textTransform: 'uppercase', 
+                  cursor: (loading || lockoutTime > 0) ? 'not-allowed' : 'pointer', 
+                  display: 'flex', 
                   alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
                   marginTop: '1rem'
                 }}

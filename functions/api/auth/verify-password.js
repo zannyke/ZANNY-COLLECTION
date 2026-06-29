@@ -50,7 +50,8 @@ export async function onRequestPost(context) {
         const secondsLeft = Math.ceil((lockedUntil - now) / 1000);
         return Response.json({ 
           success: false, 
-          message: `Too many failed attempts. Please try again in ${secondsLeft} seconds.` 
+          message: `Too many failed attempts. Please try again in ${secondsLeft} seconds.`,
+          secondsLeft
         }, { status: 429 });
       }
     }
