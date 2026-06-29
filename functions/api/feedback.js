@@ -1,7 +1,10 @@
-import { getCurrentUser } from '../utils/auth.js';
+import { getCurrentUser, requireAdmin } from '../utils/auth.js';
 
 export async function onRequestGet(context) {
   try {
+    const auth = await requireAdmin(context);
+    if (auth instanceof Response) return auth;
+
     const { results } = await context.env.DB.prepare(`
       SELECT f.*, o.user_id 
       FROM feedback f
@@ -10,7 +13,8 @@ export async function onRequestGet(context) {
     `).all();
     return Response.json(results);
   } catch (err) {
-    return Response.json({ error: err.message }, { status: 500 });
+    console.error(err);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -61,6 +65,7 @@ export async function onRequestPost(context) {
 
     return Response.json({ success: true, feedbackId });
   } catch (err) {
-    return Response.json({ error: err.message }, { status: 500 });
+    console.error(err);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

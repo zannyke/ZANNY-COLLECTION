@@ -59,7 +59,8 @@ export async function onRequestGet(context) {
 
     return Response.json(enriched);
   } catch (err) {
-    return Response.json({ error: err.message }, { status: 500 });
+    console.error(err);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -481,6 +482,7 @@ export async function onRequestPatch(context) {
 
     return Response.json({ success: true });
   } catch (err) {
-    return Response.json({ error: err.message }, { status: 500 });
+    console.error(err);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -27,7 +27,8 @@ export async function onRequestGet(context) {
 
     return Response.json({ success: true, items: items.results || [] });
   } catch (err) {
-    return Response.json({ success: false, error: err.message }, { status: 500 });
+    console.error(err);
+    return Response.json({ success: false, error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -69,6 +70,7 @@ export async function onRequestPost(context) {
 
     return Response.json({ success: true });
   } catch (err) {
-    return Response.json({ success: false, error: err.message }, { status: 500 });
+    console.error(err);
+    return Response.json({ success: false, error: 'Internal server error' }, { status: 500 });
   }
 }
