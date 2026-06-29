@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, User, ArrowRight, Eye, EyeOff, Phone, MapPin, ChevronDown } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, Eye, EyeOff, Phone, MapPin, ChevronDown, ArrowLeft } from 'lucide-react';
 import { DELIVERY_ZONES } from '../utils/delivery';
 import CustomSelect from '../components/CustomSelect';
 
@@ -56,7 +56,30 @@ export default function CustomerRegister() {
   return (
     <div className="auth-page-container" style={{ minHeight: '100vh', display: 'flex', background: '#fff', fontFamily: 'var(--font-body)' }}>
       {/* Right side: Form */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', position: 'relative' }}>
+        <button 
+          onClick={() => window.history.state?.idx > 0 ? navigate(-1) : navigate('/')}
+          style={{ 
+            position: 'absolute', 
+            top: '2rem', 
+            left: '2rem', 
+            color: '#1a1a1a', 
+            display: 'flex', 
+            alignItems: 'center', 
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: 0,
+            opacity: 0.6,
+            transition: 'opacity 0.2s',
+            zIndex: 10
+          }}
+          onMouseEnter={e => e.currentTarget.style.opacity = 1}
+          onMouseLeave={e => e.currentTarget.style.opacity = 0.6}
+          title="Go Back"
+        >
+          <ArrowLeft size={22} />
+        </button>
         <motion.div 
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
