@@ -69,10 +69,13 @@ function UserRoute({ children }) {
 
 // Layout with Navbar + Footer
 function PublicLayout({ children }) {
+  const location = useLocation();
+  const hideHeader = location.pathname === '/login' || location.pathname === '/register';
+
   return (
     <>
-      <AppBanner />
-      <Navbar />
+      {!hideHeader && <AppBanner />}
+      {!hideHeader && <Navbar />}
       {children}
       <CookieConsent />
     </>
