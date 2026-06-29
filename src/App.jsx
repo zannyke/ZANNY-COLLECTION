@@ -75,7 +75,7 @@ function PublicLayout({ children }) {
   return (
     <>
       {!hideHeader && <AppBanner />}
-      {!hideHeader && <Navbar />}
+      <Navbar />
       {children}
       <CookieConsent />
     </>

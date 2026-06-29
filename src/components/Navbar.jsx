@@ -43,6 +43,10 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState('');
   const location = useLocation();
 
+  const [isHoveredAtTop, setIsHoveredAtTop] = useState(false);
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+  const showNavbar = !isAuthPage || isHoveredAtTop;
+
   const isHomePage = location.pathname === '/';
   const shouldBeSolid = !isHomePage || isScrolled;
   const iconColor = shouldBeSolid ? '#1a1a1a' : '#fff';
@@ -131,25 +135,39 @@ export default function Navbar() {
 
   return (
     <>
-      <motion.nav
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="navbar-container"
-        style={{
+      <div
+        onMouseEnter={() => { if (isAuthPage) setIsHoveredAtTop(true); }}
+        onMouseLeave={() => { if (isAuthPage) setIsHoveredAtTop(false); }}
+        style={isAuthPage ? {
           position: 'fixed',
           top: 0, left: 0, right: 0,
-          zIndex: 50,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          background: shouldBeSolid ? 'rgba(255,255,255,0.97)' : 'transparent',
-          backdropFilter: shouldBeSolid ? 'blur(14px)' : 'none',
-          color: iconColor,
-          borderBottom: shouldBeSolid ? '1px solid rgba(0,0,0,0.06)' : 'none',
-          transition: 'all 0.35s ease',
+          height: showNavbar ? '80px' : '30px',
+          zIndex: 100,
+          background: 'transparent',
+          transition: 'height 0.2s ease',
+        } : {
+          display: 'contents'
         }}
       >
+        <motion.nav
+          initial={{ y: -100 }}
+          animate={{ y: showNavbar ? 0 : -100 }}
+          transition={{ duration: isAuthPage ? 0.45 : 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="navbar-container"
+          style={{
+            position: isAuthPage ? 'absolute' : 'fixed',
+            top: 0, left: 0, right: 0,
+            zIndex: 50,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            background: shouldBeSolid ? 'rgba(255,255,255,0.97)' : 'transparent',
+            backdropFilter: shouldBeSolid ? 'blur(14px)' : 'none',
+            color: iconColor,
+            borderBottom: shouldBeSolid ? '1px solid rgba(0,0,0,0.06)' : 'none',
+            transition: 'all 0.35s ease',
+          }}
+        >
         {/* ── LEFT: grid menu + search ── */}
         <div style={{ display: 'flex', gap: '1.6rem', flex: 1, alignItems: 'center' }}>
           {/* Grid / Menu pill */}
@@ -313,6 +331,7 @@ export default function Navbar() {
           </Link>
         </div>
       </motion.nav>
+      </div>
 
       {/* ── SEARCH OVERLAY ── */}
       <AnimatePresence>
