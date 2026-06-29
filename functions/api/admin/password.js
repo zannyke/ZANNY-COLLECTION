@@ -20,13 +20,28 @@ export async function onRequestPut(context) {
       "SELECT password_hash, salt FROM users WHERE id = ?"
     ).bind(adminId).first();
 
+    let actualHash = admin.password_hash || '';
+    let actualSaltHex = admin.salt || '';
+
+    if (admin.password_hash && admin.password_hash.startsWith('pbkdf2:')) {
+      const parts = admin.password_hash.split(':');
+      if (parts.length === 3) {
+        if (!actualSaltHex) actualSaltHex = parts[1];
+        actualHash = parts[2];
+      }
+    }
+
+    if (!actualHash || !actualSaltHex) {
+      return Response.json({ error: 'Admin password record is corrupted or incomplete' }, { status: 500 });
+    }
+
     const enc = new TextEncoder();
     const oldKeyMaterial = await crypto.subtle.importKey("raw", enc.encode(oldPassword), "PBKDF2", false, ["deriveBits"]);
-    const oldSaltBuffer = new Uint8Array(admin.salt.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+    const oldSaltBuffer = new Uint8Array(actualSaltHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
     const oldHashBuffer = await crypto.subtle.deriveBits({ name: "PBKDF2", salt: oldSaltBuffer, iterations: 100000, hash: "SHA-256" }, oldKeyMaterial, 256);
     const oldInputHash = Array.from(new Uint8Array(oldHashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
 
-    if (oldInputHash !== admin.password_hash) {
+    if (oldInputHash !== actualHash) {
       await new Promise(res => setTimeout(res, 500));
       return Response.json({ error: 'Incorrect current password' }, { status: 401 });
     }
