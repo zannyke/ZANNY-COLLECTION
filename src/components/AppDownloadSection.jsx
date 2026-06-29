@@ -195,21 +195,17 @@ export default function AppDownloadSection() {
                     <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.75rem', margin: '0.75rem 0 0.25rem 0' }}>
                       v{apkInfo.version}
                     </h3>
-                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#777' }}>
-                      Build {apkInfo.build} • Published {formatDate(apkInfo.publishedAt)}
-                    </p>
                   </div>
 
                   <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)' }} />
 
-                  {apkInfo.changelog && (
-                    <div>
-                      <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.75rem', color: '#888', textTransform: 'uppercase', letterSpacing: '1px' }}>What's New</p>
-                      <p style={{ margin: 0, fontSize: '0.85rem', color: '#bbb', lineHeight: 1.5 }}>
-                        {apkInfo.changelog}
-                      </p>
-                    </div>
-                  )}
+                  {/* Premium Clothing Message */}
+                  <div>
+                    <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.75rem', color: '#888', textTransform: 'uppercase', letterSpacing: '1px' }}>Premium Streetwear</p>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#bbb', lineHeight: 1.5 }}>
+                      Experience premium fashion. Download our official Android app to browse collections, receive notifications for limited streetwear drops, and shop seamlessly on the go.
+                    </p>
+                  </div>
 
                   <a
                     href={apkInfo.apk_url || apkInfo.url}

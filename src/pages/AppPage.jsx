@@ -384,34 +384,27 @@ export default function AppPage() {
                       >
                         {apkInfo ? `v${apkInfo.version}` : 'Zanny App'}
                       </h2>
-                      {apkInfo && (
-                        <p style={{ color: '#aaa', fontSize: '0.75rem', margin: 0 }}>
-                          Build {apkInfo.build} · Released {formatDate(apkInfo.publishedAt)}
-                        </p>
-                      )}
                     </div>
 
                     <div style={{ height: '1px', background: '#eee' }} />
 
-                    {/* Changelog */}
-                    {apkInfo?.changelog && (
-                      <div>
-                        <p
-                          style={{
-                            fontSize: '0.65rem',
-                            letterSpacing: '1.5px',
-                            textTransform: 'uppercase',
-                            color: '#aaa',
-                            marginBottom: '0.5rem',
-                          }}
-                        >
-                          What's New
-                        </p>
-                        <p style={{ color: '#555', fontSize: '0.875rem', lineHeight: 1.6 }}>
-                          {apkInfo.changelog}
-                        </p>
-                      </div>
-                    )}
+                    {/* Premium Clothing Message */}
+                    <div>
+                      <p
+                        style={{
+                          fontSize: '0.65rem',
+                          letterSpacing: '1.5px',
+                          textTransform: 'uppercase',
+                          color: '#aaa',
+                          marginBottom: '0.5rem',
+                        }}
+                      >
+                        Premium Streetwear
+                      </p>
+                      <p style={{ color: '#555', fontSize: '0.875rem', lineHeight: 1.6 }}>
+                        Experience premium fashion. Download our official Android app to browse collections, receive notifications for limited streetwear drops, and shop seamlessly on the go.
+                      </p>
+                    </div>
 
                     {/* Download CTA */}
                     <a
