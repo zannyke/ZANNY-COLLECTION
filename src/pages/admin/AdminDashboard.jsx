@@ -866,21 +866,7 @@ export default function AdminDashboard() {
   }, []);
 
   const isDark = resolvedTheme === 'dark';
-  const glassT = {
-    bg: 'transparent',
-    surface: isDark ? 'rgba(15, 23, 42, 0.45)' : 'rgba(255, 255, 255, 0.6)',
-    surfaceHover: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.85)',
-    border: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(11, 20, 55, 0.12)',
-    text: isDark ? '#ffffff' : '#0f172a',
-    textMuted: isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(15, 23, 42, 0.65)',
-    accent: accentColor,
-    sidebar: isDark ? 'rgba(15, 23, 42, 0.6)' : 'rgba(255, 255, 255, 0.75)',
-    sidebarText: isDark ? 'rgba(255, 255, 255, 0.7)' : 'rgba(15, 23, 42, 0.75)',
-    sidebarTextActive: isDark ? '#ffffff' : '#0f172a',
-    sidebarHover: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.05)',
-    input: isDark ? 'rgba(0, 0, 0, 0.25)' : 'rgba(255, 255, 255, 0.55)',
-  };
-  const t = glassT;
+  const t = rawTheme;
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard',   icon: <LayoutDashboard size={16} strokeWidth={1.5} />, path: null },
@@ -895,24 +881,14 @@ export default function AdminDashboard() {
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundImage: 'url(/homepage-background.jpg)',
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundAttachment: 'fixed',
+      background: t.bg,
       color: t.text,
       fontFamily: 'var(--font-body)',
-      position: 'relative'
+      display: 'flex',
+      flexDirection: 'column',
+      transition: 'background 0.3s ease, color 0.3s ease'
     }}>
-      {/* Dark/Light overlay for premium readability */}
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        background: isDark ? 'rgba(8, 10, 24, 0.72)' : 'rgba(244, 247, 254, 0.45)',
-        zIndex: 1,
-        pointerEvents: 'none'
-      }} />
-
-      <div style={{ position: 'relative', zIndex: 2, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', flex: 1 }}>
         
         {/* Mobile Header (Only visible on small screens) */}
         <div className="mobile-admin-header" style={{
