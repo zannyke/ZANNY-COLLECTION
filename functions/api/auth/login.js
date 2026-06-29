@@ -1,12 +1,61 @@
 export async function onRequestPost(context) {
   try {
     const data = await context.request.json();
+    const email = (data.email || '').trim().toLowerCase();
 
-    const user = await context.env.DB.prepare(
+    if (!email) {
+      return Response.json({ success: false, message: 'Email is required' }, { status: 400 });
+    }
+
+    const db = context.env.DB;
+    const now = new Date();
+
+    // 1. Check Rate Limit
+    const limitRecord = await db.prepare(
+      "SELECT attempts, locked_until FROM login_attempts WHERE email = ?"
+    ).bind(email).first();
+
+    if (limitRecord && limitRecord.locked_until) {
+      const lockedUntil = new Date(limitRecord.locked_until);
+      if (now < lockedUntil) {
+        const secondsLeft = Math.ceil((lockedUntil - now) / 1000);
+        return Response.json({ 
+          success: false, 
+          message: `Too many failed login attempts. Please try again in ${secondsLeft} seconds.` 
+        }, { status: 429 });
+      }
+    }
+
+    const recordFailedAttempt = async () => {
+      const maxAttempts = 3;
+      const lockDurationMs = 5 * 60 * 1000; // 5 minutes
+      
+      const record = await db.prepare(
+        "SELECT attempts FROM login_attempts WHERE email = ?"
+      ).bind(email).first();
+      
+      if (record) {
+        const newAttempts = record.attempts + 1;
+        let lockedUntil = null;
+        if (newAttempts >= maxAttempts) {
+          lockedUntil = new Date(now.getTime() + lockDurationMs).toISOString();
+        }
+        await db.prepare(
+          "UPDATE login_attempts SET attempts = ?, last_attempt = ?, locked_until = ? WHERE email = ?"
+        ).bind(newAttempts, now.toISOString(), lockedUntil, email).run();
+      } else {
+        await db.prepare(
+          "INSERT INTO login_attempts (email, attempts, last_attempt, locked_until) VALUES (?, 1, ?, NULL)"
+        ).bind(email, now.toISOString()).run();
+      }
+    };
+
+    const user = await db.prepare(
       "SELECT id, email, password_hash, salt, first_name, last_name, role, is_verified, auth_provider, phone_number, default_delivery_zone, restricted_from_cod FROM users WHERE email = ?"
-    ).bind(data.email).first();
+    ).bind(email).first();
 
     if (!user) {
+      await recordFailedAttempt();
       return Response.json({ success: false, message: 'Invalid credentials' }, { status: 401 });
     }
 
@@ -47,18 +96,21 @@ export async function onRequestPost(context) {
     }
 
     if (!isValid) {
+      await recordFailedAttempt();
       return Response.json({ success: false, message: 'Invalid credentials' }, { status: 401 });
     }
 
-    // Valid login. Update tracking and issue session
+    // Valid login. Clear rate limit attempts, update tracking and issue session
+    await db.prepare("DELETE FROM login_attempts WHERE email = ?").bind(email).run();
+
     const sessionId = crypto.randomUUID();
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
-    await context.env.DB.prepare(
+    await db.prepare(
       "INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)"
     ).bind(sessionId, user.id, expiresAt.toISOString()).run();
 
-    await context.env.DB.prepare(
+    await db.prepare(
       "UPDATE users SET login_count = login_count + 1, last_login = CURRENT_TIMESTAMP WHERE id = ?"
     ).bind(user.id).run();
 

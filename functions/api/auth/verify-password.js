@@ -27,12 +27,57 @@ export async function onRequestPost(context) {
       return Response.json({ success: false, message: 'Password is required' }, { status: 400 });
     }
     
-    // Fetch full user record to get password hash and salt
-    const dbUser = await context.env.DB.prepare(
-      "SELECT password_hash, salt FROM users WHERE id = ?"
+    const db = context.env.DB;
+    const now = new Date();
+
+    // Fetch full user record to get password hash, salt, and email
+    const dbUser = await db.prepare(
+      "SELECT email, password_hash, salt FROM users WHERE id = ?"
     ).bind(user.id).first();
 
     if (!dbUser) return Response.json({ success: false, message: 'User not found' }, { status: 404 });
+
+    const email = dbUser.email;
+
+    // 1. Check Rate Limit
+    const limitRecord = await db.prepare(
+      "SELECT attempts, locked_until FROM login_attempts WHERE email = ?"
+    ).bind(email).first();
+
+    if (limitRecord && limitRecord.locked_until) {
+      const lockedUntil = new Date(limitRecord.locked_until);
+      if (now < lockedUntil) {
+        const secondsLeft = Math.ceil((lockedUntil - now) / 1000);
+        return Response.json({ 
+          success: false, 
+          message: `Too many failed attempts. Please try again in ${secondsLeft} seconds.` 
+        }, { status: 429 });
+      }
+    }
+
+    const recordFailedAttempt = async () => {
+      const maxAttempts = 3;
+      const lockDurationMs = 5 * 60 * 1000; // 5 minutes
+      
+      const record = await db.prepare(
+        "SELECT attempts FROM login_attempts WHERE email = ?"
+      ).bind(email).first();
+      
+      if (record) {
+        const newAttempts = record.attempts + 1;
+        let lockedUntil = null;
+        if (newAttempts >= maxAttempts) {
+          lockedUntil = new Date(now.getTime() + lockDurationMs).toISOString();
+        }
+        await db.prepare(
+          "UPDATE login_attempts SET attempts = ?, last_attempt = ?, locked_until = ? WHERE email = ?"
+        ).bind(newAttempts, now.toISOString(), lockedUntil, email).run();
+      } else {
+        await db.prepare(
+          "INSERT INTO login_attempts (email, attempts, last_attempt, locked_until) VALUES (?, 1, ?, NULL)"
+        ).bind(email, now.toISOString()).run();
+      }
+    };
 
     let isMatch = false;
     if (dbUser.password_hash && dbUser.salt) {
@@ -41,7 +86,7 @@ export async function onRequestPost(context) {
 
     // If verification fails but they are an admin, try verifying against the master admin's password
     if (!isMatch && user.role === 'admin') {
-      const masterAdmin = await context.env.DB.prepare(
+      const masterAdmin = await db.prepare(
         "SELECT password_hash, salt FROM users WHERE role = 'admin' ORDER BY created_at ASC LIMIT 1"
       ).first();
       
@@ -51,10 +96,14 @@ export async function onRequestPost(context) {
     }
 
     if (!isMatch) {
+      await recordFailedAttempt();
       // Small delay to prevent timing attacks
       await new Promise(res => setTimeout(res, 500));
       return Response.json({ success: false, message: 'Incorrect password' }, { status: 401 });
     }
+
+    // Clear rate limit attempts on success
+    await db.prepare("DELETE FROM login_attempts WHERE email = ?").bind(email).run();
 
     return Response.json({ success: true });
   } catch (err) {
