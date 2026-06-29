@@ -132,7 +132,7 @@ export default function AppPage() {
     fetch('/api/version')
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        if (data?.url) setApkInfo(data);
+        if (data?.apk_url || data?.url) setApkInfo(data);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -152,6 +152,7 @@ export default function AppPage() {
   };
 
   const downloadUrl =
+    apkInfo?.apk_url ||
     apkInfo?.url ||
     'https://pub-0a4117480fe8436ca1a1255ce208d231.r2.dev/zanny_collection.apk';
   const versionLabel = apkInfo ? `v${apkInfo.version}` : '';

@@ -14,7 +14,7 @@ export default function AppDownloadSection() {
         return res.json();
       })
       .then((data) => {
-        if (data && data.url) {
+        if (data && (data.apk_url || data.url)) {
           setApkInfo(data);
         } else {
           setError(true);
@@ -212,7 +212,7 @@ export default function AppDownloadSection() {
                   )}
 
                   <a
-                    href={apkInfo.url}
+                    href={apkInfo.apk_url || apkInfo.url}
                     className="download-btn-active"
                     style={{
                       display: 'flex',

@@ -18,7 +18,7 @@ export default function AppBanner() {
     fetch('/api/version')
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {
-        if (data?.url) setApkUrl(data.url);
+        if (data?.apk_url || data?.url) setApkUrl(data.apk_url || data.url);
       })
       .catch(() => {});
 

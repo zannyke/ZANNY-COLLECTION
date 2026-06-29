@@ -623,7 +623,7 @@ function VersionTab({ t, accentColor, rawTheme }) {
         if (data) {
           setVersion(data.version || '');
           setBuild(String((data.build || 0) + 1));
-          setApkUrl(data.url || '');
+          setApkUrl(data.apk_url || data.url || '');
           setChangelog('');
         }
       }
@@ -678,6 +678,7 @@ function VersionTab({ t, accentColor, rawTheme }) {
           version,
           build: Number(build),
           url: apkUrl,
+          apk_url: apkUrl, // Send both keys for backwards-compatibility
           changelog,
           admin_secret: adminSecret
         })
@@ -715,8 +716,8 @@ function VersionTab({ t, accentColor, rawTheme }) {
             
             <div>
               <p style={{ color: t.textMuted, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.3rem' }}>Release URL</p>
-              <a href={apkInfo.url} target="_blank" rel="noopener noreferrer" style={{ color: accentColor, wordBreak: 'break-all', display: 'inline-block', textDecoration: 'underline' }}>
-                {apkInfo.url}
+              <a href={apkInfo.apk_url || apkInfo.url} target="_blank" rel="noopener noreferrer" style={{ color: accentColor, wordBreak: 'break-all', display: 'inline-block', textDecoration: 'underline' }}>
+                {apkInfo.apk_url || apkInfo.url}
               </a>
             </div>
 
