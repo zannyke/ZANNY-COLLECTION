@@ -144,7 +144,6 @@ export default function Navbar() {
           height: showNavbar ? '80px' : '30px',
           zIndex: 100,
           background: 'transparent',
-          transition: 'height 0.2s ease',
         } : {
           display: 'contents'
         }}
@@ -152,7 +151,7 @@ export default function Navbar() {
         <motion.nav
           initial={{ y: -100 }}
           animate={{ y: showNavbar ? 0 : -100 }}
-          transition={{ duration: isAuthPage ? 0.45 : 0.8, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: isAuthPage ? 0.2 : 0.8, ease: 'easeOut' }}
           className="navbar-container"
           style={{
             position: isAuthPage ? 'absolute' : 'fixed',
