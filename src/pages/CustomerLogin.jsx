@@ -69,9 +69,6 @@ export default function CustomerLogin() {
     setTimeout(async () => {
       const res = await login(email, password);
       if (res.success) {
-        if (res.user?.role === 'admin') {
-          sessionStorage.setItem('zanny_admin_unlocked', 'true');
-        }
         navigate(from, { replace: true });
       } else if (res.secondsLeft) {
         const until = Date.now() + res.secondsLeft * 1000;
