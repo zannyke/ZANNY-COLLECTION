@@ -84,10 +84,13 @@ function ProductCard({ product }) {
   const currentVariation = variations.find(v => 
     v.color === selectedColor && (requiresSize ? v.size === selectedSize : true)
   );
-  const maxStock = variations.length > 0
-    ? (currentVariation ? Number(currentVariation.quantity) : 0)
-    : Number(product.stock || 0);
-  const isGlobalOutOfStock = product.stock <= 0;
+  const isPreorder = product.is_preorder === 1 || product.is_preorder === true;
+  const maxStock = isPreorder 
+    ? 999 
+    : (variations.length > 0
+        ? (currentVariation ? Number(currentVariation.quantity) : 0)
+        : Number(product.stock || 0));
+  const isGlobalOutOfStock = !isPreorder && product.stock <= 0;
 
   const handleAdd = (e) => {
     e.preventDefault();
@@ -124,6 +127,16 @@ function ProductCard({ product }) {
             <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f4f4f4' }}>
               <span style={{ color: '#aaa', fontSize: '0.7rem', letterSpacing: '2px', textTransform: 'uppercase' }}>ZANNY</span>
             </div>
+          )}
+          {isPreorder && (
+            <span style={{
+              position: 'absolute', top: '0.75rem', right: '0.75rem',
+              background: '#6f42c1', 
+              color: '#fff', fontSize: '0.6rem', fontWeight: 700,
+              padding: '0.2rem 0.55rem', letterSpacing: '1.5px',
+            }}>
+              PRE-ORDER
+            </span>
           )}
           {product.badge && (
             <span style={{
@@ -229,7 +242,7 @@ function ProductCard({ product }) {
           textTransform: 'uppercase', transition: 'background 0.3s',
           fontFamily: 'var(--font-body)',
         }}>
-        {isGlobalOutOfStock ? 'Sold Out' : (maxStock <= 0 ? 'Color Out of Stock' : (added ? '✓ Added to Cart' : 'Add to Cart'))}
+        {isPreorder ? (added ? '✓ Added Pre-Order' : 'Pre-Order Now') : (isGlobalOutOfStock ? 'Sold Out' : (maxStock <= 0 ? 'Color Out of Stock' : (added ? '✓ Added to Cart' : 'Add to Cart')))}
       </motion.button>
     </motion.div>
   );

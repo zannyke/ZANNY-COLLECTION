@@ -14,7 +14,7 @@ export default function AddProduct() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
     name: '', category: 'shirts-tees', price: '', original_price: '', discount_label: '', description: '',
-    badge: 'NEW', variations: [{ color: 'Black', size: 'M', quantity: 1 }]
+    badge: 'NEW', variations: [{ color: 'Black', size: 'M', quantity: 1 }], is_preorder: 0
   });
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -139,8 +139,8 @@ export default function AddProduct() {
             {errors.description && <p style={{ color: '#c0392b', fontSize: '0.72rem', marginTop: '0.35rem' }}>{errors.description}</p>}
           </div>
 
-          {/* Row: Price + Badge */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+          {/* Row: Price + Badge + Pre-Order Checkbox */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.5rem' }}>
             <div>
               <label style={labelStyle}>Price (KSh) *</label>
               <input type="number" style={inputStyle('price')} value={form.price} onChange={e => set('price', e.target.value)} placeholder="e.g. 3500" min="0" />
@@ -151,6 +151,17 @@ export default function AddProduct() {
               <select value={form.badge} onChange={e => set('badge', e.target.value)} style={{ ...inputStyle(), appearance: 'none' }}>
                 {BADGES.map(b => <option key={b} value={b} style={{ background: t.surface, color: t.text }}>{b || '(none)'}</option>)}
               </select>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <label style={{ ...labelStyle, display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', height: '100%', marginTop: '0.8rem' }}>
+                <input 
+                  type="checkbox" 
+                  checked={form.is_preorder === 1} 
+                  onChange={e => set('is_preorder', e.target.checked ? 1 : 0)} 
+                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                />
+                <span style={{ fontWeight: 600, fontSize: '0.8rem' }}>Pre-Order Item</span>
+              </label>
             </div>
           </div>
 

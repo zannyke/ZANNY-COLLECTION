@@ -94,7 +94,9 @@ export async function onRequestPost(context) {
         return Response.json({ error: `Product not found (ID: ${item.id}).` }, { status: 400 });
       }
 
-      if (product.stock < item.qty) {
+      const isPreorder = product.is_preorder === 1;
+
+      if (!isPreorder && product.stock < item.qty) {
         return Response.json({ 
           error: `Out of stock: ${product.name}. Only ${product.stock} left. Please return to your cart and remove/adjust this item.` 
         }, { status: 400 });
@@ -127,7 +129,8 @@ export async function onRequestPost(context) {
           category: product.category || product.category_slug || '',
           is_new: product.is_new === 1,
           is_sale: product.is_sale === 1,
-          stock: product.stock
+          stock: product.stock,
+          is_preorder: isPreorder
         },
         selected_color: item.color || '',
         selected_size: item.size || '',
@@ -165,11 +168,19 @@ export async function onRequestPost(context) {
     
     await orderStmt.run();
 
-    // Decrement stock and increment sold count in products table
-    for (const item of data.items) {
-      await context.env.DB.prepare(
-        "UPDATE products SET sold = sold + ?, stock = MAX(0, stock - ?) WHERE id = ?"
-      ).bind(item.qty, item.qty, item.id).run();
+    // Decrement stock (for standard items only) and increment sold count in products table
+    for (const item of serializedItemsArray) {
+      if (item.product.is_preorder) {
+        // Pre-order item: do NOT decrement stock, only increment sold count
+        await context.env.DB.prepare(
+          "UPDATE products SET sold = sold + ? WHERE id = ?"
+        ).bind(item.quantity, item.product.id).run();
+      } else {
+        // Standard item: decrement stock and increment sold count
+        await context.env.DB.prepare(
+          "UPDATE products SET sold = sold + ?, stock = MAX(0, stock - ?) WHERE id = ?"
+        ).bind(item.quantity, item.quantity, item.product.id).run();
+      }
     }
 
     // Fetch user details for customer email

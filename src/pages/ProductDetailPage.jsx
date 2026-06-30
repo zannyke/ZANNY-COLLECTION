@@ -64,9 +64,12 @@ export default function ProductDetailPage() {
   const currentVariation = variations.find(v => 
     v.color === selectedColor && (requiresSize ? v.size === selectedSize : true)
   );
-  const maxStock = variations.length > 0
-    ? (currentVariation ? Number(currentVariation.quantity) : 0)
-    : Number(product?.stock || 0);
+  const isPreorder = product?.is_preorder === 1 || product?.is_preorder === true;
+  const maxStock = isPreorder
+    ? 999
+    : (variations.length > 0
+        ? (currentVariation ? Number(currentVariation.quantity) : 0)
+        : Number(product?.stock || 0));
 
   useEffect(() => {
     if (quantity > maxStock) {
@@ -155,6 +158,15 @@ export default function ProductDetailPage() {
                 </>
               )}
 
+              {isPreorder && (
+                <span style={{
+                  position: 'absolute', top: '1.5rem', right: '1.5rem',
+                  background: '#6f42c1', color: '#fff', fontSize: '0.7rem',
+                  padding: '0.4rem 1rem', letterSpacing: '2px', fontWeight: 700
+                }}>
+                  PRE-ORDER
+                </span>
+              )}
               {product.badge && (
                 <span style={{
                   position: 'absolute', top: '1.5rem', left: '1.5rem',
@@ -338,7 +350,7 @@ export default function ProductDetailPage() {
                     transition: 'background 0.3s ease'
                   }}
                 >
-                  {added ? '✓ Added to Cart' : 'Add to Cart'}
+                  {isPreorder ? (added ? '✓ Added Pre-Order' : 'Pre-Order Now') : (added ? '✓ Added to Cart' : 'Add to Cart')}
                 </motion.button>
               )}
             </div>

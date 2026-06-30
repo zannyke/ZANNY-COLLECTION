@@ -91,7 +91,9 @@ export default function CartPage() {
                     liveStock = Number(liveProduct.stock || 0);
                   }
                 }
-                const isOutOfStock = liveStock <= 0;
+                const isPreorder = liveProduct?.is_preorder === 1 || liveProduct?.is_preorder === true;
+                const isOutOfStock = !isPreorder && liveStock <= 0;
+                if (isPreorder) liveStock = 999;
 
                 return (
                     <div

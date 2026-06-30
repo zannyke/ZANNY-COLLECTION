@@ -111,9 +111,11 @@ export async function onRequestPut(context) {
       }
     }
 
+    const isPreorder = (data.is_preorder === true || data.is_preorder === 1 || data.isPreorder === true) ? 1 : 0;
+
     await context.env.DB.prepare(`
       UPDATE products 
-      SET name = ?, category = ?, description = ?, price = ?, original_price = ?, discount_label = ?, stock = ?, badge = ?, image_url = ?, variations = ?, gallery_urls = ?, colors = ?, sizes = ?, images = ?
+      SET name = ?, category = ?, description = ?, price = ?, original_price = ?, discount_label = ?, stock = ?, badge = ?, image_url = ?, variations = ?, gallery_urls = ?, colors = ?, sizes = ?, images = ?, is_preorder = ?
       WHERE id = ?
     `).bind(
       data.name, data.category, data.description || '', 
@@ -128,6 +130,7 @@ export async function onRequestPut(context) {
       JSON.stringify(colors),
       JSON.stringify(sizes),
       JSON.stringify(images),
+      isPreorder,
       id
     ).run();
 

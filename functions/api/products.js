@@ -97,12 +97,14 @@ export async function onRequestPost(context) {
       }
     }
 
+    const isPreorder = (data.is_preorder === true || data.is_preorder === 1 || data.isPreorder === true) ? 1 : 0;
+
     await context.env.DB.prepare(
       `INSERT INTO products (
         id, name, category, description, price, original_price, 
         discount_label, stock, sold, badge, image_url, 
-        variations, gallery_urls, colors, sizes, images
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?)`
+        variations, gallery_urls, colors, sizes, images, is_preorder
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(
       id,
       data.name,
@@ -118,7 +120,8 @@ export async function onRequestPost(context) {
       JSON.stringify(gallery_urls),
       JSON.stringify(colors),
       JSON.stringify(sizes),
-      JSON.stringify(images)
+      JSON.stringify(images),
+      isPreorder
     ).run();
 
     if (data.send_push === true || data.sendPush === true) {
