@@ -44,6 +44,7 @@ export default function ProductDetailPage() {
 function ProductDetailContent({ product, products, addToCart, navigate }) {
   const requiresSize = product.category !== 'accessories';
   const variations = useMemo(() => product.parsedVariations || [], [product.parsedVariations]);
+  const isPreorder = product.is_preorder === 1 || product.is_preorder === true;
 
   const availableColors = useMemo(() => {
     return variations.length > 0
@@ -56,11 +57,11 @@ function ProductDetailContent({ product, products, addToCart, navigate }) {
   const availableSizesForColor = useMemo(() => {
     return variations.length > 0
       ? variations
-          .filter(v => v.color === selectedColor && Number(v.quantity) > 0)
+          .filter(v => v.color === selectedColor && (isPreorder || Number(v.quantity) > 0))
           .map(v => v.size)
           .filter(Boolean)
       : (product.parsedSizes || []);
-  }, [variations, selectedColor, product.parsedSizes]);
+  }, [variations, selectedColor, product.parsedSizes, isPreorder]);
 
   const [selectedSize, setSelectedSize] = useState(availableSizesForColor[0] || '');
   const [quantity, setQuantity] = useState(1);
@@ -77,8 +78,6 @@ function ProductDetailContent({ product, products, addToCart, navigate }) {
     );
   }, [variations, selectedColor, selectedSize, requiresSize]);
 
-  const isPreorder = product.is_preorder === 1 || product.is_preorder === true;
-
   const maxStock = useMemo(() => {
     return isPreorder
       ? 999
@@ -93,7 +92,7 @@ function ProductDetailContent({ product, products, addToCart, navigate }) {
     if (requiresSize) {
       const nextSizes = variations.length > 0
         ? variations
-            .filter(v => v.color === color && Number(v.quantity) > 0)
+            .filter(v => v.color === color && (isPreorder || Number(v.quantity) > 0))
             .map(v => v.size)
             .filter(Boolean)
         : (product.parsedSizes || []);

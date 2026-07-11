@@ -118,3 +118,44 @@ export async function broadcastNotification(context, title, body, route) {
     return { success: false, error: e.message };
   }
 }
+
+export async function sendNotificationToUser(context, userId, title, body, route) {
+  const env = context.env;
+  if (!env.FIREBASE_PROJECT_ID || !env.FIREBASE_CLIENT_EMAIL || !env.FIREBASE_PRIVATE_KEY) {
+    console.info("⚠️ FCM credentials not fully configured, skipping push notification.");
+    return { success: false, reason: "Credentials missing" };
+  }
+
+  try {
+    const accessToken = await getAccessToken(env);
+
+    // Get specific user's FCM token
+    const user = await env.DB.prepare(
+      "SELECT fcm_token FROM users WHERE id = ?"
+    ).bind(userId).first();
+
+    if (!user || !user.fcm_token) {
+      return { success: true, count: 0 };
+    }
+
+    await fetch(`https://fcm.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/messages:send`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: {
+          token: user.fcm_token,
+          notification: { title, body },
+          data: { route: route || "/orders" }
+        }
+      })
+    });
+    return { success: true, count: 1 };
+  } catch (e) {
+    console.error(`FCM User send failed: ${e.message}`);
+    return { success: false, error: e.message };
+  }
+}
+

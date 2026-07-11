@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS products (
   badge          TEXT DEFAULT '',
   is_new         INTEGER DEFAULT 0,
   is_sale        INTEGER DEFAULT 0,
+  is_preorder    INTEGER DEFAULT 0,
   is_active      INTEGER DEFAULT 1,
   is_deleted     INTEGER DEFAULT 0,
   created_at     TEXT DEFAULT (datetime('now'))
@@ -101,6 +102,9 @@ CREATE TABLE IF NOT EXISTS orders (
   mpesa_checkout_id       TEXT DEFAULT '',
   mpesa_receipt           TEXT DEFAULT '',
   mpesa_phone             TEXT DEFAULT '',
+  paystack_reference      TEXT DEFAULT '',
+  is_deleted_by_user      INTEGER DEFAULT 0,
+  is_deleted_by_admin     INTEGER DEFAULT 0,
   review_prompt_dismissed INTEGER DEFAULT 0,
   tracking_number         TEXT DEFAULT '',
   confirmed_at            TEXT,
@@ -141,3 +145,13 @@ CREATE TABLE IF NOT EXISTS verification_codes (
   expires_at TEXT NOT NULL,
   created_at TEXT DEFAULT (datetime('now'))
 );
+
+-- ── Password Resets ──────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS password_resets (
+  email TEXT PRIMARY KEY,
+  token TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_password_resets_token ON password_resets(token);

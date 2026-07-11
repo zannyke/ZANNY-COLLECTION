@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronLeft, Package, Star, AlertCircle, RefreshCw, Navigation, CheckCircle2, Circle } from 'lucide-react';
+import { ChevronLeft, Package, Star, AlertCircle, RefreshCw, Navigation, CheckCircle2, Circle, Printer } from 'lucide-react';
 import ConfirmationModal from '../components/ConfirmationModal';
 
 const STATUS_BADGE = {
@@ -10,6 +10,8 @@ const STATUS_BADGE = {
   shipped:   { bg: '#d5d5d5', color: '#1a1a1a', label: 'Shipped', msg: 'On the way to you' },
   delivered: { bg: '#1a1a1a', color: '#ffffff', label: 'Delivered ✓', msg: 'Successfully delivered' },
   cancelled: { bg: '#ffeeee', color: '#dc2626', label: 'Cancelled', msg: 'Order was cancelled' },
+  return_pending:  { bg: '#fff8e1', color: '#ffb300', label: 'Return Pending', msg: 'Return request is processing' },
+  return_approved: { bg: '#e8f5e9', color: '#2e7d32', label: 'Return Approved', msg: 'Return approved & refunded' },
 };
 
 const FEEDBACK_SUGGESTIONS = {
@@ -236,10 +238,15 @@ export default function OrderDetailPage() {
   const isMpesa = !!order.mpesa_receipt || !!order.mpesa_checkout_id;
   const paymentMethodStr = isMpesa ? 'Pay Now with M-Pesa' : 'Cash on Delivery';
 
-  const orderTime = new Date(order.created_at).getTime();
   const now = new Date().getTime();
-  const diffHours = (now - orderTime) / (1000 * 60 * 60);
-  const canCancel = order.status === 'pending' && diffHours < 24;
+  const canCancel = order.status === 'pending' || order.status === 'confirmed';
+  
+  const deliveredTime = order.delivered_at ? new Date(order.delivered_at).getTime() : 0;
+  const canReturn = order.status === 'delivered' && deliveredTime > 0 && (now - deliveredTime) < 2 * 24 * 60 * 60 * 1000;
+  const isPaid = order.payment_method !== 'cod' ? (order.status !== 'cancelled') : (order.status === 'delivered');
+
+  const [requestingReturn, setRequestingReturn] = useState(false);
+  const [showReturnModal, setShowReturnModal] = useState(false);
 
   const handleCancel = () => {
     setShowConfirmModal(true);
@@ -249,20 +256,46 @@ export default function OrderDetailPage() {
     setShowConfirmModal(false);
     setCancelling(true);
     try {
-      const res = await fetch('/api/orders', {
-        method: 'PATCH',
+      const res = await fetch('/api/orders/cancel', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: order.id, status: 'cancelled', cancelledByCustomer: true })
+        body: JSON.stringify({ orderId: order.id })
       });
       if (res.ok) {
         setOrder(prev => ({ ...prev, status: 'cancelled' }));
       } else {
-        alert('Failed to cancel order.');
+        const errData = await res.json();
+        alert(errData.error || 'Failed to cancel order.');
       }
     } catch(err) {
       alert('Error cancelling order.');
     }
     setCancelling(false);
+  };
+
+  const handleReturn = () => {
+    setShowReturnModal(true);
+  };
+
+  const confirmReturn = async () => {
+    setShowReturnModal(false);
+    setRequestingReturn(true);
+    try {
+      const res = await fetch('/api/orders/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: order.id })
+      });
+      if (res.ok) {
+        setOrder(prev => ({ ...prev, status: 'return_pending' }));
+      } else {
+        const errData = await res.json();
+        alert(errData.error || 'Failed to submit return request.');
+      }
+    } catch(err) {
+      alert('Error submitting return request.');
+    }
+    setRequestingReturn(false);
   };
 
   return (
@@ -285,15 +318,87 @@ export default function OrderDetailPage() {
             <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '0.25rem' }}>Placed on {new Date(order.created_at).toLocaleDateString('en-GB')}</p>
             <p style={{ color: '#1a1a1a', fontSize: '1rem', fontWeight: 600, marginTop: '0.5rem' }}>Total: KSh {Number(order.total_amount).toLocaleString()}</p>
           </div>
-          <div style={{ textAlign: 'right' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-end', minWidth: '180px' }}>
              <span style={{
                 display: 'inline-block',
                 background: sc.bg, color: sc.color,
                 padding: '0.35rem 0.85rem', borderRadius: '50px',
-                fontSize: '0.85rem', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase'
+                fontSize: '0.85rem', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase',
+                marginBottom: '0.5rem'
               }}>
                 {sc.label}
               </span>
+              
+              {/* Invoice/Receipt Download Button */}
+              <a
+                href={`https://zanny-collection-api.zannykenya254.workers.dev/orders?id=${order.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.5rem 1.25rem',
+                  background: 'none',
+                  border: '1.5px solid #1a1a1a',
+                  borderRadius: '4px',
+                  color: '#1a1a1a',
+                  fontWeight: 600,
+                  fontSize: '0.8rem',
+                  textDecoration: 'none',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  width: '100%',
+                  justifyContent: 'center',
+                  boxSizing: 'border-box'
+                }}
+              >
+                <Printer size={14} /> {isPaid ? 'RECEIPT PDF' : 'INVOICE PDF'}
+              </a>
+
+              {/* Cancel Button */}
+              {canCancel && (
+                <button
+                  disabled={cancelling}
+                  onClick={handleCancel}
+                  style={{
+                    padding: '0.5rem 1.25rem',
+                    background: '#dc2626',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '4px',
+                    fontWeight: 600,
+                    fontSize: '0.8rem',
+                    cursor: cancelling ? 'not-allowed' : 'pointer',
+                    width: '100%',
+                    opacity: cancelling ? 0.7 : 1
+                  }}
+                >
+                  {cancelling ? 'Cancelling...' : 'Cancel Order'}
+                </button>
+              )}
+
+              {/* Return Button */}
+              {canReturn && (
+                <button
+                  disabled={requestingReturn}
+                  onClick={handleReturn}
+                  style={{
+                    padding: '0.5rem 1.25rem',
+                    background: '#ffb300',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '4px',
+                    fontWeight: 600,
+                    fontSize: '0.8rem',
+                    cursor: requestingReturn ? 'not-allowed' : 'pointer',
+                    width: '100%',
+                    opacity: requestingReturn ? 0.7 : 1
+                  }}
+                >
+                  {requestingReturn ? 'Requesting...' : 'Request Return'}
+                </button>
+              )}
           </div>
         </div>
 
@@ -328,15 +433,7 @@ export default function OrderDetailPage() {
                   </div>
 
                   <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem', minWidth: '160px' }}>
-                    {canCancel && (
-                      <button 
-                        disabled={cancelling}
-                        onClick={handleCancel}
-                        style={{ width: '100%', padding: '0.75rem', background: '#1a1a1a', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 600, cursor: cancelling ? 'not-allowed' : 'pointer', fontSize: '0.9rem', opacity: cancelling ? 0.7 : 1 }}
-                      >
-                        {cancelling ? 'Cancelling...' : 'Cancel Item'}
-                      </button>
-                    )}
+                    {/* Item actions handled at order level */}
                   </div>
                 </div>
               </div>
@@ -406,6 +503,16 @@ export default function OrderDetailPage() {
         onCancel={() => setShowConfirmModal(false)}
         confirmText="Cancel Order"
         cancelText="Keep Order"
+      />
+
+      <ConfirmationModal 
+        isOpen={showReturnModal}
+        title="Request Return"
+        message="Are you sure you want to request a return for this order? Returns take up to 5 days to verify and process."
+        onConfirm={confirmReturn}
+        onCancel={() => setShowReturnModal(false)}
+        confirmText="Submit Request"
+        cancelText="Cancel"
       />
     </div>
   );
