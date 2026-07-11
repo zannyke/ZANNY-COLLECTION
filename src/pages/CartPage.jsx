@@ -10,7 +10,7 @@ import CustomSelect from '../components/CustomSelect';
 
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQty, clearCart, cartTotal } = useCart();
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const { products } = useProducts();
   const navigate = useNavigate();
 
@@ -77,7 +77,7 @@ export default function CartPage() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
-              {cartItems.map((item, idx) => {
+              {cartItems.map((item) => {
                 const liveProduct = products.find(p => p.id === item.id);
                 let liveStock = 0;
                 if (liveProduct) {

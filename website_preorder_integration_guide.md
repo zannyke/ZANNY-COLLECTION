@@ -1,6 +1,7 @@
 # Website Integration Guide — Pre-Order System
 
-This document outlines the database schema, API changes, and frontend integration steps required to implement the **Pre-Order** feature on the React/Next.js web application.
+This document outlines the database schema, API changes, and frontend integration steps required to implement the **Pre-Order** feature on the React/Next.js website
+.
 
 ---
 

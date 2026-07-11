@@ -13,8 +13,15 @@ export default function CustomerLogin() {
   const [verificationCode, setVerificationCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [lockoutTime, setLockoutTime] = useState(0);
+
+  // Password reset states
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [forgotStep, setForgotStep] = useState(1);
+  const [forgotCode, setForgotCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   
-  const { login, verify } = useAuth();
+  const { login, verify, forgotPassword, resetPassword } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || "/";
@@ -100,6 +107,46 @@ export default function CustomerLogin() {
     }, 800);
   };
 
+  const handleSendResetCode = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccessMessage('');
+
+    const res = await forgotPassword(email);
+    setLoading(false);
+    if (res.success) {
+      setForgotStep(2);
+      setSuccessMessage(res.message);
+    } else {
+      setError(res.message);
+    }
+  };
+
+  const handleExecuteReset = async (e) => {
+    e.preventDefault();
+    if (newPassword.length < 6) {
+      setError('Password must be at least 6 characters.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    setSuccessMessage('');
+
+    const res = await resetPassword(email, forgotCode, newPassword);
+    setLoading(false);
+    if (res.success) {
+      setIsForgotPassword(false);
+      setForgotStep(1);
+      setForgotCode('');
+      setNewPassword('');
+      setPassword('');
+      setSuccessMessage('Password reset successfully! You can now log in.');
+    } else {
+      setError(res.message);
+    }
+  };
+
   return (
     <div className="auth-page-container" style={{ minHeight: '100vh', display: 'flex', background: '#fff', fontFamily: 'var(--font-body)' }}>
       {/* Left side: Visual */}
@@ -151,10 +198,132 @@ export default function CustomerLogin() {
             <Link to="/" style={{ textDecoration: 'none' }}>
               <h1 style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, letterSpacing: '4px', fontSize: '2rem', color: '#1a1a1a', marginBottom: '0.5rem' }}>ZANNY</h1>
             </Link>
-            <p style={{ color: '#888', fontSize: '0.9rem', letterSpacing: '1px' }}>SIGN IN TO YOUR ACCOUNT</p>
+            <p style={{ color: '#888', fontSize: '0.9rem', letterSpacing: '1px' }}>
+              {isForgotPassword ? 'RESET YOUR PASSWORD' : 'SIGN IN TO YOUR ACCOUNT'}
+            </p>
           </div>
 
-          {needsVerification ? (
+          {isForgotPassword ? (
+            forgotStep === 1 ? (
+              // Forgot Password Step 1: Request Code
+              <form onSubmit={handleSendResetCode} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <p style={{ color: '#555', fontSize: '0.9rem', lineHeight: 1.5 }}>
+                  Enter your registered email address below. We'll send you a 6-digit verification code to reset your password.
+                </p>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>
+                    <Mail size={18} style={{ color: '#aaa', marginRight: '0.75rem' }} />
+                    <input 
+                      type="email" 
+                      placeholder="Email Address" 
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      required
+                      autoComplete="email"
+                      style={{ border: 'none', outline: 'none', flex: 1, fontSize: '1rem', background: 'transparent' }}
+                    />
+                  </div>
+                  {error && <p style={{ color: '#c0392b', fontSize: '0.75rem', marginTop: '0.5rem' }}>{error}</p>}
+                  {successMessage && <p style={{ color: '#27ae60', fontSize: '0.75rem', marginTop: '0.5rem' }}>{successMessage}</p>}
+                </div>
+
+                <button 
+                  type="submit" 
+                  disabled={loading}
+                  style={{ 
+                    background: '#1a1a1a', color: '#fff', border: 'none', padding: '1rem', 
+                    fontSize: '0.85rem', fontWeight: 700, letterSpacing: '2px', 
+                    textTransform: 'uppercase', cursor: 'pointer', display: 'flex', 
+                    alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                    marginTop: '1rem'
+                  }}
+                >
+                  {loading ? 'Sending Code...' : <>Send Reset Code <ArrowRight size={16} /></>}
+                </button>
+
+                <button 
+                  type="button"
+                  onClick={() => { setIsForgotPassword(false); setError(''); setSuccessMessage(''); }}
+                  style={{ 
+                    background: 'none', border: 'none', color: '#888', fontSize: '0.85rem', 
+                    cursor: 'pointer', textDecoration: 'underline', marginTop: '0.5rem' 
+                  }}
+                >
+                  Back to Login
+                </button>
+              </form>
+            ) : (
+              // Forgot Password Step 2: Confirm Reset
+              <form onSubmit={handleExecuteReset} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <p style={{ color: '#555', fontSize: '0.9rem', lineHeight: 1.5 }}>
+                  Enter the 6-digit reset code sent to <strong>{email}</strong> and choose your new password.
+                </p>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>
+                    <Lock size={18} style={{ color: '#aaa', marginRight: '0.75rem' }} />
+                    <input 
+                      type="text" 
+                      placeholder="6-digit Reset Code" 
+                      value={forgotCode}
+                      onChange={e => setForgotCode(e.target.value)}
+                      required
+                      maxLength={6}
+                      style={{ border: 'none', outline: 'none', flex: 1, fontSize: '1rem', background: 'transparent' }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>
+                    <Lock size={18} style={{ color: '#aaa', marginRight: '0.75rem' }} />
+                    <input 
+                      type={showPassword ? "text" : "password"} 
+                      placeholder="New Password (min 6 chars)" 
+                      value={newPassword}
+                      onChange={e => setNewPassword(e.target.value)}
+                      required
+                      style={{ border: 'none', outline: 'none', flex: 1, fontSize: '1rem', background: 'transparent' }}
+                    />
+                    <button 
+                      type="button" 
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 0.5rem', color: '#888' }}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {error && <p style={{ color: '#c0392b', fontSize: '0.75rem', marginTop: '0.5rem' }}>{error}</p>}
+                  {successMessage && <p style={{ color: '#27ae60', fontSize: '0.75rem', marginTop: '0.5rem' }}>{successMessage}</p>}
+                </div>
+
+                <button 
+                  type="submit" 
+                  disabled={loading}
+                  style={{ 
+                    background: '#1a1a1a', color: '#fff', border: 'none', padding: '1rem', 
+                    fontSize: '0.85rem', fontWeight: 700, letterSpacing: '2px', 
+                    textTransform: 'uppercase', cursor: 'pointer', display: 'flex', 
+                    alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                    marginTop: '1rem'
+                  }}
+                >
+                  {loading ? 'Resetting Password...' : <>Reset Password <ArrowRight size={16} /></>}
+                </button>
+
+                <button 
+                  type="button"
+                  onClick={() => { setIsForgotPassword(false); setForgotStep(1); setError(''); setSuccessMessage(''); }}
+                  style={{ 
+                    background: 'none', border: 'none', color: '#888', fontSize: '0.85rem', 
+                    cursor: 'pointer', textDecoration: 'underline', marginTop: '0.5rem' 
+                  }}
+                >
+                  Back to Login
+                </button>
+              </form>
+            )
+          ) : needsVerification ? (
+            // Verification flow (for registration)
             <form onSubmit={handleVerify} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <p style={{ color: '#555', fontSize: '0.9rem', textAlign: 'center' }}>
                 We sent a 6-digit verification code to <strong>{email}</strong>.
@@ -189,7 +358,13 @@ export default function CustomerLogin() {
               </button>
             </form>
           ) : (
+            // Normal Login Form
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              {successMessage && (
+                <div style={{ background: '#e8f8f5', color: '#27ae60', padding: '0.8rem', fontSize: '0.85rem', border: '1px solid #d1f2eb', borderRadius: '4px', textAlign: 'center' }}>
+                  {successMessage}
+                </div>
+              )}
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '0.5rem' }}>
                   <Mail size={18} style={{ color: '#aaa', marginRight: '0.75rem' }} />
@@ -225,7 +400,16 @@ export default function CustomerLogin() {
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-                {error && <p style={{ color: '#c0392b', fontSize: '0.75rem', marginTop: '0.5rem' }}>{error}</p>}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
+                  {error ? <p style={{ color: '#c0392b', fontSize: '0.75rem', margin: 0 }}>{error}</p> : <div />}
+                  <button 
+                    type="button" 
+                    onClick={() => { setIsForgotPassword(true); setForgotStep(1); setError(''); setSuccessMessage(''); }}
+                    style={{ background: 'none', border: 'none', color: '#888', fontSize: '0.8rem', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
               </div>
 
               <button 

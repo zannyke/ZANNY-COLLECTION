@@ -97,8 +97,36 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const forgotPassword = async (email) => {
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      return { success: res.ok, message: data.message || 'Verification code sent.' };
+    } catch (err) {
+      return { success: false, message: 'Server error' };
+    }
+  };
+
+  const resetPassword = async (email, code, password) => {
+    try {
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code, password })
+      });
+      const data = await res.json();
+      return { success: res.ok, message: data.message };
+    } catch (err) {
+      return { success: false, message: 'Server error' };
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, register, verify, logout, deleteAccount, loading, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, register, verify, logout, deleteAccount, forgotPassword, resetPassword, loading, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProducts, CATEGORIES } from '../context/ProductContext';
@@ -13,42 +13,6 @@ const SORT_OPTIONS = [
   { value: 'price-desc', label: 'Price: High → Low' },
   { value: 'newest',     label: 'Newest First' },
 ];
-
-// Truncate description with See More / See Less toggle
-const CHAR_LIMIT = 90;
-function ExpandableDescription({ text }) {
-  const [expanded, setExpanded] = React.useState(false);
-  if (!text) return null;
-  const isLong = text.length > CHAR_LIMIT;
-
-  return (
-    <p
-      style={{ fontSize: '0.8rem', color: '#888', marginBottom: '0.3rem', lineHeight: 1.6 }}
-      onClick={e => { e.preventDefault(); e.stopPropagation(); if (isLong) setExpanded(v => !v); }}
-    >
-      {isLong && !expanded ? (
-        <>
-          {text.slice(0, CHAR_LIMIT).trimEnd()}
-          <span style={{ color: '#1a1a1a', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-            {' '}... <span style={{ textDecoration: 'underline' }}>more</span>
-          </span>
-        </>
-      ) : (
-        <>
-          {text}
-          {isLong && (
-            <span
-              onClick={e => { e.preventDefault(); e.stopPropagation(); setExpanded(false); }}
-              style={{ color: '#1a1a1a', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
-            >
-              {' '}... <span style={{ textDecoration: 'underline' }}>less</span>
-            </span>
-          )}
-        </>
-      )}
-    </p>
-  );
-}
 
 function ProductCard({ product }) {
   const { addToCart } = useCart();
@@ -71,15 +35,22 @@ function ProductCard({ product }) {
   const [selectedSize, setSelectedSize] = useState(availableSizesForColor[0] || (requiresSize ? SIZES[2] : ''));
   const [added, setAdded] = useState(false);
 
-  React.useEffect(() => {
-    if (requiresSize && selectedColor) {
-      if (availableSizesForColor.length > 0 && !availableSizesForColor.includes(selectedSize)) {
-        setSelectedSize(availableSizesForColor[0]);
-      } else if (availableSizesForColor.length === 0) {
+  const handleColorChange = (c) => {
+    setSelectedColor(c);
+    if (requiresSize) {
+      const nextSizes = variations.length > 0
+        ? variations
+            .filter(v => v.color === c && Number(v.quantity) > 0)
+            .map(v => v.size)
+            .filter(Boolean)
+        : (product.parsedSizes || []);
+      if (nextSizes.length > 0 && !nextSizes.includes(selectedSize)) {
+        setSelectedSize(nextSizes[0]);
+      } else if (nextSizes.length === 0) {
         setSelectedSize('');
       }
     }
-  }, [selectedColor, requiresSize, availableSizesForColor]);
+  };
 
   const currentVariation = variations.find(v => 
     v.color === selectedColor && (requiresSize ? v.size === selectedSize : true)
@@ -184,7 +155,7 @@ function ProductCard({ product }) {
         {availableColors.length > 0 && (
           <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', alignItems: 'center' }}>
             {displayedColors.map(c => (
-              <button key={c} onClick={() => setSelectedColor(c)} style={{
+              <button key={c} onClick={() => handleColorChange(c)} style={{
                 padding: '0.2rem 0.5rem', fontSize: '0.62rem', fontWeight: 600,
                 border: selectedColor === c ? '1.5px solid #1a1a1a' : '1px solid #ddd',
                 background: selectedColor === c ? '#1a1a1a' : 'transparent',

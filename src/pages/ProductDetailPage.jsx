@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProducts } from '../context/ProductContext';
@@ -13,8 +13,6 @@ import {
   RefreshCcw as IconRefreshCcw 
 } from 'lucide-react';
 
-const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
-
 export default function ProductDetailPage() {
   const { productId } = useParams();
   const { products } = useProducts();
@@ -22,65 +20,6 @@ export default function ProductDetailPage() {
   const navigate = useNavigate();
 
   const product = products.find(p => p.id.toString() === productId);
-  const requiresSize = product?.category !== 'accessories';
-  const variations = product?.parsedVariations || [];
-  const availableColors = variations.length > 0
-    ? [...new Set(variations.map(v => v.color))].filter(Boolean)
-    : (product?.parsedColors || []);
-
-  const [selectedColor, setSelectedColor] = useState('');
-  const [selectedSize, setSelectedSize] = useState('');
-  const [quantity, setQuantity] = useState(1);
-  const [added, setAdded] = useState(false);
-  const [currentImageIdx, setCurrentImageIdx] = useState(0);
-
-  const allImages = product ? [product.image, ...(product.parsedGallery || [])].filter(Boolean) : [];
-
-  useEffect(() => {
-    if (availableColors.length > 0 && !selectedColor) {
-      setSelectedColor(availableColors[0]);
-    }
-  }, [availableColors, selectedColor]);
-
-  const availableSizesForColor = variations.length > 0
-    ? variations
-        .filter(v => v.color === selectedColor && Number(v.quantity) > 0)
-        .map(v => v.size)
-        .filter(Boolean)
-    : (product?.parsedSizes || []);
-
-  useEffect(() => {
-    if (requiresSize) {
-      if (availableSizesForColor.length > 0) {
-        if (!selectedSize || !availableSizesForColor.includes(selectedSize)) {
-          setSelectedSize(availableSizesForColor[0]);
-        }
-      } else {
-        setSelectedSize('');
-      }
-    }
-  }, [selectedColor, availableSizesForColor, requiresSize, selectedSize]);
-
-  const currentVariation = variations.find(v => 
-    v.color === selectedColor && (requiresSize ? v.size === selectedSize : true)
-  );
-  const isPreorder = product?.is_preorder === 1 || product?.is_preorder === true;
-  const maxStock = isPreorder
-    ? 999
-    : (variations.length > 0
-        ? (currentVariation ? Number(currentVariation.quantity) : 0)
-        : Number(product?.stock || 0));
-
-  useEffect(() => {
-    if (quantity > maxStock) {
-      setQuantity(Math.max(1, maxStock));
-    }
-  }, [maxStock, quantity]);
-
-  // Suggested products from the same category
-  const relatedProducts = products
-    .filter(p => p.category === product?.category && p.id !== product?.id)
-    .slice(0, 4);
 
   if (!product) {
     return (
@@ -91,6 +30,106 @@ export default function ProductDetailPage() {
     );
   }
 
+  return (
+    <ProductDetailContent
+      key={product.id}
+      product={product}
+      products={products}
+      addToCart={addToCart}
+      navigate={navigate}
+    />
+  );
+}
+
+function ProductDetailContent({ product, products, addToCart, navigate }) {
+  const requiresSize = product.category !== 'accessories';
+  const variations = useMemo(() => product.parsedVariations || [], [product.parsedVariations]);
+
+  const availableColors = useMemo(() => {
+    return variations.length > 0
+      ? [...new Set(variations.map(v => v.color))].filter(Boolean)
+      : (product.parsedColors || []);
+  }, [variations, product.parsedColors]);
+
+  const [selectedColor, setSelectedColor] = useState(availableColors[0] || '');
+
+  const availableSizesForColor = useMemo(() => {
+    return variations.length > 0
+      ? variations
+          .filter(v => v.color === selectedColor && Number(v.quantity) > 0)
+          .map(v => v.size)
+          .filter(Boolean)
+      : (product.parsedSizes || []);
+  }, [variations, selectedColor, product.parsedSizes]);
+
+  const [selectedSize, setSelectedSize] = useState(availableSizesForColor[0] || '');
+  const [quantity, setQuantity] = useState(1);
+  const [added, setAdded] = useState(false);
+  const [currentImageIdx, setCurrentImageIdx] = useState(0);
+
+  const allImages = useMemo(() => {
+    return [product.image, ...(product.parsedGallery || [])].filter(Boolean);
+  }, [product.image, product.parsedGallery]);
+
+  const currentVariation = useMemo(() => {
+    return variations.find(v => 
+      v.color === selectedColor && (requiresSize ? v.size === selectedSize : true)
+    );
+  }, [variations, selectedColor, selectedSize, requiresSize]);
+
+  const isPreorder = product.is_preorder === 1 || product.is_preorder === true;
+
+  const maxStock = useMemo(() => {
+    return isPreorder
+      ? 999
+      : (variations.length > 0
+          ? (currentVariation ? Number(currentVariation.quantity) : 0)
+          : Number(product.stock || 0));
+  }, [isPreorder, variations, currentVariation, product.stock]);
+
+  const handleColorChange = (color) => {
+    setSelectedColor(color);
+    let nextSize = selectedSize;
+    if (requiresSize) {
+      const nextSizes = variations.length > 0
+        ? variations
+            .filter(v => v.color === color && Number(v.quantity) > 0)
+            .map(v => v.size)
+            .filter(Boolean)
+        : (product.parsedSizes || []);
+      nextSize = nextSizes.includes(selectedSize) ? selectedSize : (nextSizes[0] || '');
+      setSelectedSize(nextSize);
+    }
+    
+    // Check stock for the new selection
+    const nextVariation = variations.find(v => 
+      v.color === color && (requiresSize ? v.size === nextSize : true)
+    );
+    const nextMaxStock = isPreorder
+      ? 999
+      : (variations.length > 0
+          ? (nextVariation ? Number(nextVariation.quantity) : 0)
+          : Number(product.stock || 0));
+    if (quantity > nextMaxStock) {
+      setQuantity(Math.max(1, nextMaxStock));
+    }
+  };
+
+  const handleSizeChange = (size) => {
+    setSelectedSize(size);
+    const nextVariation = variations.find(v => 
+      v.color === selectedColor && (requiresSize ? v.size === size : true)
+    );
+    const nextMaxStock = isPreorder
+      ? 999
+      : (variations.length > 0
+          ? (nextVariation ? Number(nextVariation.quantity) : 0)
+          : Number(product.stock || 0));
+    if (quantity > nextMaxStock) {
+      setQuantity(Math.max(1, nextMaxStock));
+    }
+  };
+
   const handleAddToCart = () => {
     for (let i = 0; i < quantity; i++) {
       addToCart(product, selectedSize, selectedColor);
@@ -98,6 +137,13 @@ export default function ProductDetailPage() {
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
+
+  // Suggested products from the same category
+  const relatedProducts = useMemo(() => {
+    return products
+      .filter(p => p.category === product.category && p.id !== product.id)
+      .slice(0, 4);
+  }, [products, product.category, product.id]);
 
   return (
     <div style={{ background: '#fff', color: '#1a1a1a', minHeight: '100vh', paddingTop: '80px' }}>
@@ -239,7 +285,7 @@ export default function ProductDetailPage() {
                   {availableColors.map(color => (
                     <button
                       key={color}
-                      onClick={() => setSelectedColor(color)}
+                      onClick={() => handleColorChange(color)}
                       style={{
                         padding: '0.5rem 1rem',
                         border: selectedColor === color ? '2px solid #1a1a1a' : '1px solid #eee',
@@ -278,7 +324,7 @@ export default function ProductDetailPage() {
                       <button
                         key={size}
                         disabled={!isAvailable}
-                        onClick={() => setSelectedSize(size)}
+                        onClick={() => handleSizeChange(size)}
                         style={{
                           width: '50px', height: '50px',
                           border: selectedSize === size && isAvailable ? '2px solid #1a1a1a' : '1px solid #eee',

@@ -27,8 +27,8 @@ export default function Checkout() {
         ...prev,
         fullName: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
         email: user.email || '',
-        phone: user.phone_number || prev.phone,
-        zone: user.default_delivery_zone || prev.zone
+        phone: user.phone || prev.phone,
+        zone: user.deliveryZone || prev.zone
       }));
     }
   }, [user]);
@@ -38,29 +38,19 @@ export default function Checkout() {
   const finalTotal = cartTotal + deliveryFee;
 
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  
-  // Payment Options
-  const [paymentMethod, setPaymentMethod] = useState('cod'); // 'cod' or 'mpesa'
-  const [mpesaPhone, setMpesaPhone] = useState('');
-  const [polling, setPolling] = useState(false);
-  const [pollError, setPollError] = useState('');
-
-  // Update mpesaPhone when form phone changes initially
-  useEffect(() => {
-    if (form.phone && !mpesaPhone) {
-      setMpesaPhone(form.phone);
-    }
-  }, [form.phone]);
+  const [paymentMethod, setPaymentMethod] = useState('cod'); // 'cod' or 'paystack'
+  const [error, setError] = useState('');
 
   // Trust System Logic
   const isRestricted = user?.restricted_from_cod === 1;
 
   useEffect(() => {
     if (isRestricted) {
-      setPaymentMethod('mpesa');
+      setPaymentMethod('paystack');
     }
   }, [isRestricted]);
+
+  // ── Loading / Auth Guards ──────────────────────────────────────────────────
 
   if (authLoading) {
     return (
@@ -88,7 +78,7 @@ export default function Checkout() {
     );
   }
 
-  if (cartItems.length === 0 && !success && !polling) {
+  if (cartItems.length === 0) {
     return (
       <div style={{ minHeight: '60vh', textAlign: 'center', paddingTop: '100px' }}>
         <h2>Your cart is empty.</h2>
@@ -97,124 +87,91 @@ export default function Checkout() {
     );
   }
 
-  const handleMpesaPolling = async (checkoutRequestId, orderId) => {
-    let attempts = 0;
-    const maxAttempts = 20; // 20 * 3s = 60 seconds
-
-    const poll = setInterval(async () => {
-      attempts++;
-      try {
-        const res = await fetch(`/api/mpesa/status?checkoutRequestId=${checkoutRequestId}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.status === 'paid') {
-            clearInterval(poll);
-            clearCart();
-            navigate('/order-success');
-          } else if (data.status === 'payment_failed') {
-            clearInterval(poll);
-            setPolling(false);
-            setPollError('M-Pesa payment failed or was cancelled. Please try again.');
-          }
-        }
-      } catch (err) {
-        console.error('Polling error:', err);
-      }
-
-      if (attempts >= maxAttempts) {
-        clearInterval(poll);
-        setPolling(false);
-        setPollError('Payment request timed out. If you paid, please contact support.');
-      }
-    }, 3000);
-  };
+  // ── Submit Handler ─────────────────────────────────────────────────────────
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setPollError('');
+    setError('');
 
     const fullAddress = `${form.address}, ${selectedZone.label}`;
-    
+
     try {
-      // 1. Create the base order in D1
-      const orderRes = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user?.id || 'guest',
-          recipientName: form.fullName,
-          totalAmount: finalTotal,
-          shippingAddress: fullAddress,
-          phoneNumber: form.phone,
-          status: paymentMethod === 'mpesa' ? 'pending_payment' : 'pending',
-          items: cartItems.map(item => ({
-            id: item.id,
-            qty: item.qty,
-            size: item.size,
-            price: item.price
-          }))
-        })
-      });
-
-      if (!orderRes.ok) {
-        const errData = await orderRes.json();
-        alert(errData.error || "There was an issue processing your order.");
-        setLoading(false);
-        return;
-      }
-
-      const orderData = await orderRes.json();
-      const orderId = orderData.orderId; // Assume API returns the created orderId
-
-      if (paymentMethod === 'mpesa') {
-        // 2. Trigger STK Push
-        const stkRes = await fetch('/api/mpesa/stkpush', {
+      if (paymentMethod === 'paystack') {
+        // ── Track A: Paystack Prepaid ─────────────────────────────────────────
+        // Do NOT create the order yet. The Paystack webhook on the Worker
+        // will insert the confirmed order AFTER payment completes.
+        const res = await fetch('/api/payments/initialize-paystack', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            orderId: orderId,
-            amount: finalTotal,
-            phone: mpesaPhone || form.phone
+            items: cartItems.map(item => ({
+              product_id: item.id,
+              product_name: item.name,
+              product_price: item.price,
+              selected_size: item.size,
+              selected_color: item.color,
+              quantity: item.qty
+            })),
+            total_amount: finalTotal,
+            delivery_address: fullAddress,
+            recipient_name: form.fullName,
+            recipient_phone: form.phone
           })
         });
 
-        const stkData = await stkRes.json();
-        
-        if (stkRes.ok && stkData.success) {
-          setPolling(true);
-          handleMpesaPolling(stkData.checkoutRequestId, orderId);
-        } else {
-          setPollError(stkData.error || "Failed to initiate M-Pesa. Try again.");
+        const data = await res.json();
+
+        if (!res.ok) {
+          setError(data.error || 'Failed to initialize payment. Please try again.');
           setLoading(false);
+          return;
         }
 
+        // Clear cart immediately, then redirect to Paystack hosted checkout
+        clearCart();
+        window.location.href = data.url;
+
       } else {
-        // Cash on Delivery
+        // ── Track B: Cash on Delivery ─────────────────────────────────────────
+        const orderRes = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            recipientName: form.fullName,
+            totalAmount: finalTotal,
+            shippingAddress: fullAddress,
+            phoneNumber: form.phone,
+            status: 'pending',
+            items: cartItems.map(item => ({
+              id: item.id,
+              qty: item.qty,
+              size: item.size,
+              color: item.color,
+              price: item.price
+            }))
+          })
+        });
+
+        if (!orderRes.ok) {
+          const errData = await orderRes.json();
+          setError(errData.error || 'There was an issue processing your order.');
+          setLoading(false);
+          return;
+        }
+
         clearCart();
         navigate('/order-success');
       }
 
     } catch (err) {
       console.error(err);
-      alert("Network error.");
+      setError('Network error. Please check your connection and try again.');
       setLoading(false);
     }
   };
 
-  if (polling) {
-    return (
-      <div style={{ minHeight: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#fafafa', padding: '2rem', textAlign: 'center' }}>
-        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} style={{ width: '50px', height: '50px', border: '3px solid #ddd', borderTopColor: '#2d6a4f', borderRadius: '50%', marginBottom: '2rem' }} />
-        <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.8rem', marginBottom: '1rem' }}>Waiting for Payment...</h2>
-        <p style={{ fontSize: '1rem', color: '#555', maxWidth: '400px', lineHeight: 1.6 }}>
-          Please check your phone. An M-Pesa STK Push has been sent to <strong>{mpesaPhone || form.phone}</strong>.
-          Enter your M-Pesa PIN to complete the transaction.
-        </p>
-        <p style={{ marginTop: '2rem', fontSize: '0.85rem', color: '#888' }}>Do not refresh this page.</p>
-      </div>
-    );
-  }
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <div style={{ minHeight: '100vh', background: '#fafafa', paddingBottom: '5rem' }}>
@@ -240,32 +197,32 @@ export default function Checkout() {
         }
       `}</style>
       <PageHeader title="Checkout" subtitle="Complete your delivery details" />
-      
+
       <div className="checkout-container">
-        {pollError && (
-          <div style={{ background: '#f8d7da', color: '#721c24', padding: '1rem', marginBottom: '2rem', border: '1px solid #f5c6cb', borderRadius: '4px' }}>
-            {pollError}
+        {error && (
+          <div style={{ background: '#f8d7da', color: '#721c24', padding: '1rem', marginBottom: '2rem', border: '1px solid #f5c6cb', borderRadius: '4px', fontSize: '0.9rem' }}>
+            {error}
           </div>
         )}
 
         <div className="checkout-grid">
-          
-          {/* Form */}
+
+          {/* ── Delivery & Payment Form ── */}
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', background: '#fff', padding: '2rem', border: '1px solid #eee' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '1rem' }}>
               <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.2rem', margin: 0 }}>Delivery Information</h3>
               <Link to="/cart" style={{ color: '#1a1a1a', textDecoration: 'none', fontSize: '0.85rem', fontWeight: 600, border: '1px solid #ddd', padding: '0.4rem 0.8rem', borderRadius: '4px' }}>← Back to Cart</Link>
             </div>
-            
+
             <input required type="text" placeholder="Full Name" value={form.fullName} onChange={e => setForm({...form, fullName: e.target.value})} style={{ padding: '0.85rem', border: '1px solid #ddd', outline: 'none' }} />
             <input required type="email" placeholder="Email Address" value={form.email} onChange={e => setForm({...form, email: e.target.value})} style={{ padding: '0.85rem', border: '1px solid #ddd', outline: 'none' }} />
-            <input required type="tel" placeholder="Phone Number (for delivery rider)" value={form.phone} onChange={e => { setForm({...form, phone: e.target.value}); if(!mpesaPhone) setMpesaPhone(e.target.value); }} style={{ padding: '0.85rem', border: '1px solid #ddd', outline: 'none' }} />
+            <input required type="tel" placeholder="Phone Number (for delivery rider)" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} style={{ padding: '0.85rem', border: '1px solid #ddd', outline: 'none' }} />
             <input required type="text" placeholder="Delivery Address / Specific Location" value={form.address} onChange={e => setForm({...form, address: e.target.value})} style={{ padding: '0.85rem', border: '1px solid #ddd', outline: 'none' }} />
-            
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <label style={{ fontSize: '0.85rem', fontWeight: 600, color: '#444' }}>Delivery Region</label>
               <div style={{ border: '1px solid #ddd', background: '#fff', borderRadius: '4px', padding: '0.2rem 0.85rem' }}>
-                <CustomSelect 
+                <CustomSelect
                   options={DELIVERY_ZONES.map(z => ({ value: z.id, label: z.label, shortLabel: z.shortLabel }))}
                   value={form.zone}
                   onChange={(val) => setForm({ ...form, zone: val })}
@@ -274,49 +231,45 @@ export default function Checkout() {
               </div>
             </div>
 
+            {/* ── Payment Method ── */}
             <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.2rem', borderBottom: '1px solid #eee', paddingBottom: '1rem', marginTop: '1rem' }}>Payment Method</h3>
-            
+
             {isRestricted && (
               <div style={{ background: '#fff3cd', color: '#856404', padding: '1rem', border: '1px solid #ffeeba', borderRadius: '4px', fontSize: '0.85rem', lineHeight: 1.5 }}>
-                <strong>Note:</strong> Due to consecutive past cancellations, Pay on Delivery is temporarily disabled for your account. Please pay upfront via M-Pesa. You will regain this privilege after 3 successful deliveries.
+                <strong>Note:</strong> Due to consecutive past cancellations, Pay on Delivery is temporarily disabled for your account. Please pay online with Paystack. You will regain this privilege after 3 successful deliveries.
               </div>
             )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              
-              {/* M-Pesa Option */}
-              <label style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', border: paymentMethod === 'mpesa' ? '2px solid #2d6a4f' : '1px solid #ddd', padding: '1rem', cursor: 'pointer', background: paymentMethod === 'mpesa' ? '#f0fdf4' : '#fff', borderRadius: '4px', transition: 'all 0.2s' }}>
-                <input type="radio" name="payment" value="mpesa" checked={paymentMethod === 'mpesa'} onChange={() => setPaymentMethod('mpesa')} style={{ marginTop: '0.2rem' }} />
+
+              {/* Paystack Option */}
+              <label style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', border: paymentMethod === 'paystack' ? '2px solid #1a1a1a' : '1px solid #ddd', padding: '1rem', cursor: 'pointer', background: paymentMethod === 'paystack' ? '#fafafa' : '#fff', borderRadius: '4px', transition: 'all 0.2s' }}>
+                <input type="radio" name="payment" value="paystack" checked={paymentMethod === 'paystack'} onChange={() => setPaymentMethod('paystack')} style={{ marginTop: '0.2rem' }} />
                 <div style={{ flex: 1 }}>
-                  <p style={{ fontWeight: 600, color: paymentMethod === 'mpesa' ? '#2d6a4f' : '#1a1a1a' }}>Pay with M-Pesa</p>
-                  <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.2rem' }}>A prompt will be sent to your phone to enter your PIN.</p>
-                  
-                  {paymentMethod === 'mpesa' && (
-                    <div style={{ marginTop: '1rem' }}>
-                      <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#444' }}>M-Pesa Phone Number</label>
-                      <input 
-                        type="tel" 
-                        required={paymentMethod === 'mpesa'} 
-                        placeholder="e.g. 0712345678" 
-                        value={mpesaPhone} 
-                        onChange={e => setMpesaPhone(e.target.value)} 
-                        style={{ width: '100%', padding: '0.6rem', marginTop: '0.3rem', border: '1px solid #ddd', outline: 'none' }} 
-                      />
-                    </div>
-                  )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <p style={{ fontWeight: 700, color: '#1a1a1a', margin: 0 }}>Pay Online</p>
+                    <span style={{ background: '#0066cc', color: '#fff', fontSize: '0.65rem', fontWeight: 700, padding: '0.15rem 0.45rem', borderRadius: '3px', letterSpacing: '0.5px' }}>PAYSTACK</span>
+                  </div>
+                  <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.3rem' }}>Pay securely online with M-Pesa, card, or bank. You will be redirected to the Paystack checkout page.</p>
                 </div>
               </label>
 
-              {/* COD Option */}
+              {/* Cash on Delivery Option */}
               <label style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', border: paymentMethod === 'cod' ? '2px solid #1a1a1a' : '1px solid #ddd', padding: '1rem', cursor: isRestricted ? 'not-allowed' : 'pointer', background: paymentMethod === 'cod' ? '#fafafa' : '#fff', borderRadius: '4px', opacity: isRestricted ? 0.5 : 1, transition: 'all 0.2s' }}>
                 <input type="radio" name="payment" value="cod" checked={paymentMethod === 'cod'} onChange={() => !isRestricted && setPaymentMethod('cod')} disabled={isRestricted} style={{ marginTop: '0.2rem' }} />
                 <div>
-                  <p style={{ fontWeight: 600, color: '#1a1a1a' }}>Pay on Delivery</p>
-                  <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.2rem' }}>Pay when the item is delivered to you.</p>
+                  <p style={{ fontWeight: 700, color: '#1a1a1a', margin: 0 }}>Pay on Delivery</p>
+                  <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '0.3rem' }}>Pay cash when the item is delivered to you. Available across all delivery zones.</p>
                 </div>
               </label>
 
             </div>
+
+            {paymentMethod === 'paystack' && (
+              <div style={{ background: '#f0f7ff', border: '1px solid #bcd4f0', borderRadius: '4px', padding: '0.85rem', fontSize: '0.8rem', color: '#1a4a7a', lineHeight: 1.6 }}>
+                🔒 You will be redirected to a secure Paystack checkout page. Your payment details are handled directly by Paystack and are never stored on our servers.
+              </div>
+            )}
 
             <motion.button
               whileTap={{ scale: 0.98 }}
@@ -324,24 +277,29 @@ export default function Checkout() {
               type="submit"
               style={{
                 marginTop: '1rem', padding: '1rem', background: loading ? '#888' : '#1a1a1a', color: '#fff',
-                border: 'none', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', cursor: 'pointer'
+                border: 'none', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '0.85rem'
               }}
             >
-              {loading ? 'Processing...' : (paymentMethod === 'mpesa' ? `Pay KSh ${finalTotal.toLocaleString()}` : `Confirm Order (KSh ${finalTotal.toLocaleString()})`)}
+              {loading
+                ? 'Processing...'
+                : paymentMethod === 'paystack'
+                  ? `Pay KSh ${finalTotal.toLocaleString()} Online`
+                  : `Confirm Order (KSh ${finalTotal.toLocaleString()})`
+              }
             </motion.button>
           </form>
 
-          {/* Summary */}
+          {/* ── Order Summary ── */}
           <div style={{ background: '#fff', padding: '2rem', border: '1px solid #eee', alignSelf: 'start', position: 'sticky', top: '100px' }}>
             <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.2rem', borderBottom: '1px solid #eee', paddingBottom: '1rem', marginBottom: '1.5rem' }}>Order Summary</h3>
-            
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
               {cartItems.map(item => (
                 <div key={item.key} style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                   <img src={item.image} alt={item.name} style={{ width: '50px', height: '60px', objectFit: 'cover', background: '#f8f8f8' }} />
                   <div style={{ flex: 1 }}>
                     <p style={{ fontSize: '0.85rem', fontWeight: 600 }}>{item.name}</p>
-                    <p style={{ fontSize: '0.75rem', color: '#888' }}>Size: {item.size} | Qty: {item.qty}</p>
+                    <p style={{ fontSize: '0.75rem', color: '#888' }}>Size: {item.size}{item.color ? ` | ${item.color}` : ''} | Qty: {item.qty}</p>
                   </div>
                   <p style={{ fontSize: '0.85rem', fontWeight: 600 }}>KSh {(item.price * item.qty).toLocaleString()}</p>
                 </div>
@@ -364,6 +322,12 @@ export default function Checkout() {
             <div style={{ borderTop: '1px solid #eee', paddingTop: '1rem', display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '1.1rem' }}>
               <span>Total to Pay</span>
               <span>KSh {finalTotal.toLocaleString()}</span>
+            </div>
+
+            <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {['🔒 Secure Checkout', '🚚 Fast Nationwide Delivery', '↩ 30-Day Returns'].map(badge => (
+                <span key={badge} style={{ fontSize: '0.75rem', color: '#888', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>{badge}</span>
+              ))}
             </div>
           </div>
 
