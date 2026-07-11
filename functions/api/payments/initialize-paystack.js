@@ -1,4 +1,4 @@
-import { getCurrentUser } from '../../../utils/auth.js';
+import { getCurrentUser } from '../../utils/auth.js';
 
 // POST /api/payments/initialize-paystack
 // Initializes a Paystack payment session for the logged-in user.
